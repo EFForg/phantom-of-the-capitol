@@ -57,5 +57,13 @@ module CongressForms
     #     render 'errors/505'
     #   end
     #
+    #
+
+    use Rack::Parser, :parsers => {
+      'application/json' => proc { |data| JSON.parse data },
+      'application/xml'  => proc { |data| XML.parse data },
+      %r{msgpack}        => proc { |data| Msgpack.parse data }
+    }
+
   end
 end

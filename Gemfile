@@ -22,6 +22,7 @@ gem 'slim'
 gem 'padrino', '0.11.4'
 
 gem 'redcarpet'
+gem 'rack-parser', :require => 'rack/parser'
 
 # Or Padrino Edge
 # gem 'padrino', :github => 'padrino/padrino-framework'
