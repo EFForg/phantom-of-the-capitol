@@ -1,5 +1,5 @@
 ---
-:orm: none
+:orm: activerecord
 :test: none
 :mock: none
 :script: none
