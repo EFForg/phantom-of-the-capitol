@@ -25,6 +25,7 @@ gem 'redcarpet'
 gem 'rack-parser', :require => 'rack/parser'
 gem 'activerecord', :require => "active_record"
 gem 'mysql2'
+gem 'enumerize'
 
 # Or Padrino Edge
 # gem 'padrino', :github => 'padrino/padrino-framework'

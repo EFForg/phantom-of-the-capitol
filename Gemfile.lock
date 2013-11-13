@@ -14,6 +14,8 @@ GEM
       multi_json (~> 1.0)
     arel (3.0.2)
     builder (3.0.4)
+    enumerize (0.7.0)
+      activesupport (>= 3.2)
     http_router (0.11.0)
       rack (>= 1.0.0)
       url_mount (~> 0.2.1)
@@ -83,6 +85,7 @@ PLATFORMS
 
 DEPENDENCIES
   activerecord
+  enumerize
   mysql2
   padrino (= 0.11.4)
   rack-parser
