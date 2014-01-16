@@ -11,16 +11,26 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 1) do
+ActiveRecord::Schema.define(:version => 2) do
 
-  create_table "congress_member_fields", :force => true do |t|
+  create_table "congress_member_actions", :force => true do |t|
+    t.integer "congress_member_id"
     t.integer "step"
-    t.string  "field_type"
+    t.string  "action"
     t.string  "name"
     t.string  "selector"
     t.string  "value"
-    t.boolean "required",   :default => false
+    t.boolean "required",            :default => false
+    t.integer "maxlength"
+    t.string  "captcha_selector"
+    t.string  "captcha_id_selector"
     t.text    "options"
   end
+
+  create_table "congress_members", :force => true do |t|
+    t.string "bioguide_id"
+  end
+
+  add_index "congress_members", ["bioguide_id"], :name => "index_congress_members_on_bioguide_id", :unique => true
 
 end
