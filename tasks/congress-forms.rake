@@ -1,7 +1,8 @@
+require File.expand_path("../../config/boot.rb", __FILE__)
+
 namespace :'congress-forms' do
   desc "Maps the forms from their native YAML format into the db"
   task :map_forms, :contact_congress_yaml_directory do |t, args|
-    require File.expand_path("../../config/boot.rb", __FILE__)
     Dir[args[:contact_congress_yaml_directory]+'/*.yaml'].each do |f|
       begin
         congress_member_details = YAML.load_file(f)
@@ -34,6 +35,29 @@ namespace :'congress-forms' do
         puts "  Line:    "+exception.line.to_s
         puts "  Column:  "+exception.column.to_s
       end
+    end
+  end
+  desc "Analyze how common the expected values of fields are"
+  task :common_fields do |t, args|
+    values_hash = {}
+    congress_hash = {}
+
+    all_members = CongressMember.all
+    all_members.each do |c|
+      congress_hash[c.bioguide_id] = {}
+      action_vals = c.actions.map{|a| a.value}
+      action_vals.each do |v|
+        if congress_hash[c.bioguide_id][v].nil?
+          values_hash[v] = (values_hash[v].nil? ? 1 : values_hash[v] + 1)
+          congress_hash[c.bioguide_id][v] = true
+        end
+      end
+    end
+    puts "Percent of congress members contact forms the common fields appear on:\n\n"
+    values_hash = values_hash.select{|i, v| v >= all_members.count * 0.1 && i.to_s.start_with?("$")} # only show values that appear in >= 10% of congressmembers
+    values_arr = values_hash.sort_by{|i, v| v}.reverse!
+    values_arr.each do |v|
+      puts v[0] + " : " + (v[1] * 100 / all_members.count).to_s + "%"
     end
   end
 end
