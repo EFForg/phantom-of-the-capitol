@@ -14,6 +14,7 @@ GEM
       multi_json (~> 1.0)
     arel (3.0.2)
     builder (3.0.4)
+    diff-lcs (1.2.5)
     enumerize (0.7.0)
       activesupport (>= 3.2)
     http_router (0.11.0)
@@ -61,8 +62,18 @@ GEM
       rack
     rack-protection (1.5.1)
       rack
+    rack-test (0.6.2)
+      rack (>= 1.0)
     rake (10.1.0)
     redcarpet (3.0.0)
+    rspec (2.14.1)
+      rspec-core (~> 2.14.0)
+      rspec-expectations (~> 2.14.0)
+      rspec-mocks (~> 2.14.0)
+    rspec-core (2.14.7)
+    rspec-expectations (2.14.4)
+      diff-lcs (>= 1.1.3, < 2.0)
+    rspec-mocks (2.14.4)
     sinatra (1.4.4)
       rack (~> 1.4)
       rack-protection (~> 1.4)
@@ -89,6 +100,8 @@ DEPENDENCIES
   mysql2
   padrino (= 0.11.4)
   rack-parser
+  rack-test
   rake
   redcarpet
+  rspec
   slim
