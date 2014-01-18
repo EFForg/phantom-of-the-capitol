@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 2) do
+ActiveRecord::Schema.define(:version => 3) do
 
   create_table "congress_member_actions", :force => true do |t|
     t.integer "congress_member_id"
@@ -29,6 +29,7 @@ ActiveRecord::Schema.define(:version => 2) do
 
   create_table "congress_members", :force => true do |t|
     t.string "bioguide_id"
+    t.string "success_criteria"
   end
 
   add_index "congress_members", ["bioguide_id"], :name => "index_congress_members_on_bioguide_id", :unique => true

@@ -27,6 +27,8 @@ namespace :'congress-forms' do
               end
             end
           end
+          c.success_criteria = congress_member_details["contact_form"]["success"]
+          c.save
         end
       rescue Psych::SyntaxError => exception
         puts ""
