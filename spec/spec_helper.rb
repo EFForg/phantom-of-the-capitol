@@ -1,11 +1,16 @@
 PADRINO_ENV = 'test' unless defined?(PADRINO_ENV)
 require File.expand_path(File.dirname(__FILE__) + "/../config/boot")
+Dir[File.join(File.dirname(__FILE__), "support/**/*.rb")].each { |f| require f }
 
 RSpec.configure do |conf|
   conf.include Rack::Test::Methods
   conf.include FactoryGirl::Syntax::Methods
 
   conf.before(:each) { DatabaseCleaner.clean_with :truncation }
+
+  conf.before(:suite) do
+    LocalhostServer.new(TESTSERVER.new, 3001)
+  end
 
 end
 
