@@ -32,6 +32,8 @@ gem 'rack-parser', :require => 'rack/parser'
 gem 'activerecord', :require => "active_record"
 gem 'mysql2'
 gem 'enumerize'
+gem 'watir-webdriver'
+gem 'headless'
 
 # Or Padrino Edge
 # gem 'padrino', :github => 'padrino/padrino-framework'
