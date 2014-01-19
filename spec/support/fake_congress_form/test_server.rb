@@ -11,7 +11,6 @@ TESTSERVER = Sinatra.new do
     req_fields = ["prefix", "first-name", "last-name", "address", "city", "zip", "email", "message"]
     valid_req = true
     req_fields.each do |r|
-      puts params[r].length.to_s
       if params[r].nil? or params[r].length == 0
         valid_req = false
       end
