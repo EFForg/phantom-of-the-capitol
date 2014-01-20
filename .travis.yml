@@ -5,4 +5,4 @@ before_script:
   - mysql -e 'create database congress_forms_test;'
   - cp config/database-example.rb config/database.rb
   - "PADRINO_ENV=test bundle exec rake ar:create ar:schema:load"
-script: rspec spec
+script: bundle exec rspec spec
