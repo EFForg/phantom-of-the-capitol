@@ -27,4 +27,59 @@ class CongressMember < ActiveRecord::Base
       :include => {:required_actions => CongressMemberAction::REQUIRED_JSON}
     }.merge o)
   end
+
+  def fill_out_form f={}
+    headless = Headless.new
+    headless.start
+    b = Watir::Browser.new
+    actions.order(:step).each do |a|
+      case a.action
+      when "visit"
+        b.goto a.value
+      when "fill_in"
+        b.element(:css => a.selector).to_subtype.set(f[a.value]) unless f[a.value].nil?
+      when "select"
+        b.element(:css => a.selector).to_subtype.select(f[a.value]) unless f[a.value].nil?
+      when "click_on"
+        b.element(:css => a.selector).to_subtype.click
+      when "find"
+        b.element(:css => a.selector).wait_until_present
+      when "check"
+        b.element(:css => a.selector).to_subtype.set
+      when "uncheck"
+        b.element(:css => a.selector).to_subtype.clear
+      when "choose"
+        b.element(:css => a.selector).to_subtype.set
+      end
+    end
+    retval = check_success b
+    b.close
+    headless.destroy
+    retval
+  end
+  
+  def check_success b
+    criteria = YAML.load(success_criteria)
+    criteria.each do |i, v|
+      case i
+      when "headers"
+        v.each do |hi, hv|
+          case hi
+          when "status"
+            # TODO: check status code
+          end
+        end
+      when "body"
+        v.each do |bi, bv|
+          case bi
+          when "contains"
+            unless b.text.include? bv
+              return false
+            end
+          end
+        end
+      end
+    end
+    true
+  end
 end

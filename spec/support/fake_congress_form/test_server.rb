@@ -24,5 +24,3 @@ TESTSERVER = Sinatra.new do
   end
 
 end
-
-TESTSERVER.run!
