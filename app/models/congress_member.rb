@@ -1,4 +1,6 @@
 class CongressMember < ActiveRecord::Base
+  validates_presence_of :bioguide_id
+
   has_many :actions, :class_name => 'CongressMemberAction', :dependent => :destroy
   has_many :required_actions, :class_name => 'CongressMemberAction', :conditions => "required = 1"
   #has_one :captcha_action, :class_name => 'CongressMemberAction', :condition => "value = '$CAPTCHA_SOLUTION'"

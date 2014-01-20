@@ -1,4 +1,6 @@
 class CongressMemberAction < ActiveRecord::Base
+  validates_presence_of :action
+
   REQUIRED_JSON = {
     :only => [
       :value,
