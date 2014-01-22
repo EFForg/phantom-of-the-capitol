@@ -37,7 +37,27 @@ class CongressMember < ActiveRecord::Base
       when "visit"
         b.goto a.value
       when "fill_in"
-        b.element(:css => a.selector).to_subtype.set(f[a.value]) unless f[a.value].nil?
+        if a.value == "$CAPTCHA_SOLUTION"
+          location = b.element(:css => a.captcha_selector).wd.location
+
+          captcha_elem = b.element(:css => a.captcha_selector)
+          width = captcha_elem.style("width").delete("px").to_i
+          height = captcha_elem.style("height").delete("px").to_i
+
+          screenshot_location = Padrino.root + "/public/captchas/" + SecureRandom.hex(13) + ".png";
+          b.driver.save_screenshot(screenshot_location)
+
+          Devil.with_image(screenshot_location) do |img|
+            y = img.height - location.y - height
+            img.crop(location.x, y, width, height)
+            img.save(screenshot_location)
+          end
+
+          captcha_value = yield screenshot_location
+          b.element(:css => a.captcha_id_selector).to_subtype.set(captcha_value)
+        else
+          b.element(:css => a.selector).to_subtype.set(f[a.value]) unless f[a.value].nil?
+        end
       when "select"
         b.element(:css => a.selector).to_subtype.select(f[a.value]) unless f[a.value].nil?
       when "click_on"
@@ -57,7 +77,11 @@ class CongressMember < ActiveRecord::Base
     headless.destroy
     retval
   end
-  
+
+  def has_captcha?
+    !actions.find_by_value("$CAPTCHA_SOLUTION").nil?
+  end
+
   def check_success b
     criteria = YAML.load(success_criteria)
     criteria.each do |i, v|

@@ -9,3 +9,4 @@ db/*.db
 config/database.rb
 .*.sw*
 *.swp
+public/captchas
