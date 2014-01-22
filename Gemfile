@@ -34,6 +34,7 @@ gem 'mysql2'
 gem 'enumerize'
 gem 'watir-webdriver'
 gem 'headless'
+gem 'devil'
 
 # Or Padrino Edge
 # gem 'padrino', :github => 'padrino/padrino-framework'
