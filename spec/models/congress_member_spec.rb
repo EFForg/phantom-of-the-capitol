@@ -62,9 +62,11 @@ describe CongressMember do
 
 
     it "should successfully fill form for a congress member via CongressMember.fill_out_form" do
-      @congress_member.fill_out_form(v) do |c|
-        "placeholder"
-      end
+      expect(
+        @congress_member.fill_out_form(v) do |c|
+          "placeholder"
+        end
+      ).to be_true
     end
   end
 
