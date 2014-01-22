@@ -1,3 +1,3 @@
 # Requirements
 
- - apt-get install xvfb libdevil-dev
+ - apt-get install xvfb imagemagick

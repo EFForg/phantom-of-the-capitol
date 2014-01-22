@@ -41,17 +41,15 @@ class CongressMember < ActiveRecord::Base
           location = b.element(:css => a.captcha_selector).wd.location
 
           captcha_elem = b.element(:css => a.captcha_selector)
-          width = captcha_elem.style("width").delete("px").to_i
-          height = captcha_elem.style("height").delete("px").to_i
+          width = captcha_elem.style("width").delete("px")
+          height = captcha_elem.style("height").delete("px")
 
           screenshot_location = Padrino.root + "/public/captchas/" + SecureRandom.hex(13) + ".png";
           b.driver.save_screenshot(screenshot_location)
 
-          Devil.with_image(screenshot_location) do |img|
-            y = img.height - location.y - height
-            img.crop(location.x, y, width, height)
-            img.save(screenshot_location)
-          end
+          img = MiniMagick::Image.open(screenshot_location)
+          img.crop width + 'x' + height + "+" + location.x.to_s + "+" + location.y.to_s
+          img.write screenshot_location
 
           captcha_value = yield screenshot_location
           b.element(:css => a.captcha_id_selector).to_subtype.set(captcha_value)
