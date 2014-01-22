@@ -57,6 +57,13 @@
         <input type='radio' value='red' name='favorite-color'>Red
         <input type='radio' value='green' name='favorite-color'>Green
       </div>
+      <% if @captcha %>
+        <div class='contact-row'>
+          <img id='captcha-image' src='/images/captcha.png'>
+          <label for='captcha'>Captcha Text:</label>
+          <input name='captcha' id='captcha'>
+        </div>
+      <% end %>
       <div class='contact-row'>
         <label for='message'>Message:</label>
         <textarea name='message' id='message' required></textarea>
