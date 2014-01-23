@@ -7,7 +7,8 @@ CongressForms::App.controller do
     bio_ids = params["bio_ids"]
     response = {}
     bio_ids.each do |bio_id|
-      response[bio_id] = CongressMember.bioguide(bio_id).as_required_json
+      c = CongressMember.bioguide(bio_id)
+      response[bio_id] = c.as_required_json unless c.nil?
     end
     content_type :json
     response.to_json
