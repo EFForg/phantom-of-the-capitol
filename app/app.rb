@@ -47,10 +47,6 @@ module CongressForms
     #   end
     #
 
-    configure :development do
-      set :protect_from_csrf, false
-    end
-
     ##
     # You can manage errors like:
     #
