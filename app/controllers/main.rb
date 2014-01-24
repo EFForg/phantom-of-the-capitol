@@ -13,4 +13,17 @@ CongressForms::App.controller do
     content_type :json
     response.to_json
   end
+
+  post :'fill-out-form' do
+    bio_id = params["bio_id"]
+    fields = params["fields"]
+    content_type :json
+
+    c = CongressMember.bioguide(bio_id)
+    return {status: "error", message: "Congress member with provided bio id not found"}.to_json if c.nil?
+    fill_succeeded = c.fill_out_form fields
+
+    return {status: "error"}.to_json unless fill_succeeded
+    {status: "success"}.to_json
+  end
 end
