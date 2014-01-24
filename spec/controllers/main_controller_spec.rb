@@ -34,4 +34,29 @@ describe "Main controller" do
       expect(last_response_json[c2.bioguide_id]).not_to be_nil
     end
   end
+
+  describe "route /fill-out-form" do
+    before do
+      @route = :'fill-out-form'
+    end
+
+    it "should return json indicating an error when trying to fill out form for an undefined congress member" do
+      post_json @route, {
+        "bio_id" => "TEST",
+        "fields" => MOCK_VALUES
+      }.to_json
+      expect(JSON.load(last_response.body)["status"]).to eq("error")
+      expect(JSON.load(last_response.body)["message"]).not_to be_nil # don't be brittle
+    end
+
+    it "should fill out a form when provided with the required values from /fill-out-form" do
+      c = create :congress_member_with_actions
+      post_json @route, {
+        "bio_id" => c.bioguide_id,
+        "fields" => MOCK_VALUES
+      }.to_json
+      expect(last_response.status).to eq(200)
+      expect(JSON.load(last_response.body)["status"]).to eq("success")
+    end
+  end
 end
