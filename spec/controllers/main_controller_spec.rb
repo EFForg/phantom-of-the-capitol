@@ -21,8 +21,11 @@ describe "Main controller" do
 
   it "should retrieve form elements successfully with multiple congress members for /retrieve-form-elements" do
     c = create :congress_member_with_actions
-    c2 = create :congress_member_with_actions, :congress_id 
-    expect(JSON.load(last_response.body)[c.bioguide_id]).not_to be_nil
-    expect(JSON.load(last_response.body)[c2.bioguide_id]).not_to be_nil
+    c2 = create :congress_member_with_actions, bioguide_id: "A111111"
+    post_json :'retrieve-form-elements', {"bio_ids" => [c.bioguide_id, c2.bioguide_id]}.to_json
+
+    last_response_json = JSON.load(last_response.body)
+    expect(last_response_json[c.bioguide_id]).not_to be_nil
+    expect(last_response_json[c2.bioguide_id]).not_to be_nil
   end
 end
