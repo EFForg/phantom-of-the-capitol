@@ -34,24 +34,13 @@ describe CongressMember do
     end
   end
 
-  v = {
-    "$NAME_FIRST" => "John",
-    "$NAME_LAST" => "Doe",
-    "$ADDRESS_STREET" => "123 Main Street",
-    "$ADDRESS_CITY" => "New York",
-    "$ADDRESS_ZIP5" => "10112",
-    "$EMAIL" => "joe@example.com",
-    "$MESSAGE" => "I have concerns about the proposal....",
-    "$NAME_PREFIX" => "Grand Moff"
-  }
-
   describe "that already exists with actions" do
     before do
       @congress_member = create :congress_member_with_actions, :bioguide_id => "B010101"
     end
 
     it "should successfully fill form for a congress member via CongressMember.fill_out_form" do
-      expect(@congress_member.fill_out_form(v)).to be_true
+      expect(@congress_member.fill_out_form(MOCK_VALUES)).to be_true
     end
   end
 
@@ -63,7 +52,7 @@ describe CongressMember do
 
     it "should successfully fill form for a congress member via CongressMember.fill_out_form" do
       expect(
-        @congress_member.fill_out_form(v) do |c|
+        @congress_member.fill_out_form(MOCK_VALUES) do |c|
           "placeholder"
         end
       ).to be_true

@@ -38,3 +38,14 @@ FactoryGirl.definition_file_paths = [
   File.join(Padrino.root, 'spec', 'factories')
 ]
 FactoryGirl.find_definitions
+
+MOCK_VALUES = {
+  "$NAME_FIRST" => "John",
+  "$NAME_LAST" => "Doe",
+  "$ADDRESS_STREET" => "123 Main Street",
+  "$ADDRESS_CITY" => "New York",
+  "$ADDRESS_ZIP5" => "10112",
+  "$EMAIL" => "joe@example.com",
+  "$MESSAGE" => "I have concerns about the proposal....",
+  "$NAME_PREFIX" => "Grand Moff"
+}
