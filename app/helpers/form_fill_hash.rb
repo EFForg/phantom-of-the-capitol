@@ -1,5 +1,3 @@
-require 'fiber'
-
 class FillHash
   attr_accessor :timeout
 
@@ -18,10 +16,10 @@ class FillHash
   end
 
   def remove_after_timeout index
-    Fiber.new do
+    Thread.new do
       sleep @timeout
       @fh.delete index
-    end.resume
+    end
   end
 
   def include? index
