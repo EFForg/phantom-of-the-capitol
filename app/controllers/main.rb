@@ -14,7 +14,7 @@ CongressForms::App.controller do
     response.to_json
   end
 
-  fh = {}
+  fh = FillHash.new
   post :'fill-out-form' do
     bio_id = params["bio_id"]
     fields = params["fields"]
