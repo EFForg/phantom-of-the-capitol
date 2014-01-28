@@ -14,16 +14,32 @@ CongressForms::App.controller do
     response.to_json
   end
 
+  ff = {}
   post :'fill-out-form' do
     bio_id = params["bio_id"]
     fields = params["fields"]
+    uid = params["uid"]
     content_type :json
 
     c = CongressMember.bioguide(bio_id)
     return {status: "error", message: "Congress member with provided bio id not found"}.to_json if c.nil?
-    fill_succeeded = c.fill_out_form fields
 
-    return {status: "error"}.to_json unless fill_succeeded
+    ff[uid] = FillHandler.new(c).fill fields
+    ff_result = ff[uid].resume
+    return {status: "captcha_needed", url: ff_result}.to_json unless ff_result == true or ff_result == false
+
+    return {status: "error"}.to_json unless ff_result
+    {status: "success"}.to_json
+  end
+
+  post :'fill-out-captcha' do
+    uid = params["uid"]
+    answer = params["answer"]
+
+    content_type :json
+
+    ff_result = ff[uid].resume answer
+    return {status: "error"}.to_json unless ff_result
     {status: "success"}.to_json
   end
 end
