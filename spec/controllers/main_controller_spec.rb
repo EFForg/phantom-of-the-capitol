@@ -38,12 +38,14 @@ describe "Main controller" do
   describe "route /fill-out-form" do
     before do
       @route = :'fill-out-form'
+      @uid = "someuid"
     end
 
     it "should return json indicating an error when trying to fill out form for an undefined congress member" do
       post_json @route, {
         "bio_id" => "TEST",
-        "fields" => MOCK_VALUES
+        "fields" => MOCK_VALUES,
+        "uid" => @uid
       }.to_json
       expect(JSON.load(last_response.body)["status"]).to eq("error")
       expect(JSON.load(last_response.body)["message"]).not_to be_nil # don't be brittle
@@ -53,10 +55,45 @@ describe "Main controller" do
       c = create :congress_member_with_actions
       post_json @route, {
         "bio_id" => c.bioguide_id,
-        "fields" => MOCK_VALUES
+        "fields" => MOCK_VALUES,
+        "uid" => @uid
       }.to_json
       expect(last_response.status).to eq(200)
       expect(JSON.load(last_response.body)["status"]).to eq("success")
+    end
+
+    describe "with a captcha" do
+      before do
+        c = create :congress_member_with_actions_and_captcha
+        post_json @route, {
+          "bio_id" => c.bioguide_id,
+          "fields" => MOCK_VALUES,
+          "uid" => @uid
+        }.to_json
+      end
+
+      it "should result in a status of 'captcha_needed'" do
+        expect(last_response.status).to eq(200)
+        expect(JSON.load(last_response.body)["status"]).to eq("captcha_needed")
+      end
+
+      it "should result in 'success' with the right answer given to /fill-out-captcha" do
+        post_json :'fill-out-captcha', {
+          "uid" => @uid,
+          "answer" => "placeholder"
+        }.to_json
+        expect(last_response.status).to eq(200)
+        expect(JSON.load(last_response.body)["status"]).to eq("success")
+      end
+
+      it "should result in 'error' with the wrong answer given to /fill-out-captcha" do
+        post_json :'fill-out-captcha', {
+          "uid" => @uid,
+          "answer" => "wrong"
+        }.to_json
+        expect(last_response.status).to eq(200)
+        expect(JSON.load(last_response.body)["status"]).to eq("error")
+      end
     end
   end
 end
