@@ -109,6 +109,16 @@ describe "Main controller" do
         expect(last_response_json["message"]).to eq("The unique id provided was not found.")
       end
 
+      it "should destroy the fiber after a time interval" do
+        sleep(5)
+        post_json :'fill-out-captcha', {
+          "uid" => @uid,
+          "answer" => "placeholder"
+        }.to_json
+        last_response_json = JSON.load(last_response.body)
+        expect(last_response_json["status"]).to eq("error")
+        expect(last_response_json["message"]).to eq("The unique id provided was not found.")
+      end
     end
   end
 end
