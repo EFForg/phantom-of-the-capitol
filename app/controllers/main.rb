@@ -28,7 +28,7 @@ CongressForms::App.controller do
     ff_result = ff[uid].resume
     return {status: "captcha_needed", url: ff_result}.to_json unless ff_result == true or ff_result == false
 
-    return {status: "error"}.to_json unless ff_result
+    return {status: "error", message: "An error has occurred while filling out the remote form."}.to_json unless ff_result
     {status: "success"}.to_json
   end
 
@@ -38,8 +38,11 @@ CongressForms::App.controller do
 
     content_type :json
 
+    return {status: "error", message: "The unique id provided was not found."}.to_json unless ff.include? uid
+
     ff_result = ff[uid].resume answer
-    return {status: "error"}.to_json unless ff_result
+    ff.delete(uid)
+    return {status: "error", message: "An error has occurred while filling out the remote form."}.to_json unless ff_result
     {status: "success"}.to_json
   end
 end
