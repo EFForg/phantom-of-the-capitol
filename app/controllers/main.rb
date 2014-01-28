@@ -14,7 +14,7 @@ CongressForms::App.controller do
     response.to_json
   end
 
-  ff = {}
+  fh = {}
   post :'fill-out-form' do
     bio_id = params["bio_id"]
     fields = params["fields"]
@@ -24,12 +24,10 @@ CongressForms::App.controller do
     c = CongressMember.bioguide(bio_id)
     return {status: "error", message: "Congress member with provided bio id not found"}.to_json if c.nil?
 
-    ff[uid] = FillHandler.new(c).fill fields
-    ff_result = ff[uid].resume
-    return {status: "captcha_needed", url: ff_result}.to_json unless ff_result == true or ff_result == false
-
-    return {status: "error", message: "An error has occurred while filling out the remote form."}.to_json unless ff_result
-    {status: "success"}.to_json
+    handler = FillHandler.new(c)
+    result = handler.fill fields
+    fh[uid] = handler if result[:status] == "captcha_needed"
+    result.to_json
   end
 
   post :'fill-out-captcha' do
@@ -38,11 +36,10 @@ CongressForms::App.controller do
 
     content_type :json
 
-    return {status: "error", message: "The unique id provided was not found."}.to_json unless ff.include? uid
+    return {status: "error", message: "The unique id provided was not found."}.to_json unless fh.include? uid
 
-    ff_result = ff[uid].resume answer
-    ff.delete(uid)
-    return {status: "error", message: "An error has occurred while filling out the remote form."}.to_json unless ff_result
-    {status: "success"}.to_json
+    result = fh[uid].fill_captcha answer
+    fh.delete(uid)
+    result.to_json
   end
 end
