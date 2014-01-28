@@ -6,34 +6,34 @@ This project relies on [Contact Congress](https://github.com/unitedstates/contac
 
 ## Requirements
 
- - apt-get install xvfb imagemagick
+ - `apt-get install xvfb imagemagick`
 
 ## Installation
 
- - apt-get install ruby
+ - `apt-get install ruby`
 
 or [install ruby with rvm](http://rvm.io).
 
- - gem install bundler
- - bundle install
+ - `gem install bundler`
+ - `bundle install`
 
 Create the database, then
 
- - cp config/database-example.rb config/database.rb
- - vim config/database.rb # fill in db info
- - bundle exec rake ar:create ar:schema:load
+ - `cp config/database-example.rb config/database.rb`
+ - `vim config/database.rb # fill in db info`
+ - `bundle exec rake ar:create ar:schema:load`
 
 ## Populating the database
 
 Grab a copy of contact-congress and store it somewhere:
 
- - git clone https://github.com/unitedstates/contact-congress
+ - `git clone https://github.com/unitedstates/contact-congress`
 
 Then cd back over to congress-forms and run
 
- - bundle exec rake congress-forms:map_forms[contact_congress_yaml_directory]
+ - `bundle exec rake congress-forms:map_forms[contact_congress_yaml_directory]`
 
-replacing contact_congress_yaml_directory with the directory path.
+replacing `contact_congress_yaml_directory` with the directory path.
 
 ## Running
 
