@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'thin'
 
 describe "Main controller" do
   it "should receive 200 status from index" do
@@ -87,7 +88,7 @@ describe "Main controller" do
       expect(last_response_json["message"]).not_to be_nil # don't be brittle
     end
 
-    it "should fill out a form when provided with the required values from /fill-out-form" do
+    it "should fill out a form when provided with the required values" do
       c = create :congress_member_with_actions
       post_json @route, {
         "bio_id" => c.bioguide_id,
@@ -174,7 +175,10 @@ describe "Main controller" do
 
   describe "running the Padrino app on an actual server" do
     before do
-      Thread.new { Rack::Handler::Thin.run CongressForms::App.new, :Port => 9922 }
+      Thread.new do
+        Thin::Logging.silent = true
+        Rack::Handler::Thin.run CongressForms::App.new, :Port => 9922
+      end
     end
 
     it "should run through the entire workflow for a captcha form successfully" do
