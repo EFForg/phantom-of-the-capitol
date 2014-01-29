@@ -22,6 +22,7 @@ group :test do
   gem 'rack-test', :require => 'rack/test'
   gem 'factory_girl'
   gem 'database_cleaner'
+  gem 'typhoeus'
 end
 
 # Padrino Stable Gem
@@ -35,6 +36,7 @@ gem 'enumerize'
 gem 'watir-webdriver'
 gem 'headless'
 gem 'mini_magick'
+gem 'thin'
 
 # Or Padrino Edge
 # gem 'padrino', :github => 'padrino/padrino-framework'

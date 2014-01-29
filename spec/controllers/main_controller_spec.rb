@@ -171,4 +171,36 @@ describe "Main controller" do
       end
     end 
   end
+
+  describe "running the Padrino app on an actual server" do
+    before do
+      Thread.new { Rack::Handler::Thin.run CongressForms::App.new, :Port => 9922 }
+    end
+
+    it "should run through the entire workflow for a captcha form successfully" do
+      @uid = "test"
+      @c = create :congress_member_with_actions_and_captcha
+      Typhoeus.post(
+        "localhost:9922/fill-out-form",
+        method: :post,
+        body: {
+          bio_id: @c.bioguide_id,
+          uid: @uid,
+          fields: MOCK_VALUES
+        }.to_json,
+        headers: { :'Content-Type' => "application/json" }
+      )
+      captcha_response = Typhoeus.post(
+        "localhost:9922/fill-out-captcha",
+        method: :post,
+        body: {
+          uid: @uid,
+          answer: "placeholder"
+        }.to_json,
+        headers: { :'Content-Type' => "application/json" }
+      )
+      expect(captcha_response.code).to eq(200)
+      expect(JSON.load(captcha_response.body)["status"]).to eq("success")
+    end
+  end
 end
