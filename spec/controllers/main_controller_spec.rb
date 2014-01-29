@@ -179,6 +179,7 @@ describe "Main controller" do
         Thin::Logging.silent = true
         Rack::Handler::Thin.run CongressForms::App.new, :Port => 9922
       end
+      sleep 1
     end
 
     it "should run through the entire workflow for a captcha form successfully" do
