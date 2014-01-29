@@ -11,20 +11,20 @@ describe "Main controller" do
       @route = :'retrieve-form-elements'
     end
 
-    it "should not raise an exception for nonexistent congress members when requesting form elements from /retrieve-form-elements" do
+    it "should not raise an exception for nonexistent congress members" do
       expect do
         post_json @route, {"bio_ids" => ["B000243", "D000563"]}.to_json
       end.not_to raise_exception
       expect(JSON.load(last_response.body)).to eq({})
     end
 
-    it "should retrieve form elements successfully from /retrieve-form-elements" do
+    it "should retrieve form elements successfully" do
       c = create :congress_member_with_actions
       post_json @route, {"bio_ids" => [c.bioguide_id]}.to_json
       expect(JSON.load(last_response.body)[c.bioguide_id]).not_to be_nil
     end
 
-    it "should retrieve form elements successfully with multiple congress members from /retrieve-form-elements" do
+    it "should retrieve form elements successfully with multiple congress members" do
       c = create :congress_member_with_actions
       c2 = create :congress_member_with_actions, bioguide_id: "A111111"
       post_json @route, {"bio_ids" => [c.bioguide_id, c2.bioguide_id]}.to_json
@@ -32,6 +32,20 @@ describe "Main controller" do
       last_response_json = JSON.load(last_response.body)
       expect(last_response_json[c.bioguide_id]).not_to be_nil
       expect(last_response_json[c2.bioguide_id]).not_to be_nil
+    end
+
+    it "should return json indicating an error when trying retrieve fields without bio_ids or when bio_ids is not an array" do
+      post_json @route, {}.to_json
+
+      last_response_json = JSON.load(last_response.body)
+      expect(last_response_json["status"]).to eq("error")
+      expect(last_response_json["message"]).not_to be_nil # don't be brittle
+
+      post_json @route, {"bio_ids" => "test"}.to_json
+
+      last_response_json = JSON.load(last_response.body)
+      expect(last_response_json["status"]).to eq("error")
+      expect(last_response_json["message"]).not_to be_nil # don't be brittle
     end
   end
 
@@ -49,6 +63,28 @@ describe "Main controller" do
       }.to_json
       expect(JSON.load(last_response.body)["status"]).to eq("error")
       expect(JSON.load(last_response.body)["message"]).not_to be_nil # don't be brittle
+    end
+
+    it "should return json indicating an error when trying to fill out form without fields" do
+      c = create :congress_member_with_actions
+      post_json @route, {
+        "bio_id" => c.bioguide_id,
+        "uid" => @uid
+      }.to_json
+      last_response_json = JSON.load(last_response.body)
+      expect(last_response_json["status"]).to eq("error")
+      expect(last_response_json["message"]).not_to be_nil # don't be brittle
+    end
+
+    it "should return json indicating an error when trying to fill out form without uid" do
+      c = create :congress_member_with_actions
+      post_json @route, {
+        "bio_id" => c.bioguide_id,
+        "fields" => MOCK_VALUES
+      }.to_json
+      last_response_json = JSON.load(last_response.body)
+      expect(last_response_json["status"]).to eq("error")
+      expect(last_response_json["message"]).not_to be_nil # don't be brittle
     end
 
     it "should fill out a form when provided with the required values from /fill-out-form" do
@@ -119,6 +155,20 @@ describe "Main controller" do
         expect(last_response_json["status"]).to eq("error")
         expect(last_response_json["message"]).to eq("The unique id provided was not found.")
       end
-    end
+
+      it "should return json indicating an error without uid or answer" do
+        post_json @route, {"answer" => "placeholder"}.to_json
+
+        last_response_json = JSON.load(last_response.body)
+        expect(last_response_json["status"]).to eq("error")
+        expect(last_response_json["message"]).not_to be_nil # don't be brittle
+
+        post_json @route, {"uid" => @uid}.to_json
+
+        last_response_json = JSON.load(last_response.body)
+        expect(last_response_json["status"]).to eq("error")
+        expect(last_response_json["message"]).not_to be_nil # don't be brittle
+      end
+    end 
   end
 end
