@@ -57,7 +57,7 @@ class CongressMember < ActiveRecord::Base
           b.element(:css => a.selector).to_subtype.set(f[a.value]) unless f[a.value].nil?
         end
       when "select"
-        b.element(:css => a.selector).to_subtype.select(f[a.value]) unless f[a.value].nil?
+        b.element(:css => a.selector).to_subtype.select_value(f[a.value]) unless f[a.value].nil?
       when "click_on"
         b.element(:css => a.selector).to_subtype.click
       when "find"
