@@ -42,6 +42,33 @@ describe CongressMember do
     it "should successfully fill form for a congress member via CongressMember.fill_out_form" do
       expect(@congress_member.fill_out_form(MOCK_VALUES)).to be_true
     end
+
+    it "should delay filling out a form for a congress member via CongressMember.delay.fill_out_form" do
+      @congress_member.delay.fill_out_form(MOCK_VALUES)
+      result = Delayed::Worker.new.run Delayed::Job.last
+      expect(result).to be_true
+    end
+  end
+  
+  describe "that already exists with actions and an incorrect success criteria" do
+    before do
+      @congress_member = create :congress_member_with_actions, success_criteria: YAML.dump({"headers"=>{"status"=>200}, "body"=>{"contains"=>"Won't get me!"}})
+    end
+
+    it "should raise an error filling out a form via CongressMember.fill_out_form" do
+      expect { @congress_member.fill_out_form(MOCK_VALUES) }.to raise_error CongressMember::FillError
+    end
+  end
+
+  describe "that already exists with unfulfillable actions" do
+    before do
+      @congress_member = create :congress_member_with_actions
+      @congress_member.actions.append(create :congress_member_action, action: "fill_in", name: 'middle-name', selector: '#middle-name', value: "$NAME_MIDDLE", required: true, step: 4, congress_member: @congress_member)
+    end
+
+    it "should raise an error filling out a form via CongressMember.fill_out_form" do
+      expect { @congress_member.fill_out_form MOCK_VALUES.merge({"$NAME_MIDDLE" => "Bart"}) }.to raise_error Watir::Exception::UnknownObjectException
+    end
   end
 
   describe "that already exists with actions including captcha" do
