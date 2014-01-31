@@ -88,6 +88,19 @@ describe "Main controller" do
       expect(last_response_json["message"]).not_to be_nil # don't be brittle
     end
 
+    it "should return json indicating an error and create a new Delayed Job when trying to fill out form of CongressMember with incorrect success criteria" do
+      c = create :congress_member_with_actions, success_criteria: YAML.dump({"headers"=>{"status"=>200}, "body"=>{"contains"=>"Won't get me!"}})
+      post_json @route, {
+        "bio_id" => c.bioguide_id,
+        "fields" => MOCK_VALUES,
+        "uid" => @uid
+      }.to_json
+      last_response_json = JSON.load(last_response.body)
+      expect(last_response_json["status"]).to eq("error")
+      expect(last_response_json["message"]).not_to be_nil # don't be brittle
+      expect(Delayed::Job.count).to eq(1)
+    end
+
     it "should fill out a form when provided with the required values" do
       c = create :congress_member_with_actions
       post_json @route, {

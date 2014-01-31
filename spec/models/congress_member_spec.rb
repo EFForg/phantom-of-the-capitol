@@ -69,6 +69,15 @@ describe CongressMember do
     it "should raise an error filling out a form via CongressMember.fill_out_form" do
       expect { @congress_member.fill_out_form MOCK_VALUES.merge({"$NAME_MIDDLE" => "Bart"}) }.to raise_error Watir::Exception::UnknownObjectException
     end
+
+    it "should keep a delayed job that raises an error filling out a form via CongressMember.fill_out_form" do
+      @congress_member.delay.fill_out_form(MOCK_VALUES.merge({"$NAME_MIDDLE" => "Bart"}))
+      last_job = Delayed::Job.last
+      result = Delayed::Worker.new.run last_job
+      expect(result).to be_false
+      expect { last_job.reload }.not_to raise_error
+    end
+
   end
 
   describe "that already exists with actions including captcha" do
