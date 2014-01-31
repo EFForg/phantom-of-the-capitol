@@ -18,6 +18,11 @@ GEM
       ffi (~> 1.0, >= 1.0.11)
     daemons (1.1.9)
     database_cleaner (1.2.0)
+    delayed_job (4.0.0)
+      activesupport (>= 3.0, < 4.1)
+    delayed_job_active_record (4.0.0)
+      activerecord (>= 3.0, < 4.1)
+      delayed_job (>= 3.0, < 4.1)
     diff-lcs (1.2.5)
     enumerize (0.7.0)
       activesupport (>= 3.2)
@@ -127,6 +132,7 @@ PLATFORMS
 DEPENDENCIES
   activerecord
   database_cleaner
+  delayed_job_active_record
   enumerize
   factory_girl
   headless
