@@ -5,6 +5,9 @@ class CongressMember < ActiveRecord::Base
   has_many :required_actions, :class_name => 'CongressMemberAction', :conditions => "required = 1"
   #has_one :captcha_action, :class_name => 'CongressMemberAction', :condition => "value = '$CAPTCHA_SOLUTION'"
   
+  class FillError < Error
+  end
+
   def self.bioguide bioguide_id
     find_by_bioguide_id bioguide_id
   end
@@ -70,10 +73,11 @@ class CongressMember < ActiveRecord::Base
         b.element(:css => a.selector).to_subtype.set
       end
     end
-    retval = check_success b
+    success = check_success b
     b.close
     headless.destroy
-    retval
+    raise FillError, "Filling out the remote form was not successful" unless success
+    true
   end
 
   def has_captcha?

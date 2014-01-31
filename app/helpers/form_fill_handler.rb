@@ -7,8 +7,12 @@ class FillHandler
 
   def create_fiber fields={}
     @fiber = Fiber.new do |answer|
-      @c.fill_out_form fields do |c|
-        answer = Fiber.yield c
+      begin
+        @c.fill_out_form fields do |c|
+          answer = Fiber.yield c
+        end
+      rescue
+        false
       end
     end
   end
