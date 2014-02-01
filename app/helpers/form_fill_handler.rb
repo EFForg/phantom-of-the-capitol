@@ -8,8 +8,12 @@ class FillHandler
   def create_fiber fields={}
     @fiber = Fiber.new do |answer|
       begin
-        @c.fill_out_form fields do |c|
-          answer = Fiber.yield c
+        if DELAY_ALL_NONCAPTCHA_FILLS and not @c.has_captcha?
+          @c.delay.fill_out_form fields
+        else
+          @c.fill_out_form fields do |c|
+            answer = Fiber.yield c
+          end
         end
       rescue Exception => e
         # we need to add the job manually instead of delaying and running automatically above, since DJ doesn't handle yield blocks

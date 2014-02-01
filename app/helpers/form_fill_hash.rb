@@ -3,7 +3,7 @@ class FillHash
 
   def initialize
     @fh = {}
-    @timeout = Padrino.env == :test ? 4 : 120
+    @timeout = Padrino.env == :test ? 4 : CAPTCHA_TIMEOUT
   end
 
   def [] index

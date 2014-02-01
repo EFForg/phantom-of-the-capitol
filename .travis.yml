@@ -4,5 +4,6 @@ rvm:
 before_script:
   - mysql -e 'create database congress_forms_test;'
   - cp config/database-example.rb config/database.rb
+  - cp config/congress-forms_config.rb.example config/congress-forms_config.rb
   - "PADRINO_ENV=test bundle exec rake ar:create ar:schema:load"
 script: bundle exec rspec spec
