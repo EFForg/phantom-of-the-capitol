@@ -6,7 +6,7 @@ This project relies on [Contact Congress](https://github.com/unitedstates/contac
 
 ## Requirements
 
- - `apt-get install xvfb imagemagick`
+ - `apt-get install xvfb imagemagick libmysql++-dev`
 
 ## Installation
 
