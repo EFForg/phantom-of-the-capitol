@@ -10,6 +10,7 @@ class FillHandler
       begin
         if DELAY_ALL_NONCAPTCHA_FILLS and not @c.has_captcha?
           @c.delay.fill_out_form fields
+          true
         else
           @c.fill_out_form fields do |c|
             answer = Fiber.yield c
