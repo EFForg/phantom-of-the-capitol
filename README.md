@@ -21,6 +21,7 @@ Create the database, then
 
  - `cp config/database-example.rb config/database.rb`
  - `vim config/database.rb # fill in db info`
+ - `cp config/congress-forms_config.rb.example config/congress-forms_config.rb`
  - `bundle exec rake ar:create ar:schema:load`
 
 ## Populating the database
