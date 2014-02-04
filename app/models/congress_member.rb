@@ -55,7 +55,7 @@ class CongressMember < ActiveRecord::Base
           img.write screenshot_location
 
           captcha_value = yield screenshot_location.sub(Padrino.root + "/public","")
-          b.element(:css => a.captcha_id_selector).to_subtype.set(captcha_value)
+          b.element(:css => a.selector).to_subtype.set(captcha_value)
         else
           b.element(:css => a.selector).to_subtype.set(f[a.value]) unless f[a.value].nil?
         end
