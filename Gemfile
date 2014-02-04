@@ -21,13 +21,13 @@ group :test do
   gem 'rspec'
   gem 'rack-test', :require => 'rack/test'
   gem 'factory_girl'
-  gem 'database_cleaner'
   gem 'typhoeus'
 end
 
 # Padrino Stable Gem
 gem 'padrino', '0.11.4'
 
+gem 'database_cleaner'
 gem 'redcarpet'
 gem 'rack-parser', :require => 'rack/parser'
 gem 'activerecord', :require => "active_record"

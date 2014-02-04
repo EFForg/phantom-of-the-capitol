@@ -3,6 +3,10 @@ require File.expand_path("../../config/boot.rb", __FILE__)
 namespace :'congress-forms' do
   desc "Maps the forms from their native YAML format into the db"
   task :map_forms, :contact_congress_yaml_directory do |t, args|
+
+    DatabaseCleaner.strategy = :truncation, {:only => %w[congress_members congress_member_actions]}
+    DatabaseCleaner.clean
+
     Dir[args[:contact_congress_yaml_directory]+'/*.yaml'].each do |f|
       begin
         congress_member_details = YAML.load_file(f)
