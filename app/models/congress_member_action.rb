@@ -21,6 +21,7 @@ class CongressMemberAction < ActiveRecord::Base
 
   def options_hash
     return nil if options.nil?
+    return CONSTANTS[options]["value"] if defined? CONSTANTS and CONSTANTS.include? options
     YAML.load(options)
   end
 end

@@ -2,12 +2,12 @@ require File.expand_path("../../config/boot.rb", __FILE__)
 
 namespace :'congress-forms' do
   desc "Maps the forms from their native YAML format into the db"
-  task :map_forms, :contact_congress_yaml_directory do |t, args|
+  task :map_forms, :contact_congress_directory do |t, args|
 
     DatabaseCleaner.strategy = :truncation, {:only => %w[congress_members congress_member_actions]}
     DatabaseCleaner.clean
 
-    Dir[args[:contact_congress_yaml_directory]+'/*.yaml'].each do |f|
+    Dir[args[:contact_congress_directory]+'/members/*.yaml'].each do |f|
       begin
         congress_member_details = YAML.load_file(f)
         CongressMember.with_new_or_existing_bioguide(congress_member_details["bioguide"]) do |c|
@@ -41,6 +41,11 @@ namespace :'congress-forms' do
         puts "  Line:    "+exception.line.to_s
         puts "  Column:  "+exception.column.to_s
       end
+    end
+    constants = YAML.load_file(args[:contact_congress_directory]+'/support/constants.yaml')
+    File.open(File.expand_path("../../config/constants.rb", __FILE__), 'w') do |f|
+      f.write "CONSTANTS = "
+      f.write constants
     end
   end
   desc "Analyze how common the expected values of fields are"

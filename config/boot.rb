@@ -7,6 +7,9 @@ require 'rubygems' unless defined?(Gem)
 require 'bundler/setup'
 Bundler.require(:default, PADRINO_ENV)
 Padrino.require("#{Padrino.root}/config/congress-forms_config.rb")
+if File.exists?(file = "#{Padrino.root}/config/constants.rb")
+  require file
+end
 
 ##
 # ## Enable devel logging

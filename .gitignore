@@ -10,3 +10,4 @@ config/database.rb
 .*.sw*
 *.swp
 config/congress-forms_config.rb
+config/constants.rb
