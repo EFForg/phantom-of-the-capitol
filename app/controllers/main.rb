@@ -3,6 +3,12 @@ CongressForms::App.controller do
     render :index
   end
 
+  before do
+    if CORS_ALLOWED_DOMAINS.include? request.env['HTTP_ORIGIN'] or CORS_ALLOWED_DOMAINS.include? "*"
+      response.headers['Access-Control-Allow-Origin'] = request.env['HTTP_ORIGIN']
+    end
+  end
+
   post :'retrieve-form-elements' do
     content_type :json
     return {status: "error", message: "You must provide bio_ids to retrieve form elements."}.to_json unless params.include? "bio_ids" and params["bio_ids"].is_a? Array

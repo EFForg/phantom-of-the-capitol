@@ -1,2 +1,3 @@
 CAPTCHA_TIMEOUT = 120
 DELAY_ALL_NONCAPTCHA_FILLS = false
+CORS_ALLOWED_DOMAINS = %w[http://www.example.com]
