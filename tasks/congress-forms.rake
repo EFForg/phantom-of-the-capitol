@@ -51,24 +51,28 @@ namespace :'congress-forms' do
   desc "Analyze how common the expected values of fields are"
   task :common_fields do |t, args|
     values_hash = {}
+    required_hash = {}
     congress_hash = {}
 
     all_members = CongressMember.all
     all_members.each do |c|
       congress_hash[c.bioguide_id] = {}
-      action_vals = c.actions.map{|a| a.value}
-      action_vals.each do |v|
-        if congress_hash[c.bioguide_id][v].nil?
-          values_hash[v] = (values_hash[v].nil? ? 1 : values_hash[v] + 1)
-          congress_hash[c.bioguide_id][v] = true
+      c.actions.each do |a|
+        if congress_hash[c.bioguide_id][a.value].nil? && a.value.to_s.start_with?("$")
+          values_hash[a.value] = (values_hash[a.value].nil? ? 1 : values_hash[a.value] + 1)
+          required_hash[a.value] = (required_hash[a.value].nil? ? 1 : required_hash[a.value] + 1) if a.required
+          congress_hash[c.bioguide_id][a.value] = true
         end
       end
     end
-    puts "Percent of congress members contact forms the common fields appear on:\n\n"
-    values_hash = values_hash.select{|i, v| v >= all_members.count * 0.1 && i.to_s.start_with?("$")} # only show values that appear in >= 10% of congressmembers
+    puts "Percent of congress members contact forms the common fields appear on:"
+    puts "Format given as '$VAR_NAME : PERCENT_PRESENT (PERCENT_REQUIRED)\n\n"
+    values_hash = values_hash.select{ |i, v| v >= all_members.count * 0.1 } # only show values that appear in >= 10% of congressmembers
     values_arr = values_hash.sort_by{|i, v| v}.reverse!
     values_arr.each do |v|
-      puts v[0] + " : " + (v[1] * 100 / all_members.count).to_s + "%"
+      appears_percent = v[1] * 100 / all_members.count
+      required_percent = required_hash[v[0]] * 100 / all_members.count
+      puts v[0] + " : " + appears_percent.to_s + "% (" + required_percent.to_s + "%)"
     end
   end
 end
