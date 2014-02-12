@@ -77,6 +77,7 @@ class CongressMember < ActiveRecord::Base
     b.close
     headless.destroy
     raise FillError, "Filling out the remote form was not successful" unless success
+    FillSuccess.new(:congress_member => self).save if RECORD_FILL_SUCCESSES
     true
   end
 

@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 4) do
+ActiveRecord::Schema.define(:version => 5) do
 
   create_table "congress_member_actions", :force => true do |t|
     t.integer "congress_member_id"
@@ -49,5 +49,11 @@ ActiveRecord::Schema.define(:version => 4) do
   end
 
   add_index "delayed_jobs", ["priority", "run_at"], :name => "delayed_jobs_priority"
+
+  create_table "fill_successes", :force => true do |t|
+    t.integer  "congress_member_id"
+    t.datetime "created_at",         :null => false
+    t.datetime "updated_at",         :null => false
+  end
 
 end
