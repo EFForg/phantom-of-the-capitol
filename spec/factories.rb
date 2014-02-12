@@ -41,4 +41,12 @@ FactoryGirl.define do
     congress_member
   end
 
+  factory :fill_success do
+    congress_member
+    campaign_tag
+  end
+  
+  factory :campaign_tag do
+    name "test"
+  end
 end
