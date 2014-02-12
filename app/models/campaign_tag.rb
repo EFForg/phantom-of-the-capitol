@@ -1,2 +1,2 @@
-class FillSuccess < ActiveRecord::Base
+class CampaignTag < ActiveRecord::Base
 end
