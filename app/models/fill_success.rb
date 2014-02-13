@@ -3,7 +3,7 @@ class FillSuccess < ActiveRecord::Base
   belongs_to :campaign_tag
 
   def initialize attrs = {}
-    ct = CampaignTag.find_or_create_by_name attrs.delete(:name) if attrs.include? :name
+    ct = CampaignTag.find_or_create_by_name attrs.delete(:campaign_tag) if attrs.include? :campaign_tag
     super attrs
     self.campaign_tag = ct
   end

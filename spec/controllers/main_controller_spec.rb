@@ -54,6 +54,7 @@ describe "Main controller" do
     before do
       @route = :'fill-out-form'
       @uid = "someuid"
+      @campaign_tag = "know your rights"
     end
 
     it "should return json indicating an error when trying to fill out form for an undefined congress member" do
@@ -110,6 +111,20 @@ describe "Main controller" do
       }.to_json
       expect(last_response.status).to eq(200)
       expect(JSON.load(last_response.body)["status"]).to eq("success")
+      expect(FillSuccess.count).to eq(1)
+    end
+
+    it "should create a new campaign tag record when filling in a form successfully with a campaign tag specified" do
+      c = create :congress_member_with_actions
+      post_json @route, {
+        "bio_id" => c.bioguide_id,
+        "fields" => MOCK_VALUES,
+        "uid" => @uid,
+        "campaign_tag" => @campaign_tag
+      }.to_json
+      expect(last_response.status).to eq(200)
+      expect(JSON.load(last_response.body)["status"]).to eq("success")
+      expect(CampaignTag.last.name).to eq(@campaign_tag)
     end
 
     describe "with a captcha" do
@@ -127,7 +142,7 @@ describe "Main controller" do
         expect(JSON.load(last_response.body)["status"]).to eq("captcha_needed")
       end
 
-      it "should result in 'success' with the right answer given to /fill-out-captcha" do
+      it "should result in 'success' with the right answer given" do
         post_json :'fill-out-captcha', {
           "uid" => @uid,
           "answer" => "placeholder"
@@ -136,7 +151,7 @@ describe "Main controller" do
         expect(JSON.load(last_response.body)["status"]).to eq("success")
       end
 
-      it "should result in 'error' with the wrong answer given to /fill-out-captcha" do
+      it "should result in 'error' with the wrong answer given" do
         post_json :'fill-out-captcha', {
           "uid" => @uid,
           "answer" => "wrong"
@@ -145,7 +160,7 @@ describe "Main controller" do
         expect(JSON.load(last_response.body)["status"]).to eq("error")
       end
 
-      it "should destroy the fiber after giving an answer to /fill-out-captcha" do
+      it "should destroy the fiber after giving a answer" do
         post_json :'fill-out-captcha', {
           "uid" => @uid,
           "answer" => "placeholder"

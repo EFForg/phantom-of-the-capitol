@@ -2,7 +2,7 @@ require 'spec_helper'
 
 describe FillSuccess do
   before do
-    FillSuccess.new name: "test"
+    FillSuccess.new campaign_tag: "test"
   end
 
   it "should create a new campaign tag when initialized with new name " do
@@ -10,7 +10,7 @@ describe FillSuccess do
   end
 
   it "should not create a new campaign tag when initialized with an existing name" do
-    FillSuccess.new name: "test"
+    FillSuccess.new campaign_tag: "test"
     expect(CampaignTag.count).to eq(1)
   end
 end

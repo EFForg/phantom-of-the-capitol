@@ -35,7 +35,7 @@ CongressForms::App.controller do
     return {status: "error", message: "Congress member with provided bio id not found"}.to_json if c.nil?
 
     handler = FillHandler.new(c)
-    result = handler.fill fields
+    result = handler.fill fields, params["campaign_tag"]
     fh[uid] = handler if result[:status] == "captcha_needed"
     result.to_json
   end

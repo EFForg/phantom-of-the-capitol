@@ -43,6 +43,12 @@ describe CongressMember do
       expect(@congress_member.fill_out_form(MOCK_VALUES)).to be_true
     end
 
+    it "should successfully fill form for a congress member and create a new tag when one is provided via CongressMember.fill_out_form" do
+      @campaign_tag = "some campaign"
+      expect(@congress_member.fill_out_form(MOCK_VALUES, @campaign_tag)).to be_true
+      expect(CampaignTag.last.name).to eq(@campaign_tag)
+    end
+
     it "should delay filling out a form for a congress member via CongressMember.delay.fill_out_form" do
       @congress_member.delay.fill_out_form(MOCK_VALUES)
       result = Delayed::Worker.new.run Delayed::Job.last
