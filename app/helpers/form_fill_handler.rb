@@ -1,19 +1,21 @@
-require 'fiber'
+require 'thread'
 
 class FillHandler
   def initialize c
     @c = c
   end
 
-  def create_fiber fields={}, campaign_tag
-    @fiber = Fiber.new do |answer|
+  def create_thread fields={}, campaign_tag
+    @thread = Thread.new do
       begin
         if DELAY_ALL_NONCAPTCHA_FILLS and not @c.has_captcha?
           @c.delay.fill_out_form fields, campaign_tag
-          true
+          @result = true
         else
-          @c.fill_out_form fields, campaign_tag do |c|
-            answer = Fiber.yield c
+          @captcha_result = @result = @c.fill_out_form fields, campaign_tag do |c|
+            @result = c
+            Thread.stop
+            @answer
           end
         end
       rescue Exception => e
@@ -24,21 +26,29 @@ class FillHandler
         last_job.run_at = Time.now
         last_job.last_error = e.message + "\n" + e.backtrace.inspect
         last_job.save
-        false
+        @result = false
       end
     end
   end
 
   def fill fields={}, campaign_tag
-    create_fiber fields, campaign_tag
-    result = @fiber.resume
-    FillHandler::check_result result
+    create_thread fields, campaign_tag
+
+    while not defined? @result
+      Thread.pass
+    end
+
+    FillHandler::check_result @result
   end
 
   def fill_captcha answer
-    return false unless @fiber
-    result = @fiber.resume answer
-    FillHandler::check_result result
+    return false unless @thread
+
+    @answer = answer
+    @thread.run
+    @thread.join
+
+    FillHandler::check_result @captcha_result
   end
 
   def self.check_result result
