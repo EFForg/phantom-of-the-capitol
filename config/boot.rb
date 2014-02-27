@@ -11,6 +11,9 @@ if File.exists?(file = "#{Padrino.root}/config/constants.rb")
   require file
 end
 
+HEADLESS = Headless.new
+HEADLESS.start
+
 ##
 # ## Enable devel logging
 #

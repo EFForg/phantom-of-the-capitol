@@ -32,8 +32,6 @@ class CongressMember < ActiveRecord::Base
   end
 
   def fill_out_form f={}, ct = nil
-    headless = Headless.new
-    headless.start
     b = Watir::Browser.new
     actions.order(:step).each do |a|
       case a.action
@@ -75,7 +73,6 @@ class CongressMember < ActiveRecord::Base
     end
     success = check_success b
     b.close
-    headless.destroy
     raise FillError, "Filling out the remote form was not successful" unless success
     FillSuccess.new(
       {:congress_member => self}.merge(ct.nil? ? {} : {campaign_tag: ct})
