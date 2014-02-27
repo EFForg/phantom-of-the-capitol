@@ -28,6 +28,7 @@ class FillHandler
         last_job.save
         @result = false
       end
+      ActiveRecord::Base.connection.close
     end
   end
 
