@@ -12,7 +12,7 @@ class FillHandler
           @c.delay.fill_out_form fields, campaign_tag
           @result = true
         else
-          @captcha_result = @result = @c.fill_out_form fields, campaign_tag do |c|
+          @result = @c.fill_out_form fields, campaign_tag do |c|
             @result = c
             Thread.stop
             @answer
@@ -49,7 +49,7 @@ class FillHandler
     @thread.run
     @thread.join
 
-    FillHandler::check_result @captcha_result
+    FillHandler::check_result @result
   end
 
   def self.check_result result
