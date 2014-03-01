@@ -2,6 +2,42 @@ require 'spec_helper'
 require 'thin'
 
 describe "Main controller" do
+  describe "running the Padrino app on an actual server" do
+    before do
+      Thread.new do
+        Thin::Logging.silent = true
+        Rack::Handler::Thin.run CongressForms::App.new, :Port => 9922
+      end
+      sleep 1
+    end
+
+    it "should run through the entire workflow for a captcha form successfully" do
+      @uid = "test"
+      @c = create :congress_member_with_actions_and_captcha
+      Typhoeus.post(
+        "localhost:9922/fill-out-form",
+        method: :post,
+        body: {
+          bio_id: @c.bioguide_id,
+          uid: @uid,
+          fields: MOCK_VALUES
+        }.to_json,
+        headers: { :'Content-Type' => "application/json" }
+      )
+      captcha_response = Typhoeus.post(
+        "localhost:9922/fill-out-captcha",
+        method: :post,
+        body: {
+          uid: @uid,
+          answer: "placeholder"
+        }.to_json,
+        headers: { :'Content-Type' => "application/json" }
+      )
+      expect(captcha_response.code).to eq(200)
+      expect(JSON.load(captcha_response.body)["status"]).to eq("success")
+    end
+  end
+
   it "should receive 200 status from index" do
     get '/'
     expect(last_response.status).to eq(200)
@@ -199,41 +235,5 @@ describe "Main controller" do
         expect(last_response_json["message"]).not_to be_nil # don't be brittle
       end
     end 
-  end
-
-  describe "running the Padrino app on an actual server" do
-    before do
-      Thread.new do
-        Thin::Logging.silent = true
-        Rack::Handler::Thin.run CongressForms::App.new, :Port => 9922
-      end
-      sleep 1
-    end
-
-    it "should run through the entire workflow for a captcha form successfully" do
-      @uid = "test"
-      @c = create :congress_member_with_actions_and_captcha
-      Typhoeus.post(
-        "localhost:9922/fill-out-form",
-        method: :post,
-        body: {
-          bio_id: @c.bioguide_id,
-          uid: @uid,
-          fields: MOCK_VALUES
-        }.to_json,
-        headers: { :'Content-Type' => "application/json" }
-      )
-      captcha_response = Typhoeus.post(
-        "localhost:9922/fill-out-captcha",
-        method: :post,
-        body: {
-          uid: @uid,
-          answer: "placeholder"
-        }.to_json,
-        headers: { :'Content-Type' => "application/json" }
-      )
-      expect(captcha_response.code).to eq(200)
-      expect(JSON.load(captcha_response.body)["status"]).to eq("success")
-    end
   end
 end
