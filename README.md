@@ -67,7 +67,7 @@ Example:
 
 ### `/fill-out-form`
 
-Provide a json object containing the `bio_id` of the member of congress, the `fields` to fill out, and a unique `uid` that will have to be provided if a subsequent captcha request is required.  Responds with a json object containing a status: `success` if the request succeeded, `error` if there was a problem, or `captcha_needed` if the form requires a captcha to be filled out.  If `error` there will be an additional message giving more information.  If `captcha_needed` a url will be provided which gives a relative path to the captcha image that can be provided to the end user.
+Provide a json object containing the `bio_id` of the member of congress, the `fields` to fill out, a `campaign_tag` for tracking successes, and a unique `uid` that will have to be provided if a subsequent captcha request is required.  Responds with a json object containing a status: `success` if the request succeeded, `error` if there was a problem, or `captcha_needed` if the form requires a captcha to be filled out.  If `error` there will be an additional message giving more information.  If `captcha_needed` a url will be provided which gives a relative path to the captcha image that can be provided to the end user.
 
 Example #1, with captcha:
 
@@ -76,7 +76,7 @@ Example #1, with captcha:
 
 Example #2, no captcha:
 
-    $ curl -H "Content-Type: application/json" -d '{"bio_id": "A111111", "uid": "example_uid_2", "fields": {"$NAME_FIRST": "John", "$NAME_LAST": "Doe", "$ADDRESS_STREET": "123 Main Street", "$ADDRESS_CITY": "New York", "$ADDRESS_ZIP5": "10112", "$EMAIL": "joe@example.com", "$MESSAGE": "I have concerns about the proposal....", "$NAME_PREFIX": "Grand Moff"}}' http://localhost:9292/fill-out-form
+    $ curl -H "Content-Type: application/json" -d '{"bio_id": "A111111", "campaign_tag": "stop_sopa", "uid": "example_uid_2", "fields": {"$NAME_FIRST": "John", "$NAME_LAST": "Doe", "$ADDRESS_STREET": "123 Main Street", "$ADDRESS_CITY": "New York", "$ADDRESS_ZIP5": "10112", "$EMAIL": "joe@example.com", "$MESSAGE": "I have concerns about the proposal....", "$NAME_PREFIX": "Grand Moff"}}' http://localhost:9292/fill-out-form
     {"status":"success"}
 
 ### `/fill-out-captcha`
