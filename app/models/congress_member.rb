@@ -32,6 +32,15 @@ class CongressMember < ActiveRecord::Base
   end
 
   def fill_out_form f={}, ct = nil
+    success = fill_out_form_with_watir f
+    raise FillError, "Filling out the remote form was not successful" unless success
+    FillSuccess.new(
+      {:congress_member => self}.merge(ct.nil? ? {} : {campaign_tag: ct})
+    ).save if RECORD_FILL_SUCCESSES
+    true
+  end
+
+  def fill_out_form_with_watir f={}
     b = Watir::Browser.new
     actions.order(:step).each do |a|
       case a.action
@@ -71,20 +80,43 @@ class CongressMember < ActiveRecord::Base
         b.element(:css => a.selector).to_subtype.set
       end
     end
-    success = check_success b
+    success = check_success b.text
     b.close
-    raise FillError, "Filling out the remote form was not successful" unless success
-    FillSuccess.new(
-      {:congress_member => self}.merge(ct.nil? ? {} : {campaign_tag: ct})
-    ).save if RECORD_FILL_SUCCESSES
-    true
+    success
+  end
+
+  def fill_out_form_with_poltergeist f={}
+    session = Capybara::Session.new(:poltergeist)
+    actions.order(:step).each do |a|
+      case a.action
+      when "visit"
+        session.visit(a.value)
+      when "fill_in"
+        session.find(a.selector).set(f[a.value]) unless f[a.value].nil?
+      when "select"
+        session.within a.selector do
+          session.find("option[value='" + f[a.value] + "']").select_option unless f[a.value].nil?
+        end
+      when "click_on"
+        session.find(a.selector).click
+      when "find"
+        session.find(a.selector)
+      when "check"
+        session.find(a.selector).set(true)
+      when "uncheck"
+        session.find(a.selector).set(false)
+      when "choose"
+        session.find(a.selector).set(true)
+      end
+    end
+    check_success session.text
   end
 
   def has_captcha?
     !actions.find_by_value("$CAPTCHA_SOLUTION").nil?
   end
 
-  def check_success b
+  def check_success body_text
     criteria = YAML.load(success_criteria)
     criteria.each do |i, v|
       case i
@@ -99,7 +131,7 @@ class CongressMember < ActiveRecord::Base
         v.each do |bi, bv|
           case bi
           when "contains"
-            unless b.text.include? bv
+            unless body_text.include? bv
               return false
             end
           end

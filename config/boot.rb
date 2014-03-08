@@ -14,6 +14,9 @@ end
 HEADLESS = Headless.new
 HEADLESS.start
 
+require 'capybara/poltergeist'
+Capybara.run_server = false
+
 ##
 # ## Enable devel logging
 #
