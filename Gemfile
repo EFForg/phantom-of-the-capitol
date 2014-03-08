@@ -37,6 +37,8 @@ gem 'watir-webdriver'
 gem 'headless'
 gem 'mini_magick'
 gem 'delayed_job_active_record'
+gem 'capybara'
+gem 'poltergeist'
 
 # Or Padrino Edge
 # gem 'padrino', :github => 'padrino/padrino-framework'
