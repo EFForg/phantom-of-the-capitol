@@ -36,7 +36,6 @@ gem 'enumerize'
 gem 'watir-webdriver'
 gem 'headless'
 gem 'mini_magick'
-gem 'thin'
 gem 'delayed_job_active_record'
 
 # Or Padrino Edge
