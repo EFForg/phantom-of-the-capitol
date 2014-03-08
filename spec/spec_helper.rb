@@ -47,5 +47,5 @@ MOCK_VALUES = {
   "$ADDRESS_ZIP5" => "10112",
   "$EMAIL" => "joe@example.com",
   "$MESSAGE" => "I have concerns about the proposal....",
-  "$NAME_PREFIX" => "Grand Moff"
+  "$NAME_PREFIX" => "4"
 }
