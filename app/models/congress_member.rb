@@ -95,7 +95,7 @@ class CongressMember < ActiveRecord::Base
         session.find(a.selector).set(f[a.value]) unless f[a.value].nil?
       when "select"
         session.within a.selector do
-          session.find("option[value='" + f[a.value] + "']").select_option unless f[a.value].nil?
+          session.find('option[value="' + f[a.value].gsub('"', '\"') + '"]').select_option unless f[a.value].nil?
         end
       when "click_on"
         session.find(a.selector).click
@@ -109,7 +109,9 @@ class CongressMember < ActiveRecord::Base
         session.find(a.selector).set(true)
       end
     end
-    check_success session.text
+    success = check_success session.text
+    session.driver.quit
+    success
   end
 
   def has_captcha?
