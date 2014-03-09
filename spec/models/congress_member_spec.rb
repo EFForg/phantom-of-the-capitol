@@ -103,6 +103,14 @@ describe CongressMember do
         end
       ).to be_true
     end
+
+    it "should successfully fill form for a congress member via CongressMember.fill_out_form_with_poltergeist" do
+      expect(
+        @congress_member.fill_out_form_with_poltergeist(MOCK_VALUES) do |c|
+          "placeholder"
+        end
+      ).to be_true
+    end
   end
 
   it "should create a new congress member with bioguide id via CongressMember.with_new_bioguide" do
