@@ -84,6 +84,7 @@ class CongressMember < ActiveRecord::Base
 
   def fill_out_form_with_poltergeist f={}
     session = Capybara::Session.new(:poltergeist)
+    session.driver.options[:js_errors] = false
     actions.order(:step).each do |a|
       case a.action
       when "visit"
@@ -93,7 +94,7 @@ class CongressMember < ActiveRecord::Base
           location = session.driver.evaluate_script 'document.querySelector("' + a.captcha_selector.gsub('"', '\"') + '").getBoundingClientRect();'
 
           screenshot_location = random_captcha_location
-          session.save_screenshot(screenshot_location)
+          session.save_screenshot(screenshot_location, full: true)
           crop_screenshot_from_coords screenshot_location, location["left"], location["top"], location["width"], location["height"]
 
           captcha_value = yield screenshot_location.sub(Padrino.root + "/public","")
