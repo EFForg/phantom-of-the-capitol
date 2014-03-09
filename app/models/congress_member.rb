@@ -31,8 +31,8 @@ class CongressMember < ActiveRecord::Base
     }.merge o)
   end
 
-  def fill_out_form f={}, ct = nil
-    success = fill_out_form_with_watir f
+  def fill_out_form f={}, ct = nil, &block
+    success = fill_out_form_with_watir f, &block
     raise FillError, "Filling out the remote form was not successful" unless success
     FillSuccess.new(
       {:congress_member => self}.merge(ct.nil? ? {} : {campaign_tag: ct})
@@ -54,12 +54,9 @@ class CongressMember < ActiveRecord::Base
           width = captcha_elem.style("width").delete("px")
           height = captcha_elem.style("height").delete("px")
 
-          screenshot_location = Padrino.root + "/public/captchas/" + SecureRandom.hex(13) + ".png";
+          screenshot_location = random_captcha_location
           b.driver.save_screenshot(screenshot_location)
-
-          img = MiniMagick::Image.open(screenshot_location)
-          img.crop width + 'x' + height + "+" + location.x.to_s + "+" + location.y.to_s
-          img.write screenshot_location
+          crop_screenshot_from_coords screenshot_location, location.x, location.y, width, height
 
           captcha_value = yield screenshot_location.sub(Padrino.root + "/public","")
           b.element(:css => a.selector).to_subtype.set(captcha_value)
@@ -92,7 +89,18 @@ class CongressMember < ActiveRecord::Base
       when "visit"
         session.visit(a.value)
       when "fill_in"
-        session.find(a.selector).set(f[a.value]) unless f[a.value].nil?
+        if a.value == "$CAPTCHA_SOLUTION"
+          location = session.driver.evaluate_script 'document.querySelector("' + a.captcha_selector.gsub('"', '\"') + '").getBoundingClientRect();'
+
+          screenshot_location = random_captcha_location
+          session.save_screenshot(screenshot_location)
+          crop_screenshot_from_coords screenshot_location, location["left"], location["top"], location["width"], location["height"]
+
+          captcha_value = yield screenshot_location.sub(Padrino.root + "/public","")
+          session.find(a.selector).set(captcha_value)
+        else
+          session.find(a.selector).set(f[a.value]) unless f[a.value].nil?
+        end
       when "select"
         session.within a.selector do
           session.find('option[value="' + f[a.value].gsub('"', '\"') + '"]').select_option unless f[a.value].nil?
@@ -112,6 +120,16 @@ class CongressMember < ActiveRecord::Base
     success = check_success session.text
     session.driver.quit
     success
+  end
+
+  def crop_screenshot_from_coords screenshot_location, x, y, width, height
+    img = MiniMagick::Image.open(screenshot_location)
+    img.crop width.to_s + 'x' + height.to_s + "+" + x.to_s + "+" + y.to_s
+    img.write screenshot_location
+  end
+
+  def random_captcha_location
+    Padrino.root + "/public/captchas/" + SecureRandom.hex(13) + ".png"
   end
 
   def has_captcha?
