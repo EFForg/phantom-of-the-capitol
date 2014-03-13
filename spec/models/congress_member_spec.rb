@@ -43,10 +43,6 @@ describe CongressMember do
       expect(@congress_member.fill_out_form(MOCK_VALUES)).to be_true
     end
 
-    it "should successfully fill form for a congress member via CongressMember.fill_out_form_with_poltergeist" do
-      expect(@congress_member.fill_out_form_with_poltergeist(MOCK_VALUES)).to be_true
-    end
-
     it "should successfully fill form for a congress member and create a new tag when one is provided via CongressMember.fill_out_form" do
       @campaign_tag = "some campaign"
       expect(@congress_member.fill_out_form(MOCK_VALUES, @campaign_tag)).to be_true
@@ -99,14 +95,6 @@ describe CongressMember do
     it "should successfully fill form for a congress member via CongressMember.fill_out_form" do
       expect(
         @congress_member.fill_out_form(MOCK_VALUES) do |c|
-          "placeholder"
-        end
-      ).to be_true
-    end
-
-    it "should successfully fill form for a congress member via CongressMember.fill_out_form_with_poltergeist" do
-      expect(
-        @congress_member.fill_out_form_with_poltergeist(MOCK_VALUES) do |c|
           "placeholder"
         end
       ).to be_true
