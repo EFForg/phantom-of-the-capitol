@@ -73,7 +73,7 @@ describe CongressMember do
     end
 
     it "should raise an error filling out a form via CongressMember.fill_out_form" do
-      expect { @congress_member.fill_out_form MOCK_VALUES.merge({"$NAME_MIDDLE" => "Bart"}) }.to raise_error Watir::Exception::UnknownObjectException
+      expect { @congress_member.fill_out_form MOCK_VALUES.merge({"$NAME_MIDDLE" => "Bart"}) }.to raise_error Capybara::ElementNotFound
     end
 
     it "should keep a delayed job that raises an error filling out a form via CongressMember.fill_out_form" do
