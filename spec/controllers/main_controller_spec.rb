@@ -1,3 +1,5 @@
+require 'benchmark'
+
 require 'spec_helper'
 require 'thin'
 
@@ -6,7 +8,7 @@ describe "Main controller" do
     before do
       Thread.new do
         Thin::Logging.silent = true
-        Rack::Handler::Thin.run CongressForms::App.new, :Port => 9922
+        Rack::Handler::Thin.run CongressForms::App.new, :Port => 9922, threaded: true
       end
       sleep 1
     end
@@ -35,6 +37,39 @@ describe "Main controller" do
       )
       expect(captcha_response.code).to eq(200)
       expect(JSON.load(captcha_response.body)["status"]).to eq("success")
+    end
+
+    it "should perform some basic benchmarks" do
+      if ENV["PADRINO_TEST_LOAD"] == "true"
+        @c = create :congress_member_with_actions
+        requests_arr = [10, 25, 50]
+
+        requests_arr.each do |requests_num|
+          result = Benchmark.realtime do
+            threads = []
+            1.upto(requests_num) do |i|
+              threads << Thread.new do
+                @uid = SecureRandom.hex(13)
+                Typhoeus.post(
+                  "localhost:9922/fill-out-form",
+                  method: :post,
+                  body: {
+                    bio_id: @c.bioguide_id,
+                    uid: @uid,
+                    fields: MOCK_VALUES
+                  }.to_json,
+                  headers: { :'Content-Type' => "application/json" }
+                )
+                ActiveRecord::Base.connection.close
+              end
+            end
+            threads.each do |t|
+              t.join
+            end
+          end
+          puts requests_num.to_s + " requests take " + result.to_s + " seconds to perform"
+        end
+      end
     end
   end
 
