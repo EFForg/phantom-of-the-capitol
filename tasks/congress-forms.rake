@@ -8,38 +8,9 @@ namespace :'congress-forms' do
     DatabaseCleaner.clean
 
     Dir[args[:contact_congress_directory]+'/members/*.yaml'].each do |f|
-      begin
+      create_congress_member_exception_wrapper(f) do
         congress_member_details = YAML.load_file(f)
-        CongressMember.with_new_or_existing_bioguide(congress_member_details["bioguide"]) do |c|
-          step_increment = 0
-          congress_member_details["contact_form"]["steps"].each do |s|
-            action, value = s.first
-            case action
-            when "visit"
-              create_action_add_to_member(action, step_increment += 1, c) do |cmf|
-                cmf.value = value
-              end
-            when "fill_in", "select", "click_on", "find", "check", "uncheck", "choose"  
-              value.each do |field|
-                create_action_add_to_member(action, step_increment += 1, c) do |cmf|
-                  field.each do |attribute|
-                    if cmf.attributes.keys.include? attribute[0]
-                      cmf.update_attribute(attribute[0], attribute[1])
-                    end
-                  end
-                end
-              end
-            end
-          end
-          c.success_criteria = congress_member_details["contact_form"]["success"]
-          c.save
-        end
-      rescue Psych::SyntaxError => exception
-        puts ""
-        puts "File "+f+" could not be parsed"
-        puts "  Problem: "+exception.problem
-        puts "  Line:    "+exception.line.to_s
-        puts "  Column:  "+exception.column.to_s
+        create_congress_member_from_hash congress_member_details
       end
     end
     constants = YAML.load_file(args[:contact_congress_directory]+'/support/constants.yaml')
@@ -74,6 +45,46 @@ namespace :'congress-forms' do
       required_percent = required_hash[v[0]] * 100 / all_members.count
       puts v[0] + " : " + appears_percent.to_s + "% (" + required_percent.to_s + "%)"
     end
+  end
+end
+
+def create_congress_member_exception_wrapper file_path
+  begin
+    yield
+  rescue Psych::SyntaxError => exception
+    puts ""
+    puts "File "+file_path+" could not be parsed"
+    puts "  Problem: "+exception.problem
+    puts "  Line:    "+exception.line.to_s
+    puts "  Column:  "+exception.column.to_s
+  end
+end
+
+
+def create_congress_member_from_hash congress_member_details
+  CongressMember.with_new_or_existing_bioguide(congress_member_details["bioguide"]) do |c|
+    step_increment = 0
+    congress_member_details["contact_form"]["steps"].each do |s|
+      action, value = s.first
+      case action
+      when "visit"
+        create_action_add_to_member(action, step_increment += 1, c) do |cmf|
+          cmf.value = value
+        end
+      when "fill_in", "select", "click_on", "find", "check", "uncheck", "choose"  
+        value.each do |field|
+          create_action_add_to_member(action, step_increment += 1, c) do |cmf|
+            field.each do |attribute|
+              if cmf.attributes.keys.include? attribute[0]
+                cmf.update_attribute(attribute[0], attribute[1])
+              end
+            end
+          end
+        end
+      end
+    end
+    c.success_criteria = congress_member_details["contact_form"]["success"]
+    c.save
   end
 end
 
