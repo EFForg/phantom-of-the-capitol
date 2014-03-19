@@ -40,6 +40,7 @@ GEM
     factory_girl (4.3.0)
       activesupport (>= 3.0.0)
     ffi (1.9.3)
+    git (1.2.6)
     headless (1.0.1)
     http_router (0.11.0)
       rack (>= 1.0.0)
@@ -154,6 +155,7 @@ DEPENDENCIES
   delayed_job_active_record
   enumerize
   factory_girl
+  git
   headless
   mini_magick
   mysql2

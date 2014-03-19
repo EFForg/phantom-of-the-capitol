@@ -40,6 +40,7 @@ gem 'mini_magick'
 gem 'delayed_job_active_record'
 gem 'capybara'
 gem 'poltergeist'
+gem 'git'
 
 # Or Padrino Edge
 # gem 'padrino', :github => 'padrino/padrino-framework'
