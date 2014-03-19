@@ -182,7 +182,7 @@ describe "Main controller" do
       }.to_json
       expect(last_response.status).to eq(200)
       expect(JSON.load(last_response.body)["status"]).to eq("success")
-      expect(FillSuccess.count).to eq(1)
+      expect(FillStatus.success.count).to eq(1)
     end
 
     it "should create a new campaign tag record when filling in a form successfully with a campaign tag specified" do

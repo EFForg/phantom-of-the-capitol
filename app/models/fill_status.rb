@@ -1,4 +1,6 @@
-class FillSuccess < ActiveRecord::Base
+class FillStatus < ActiveRecord::Base
+  scope :success, conditions: "status = 'success'"
+
   belongs_to :congress_member
   belongs_to :campaign_tag
 

@@ -34,9 +34,9 @@ class CongressMember < ActiveRecord::Base
   def fill_out_form f={}, ct = nil, &block
     success = fill_out_form_with_poltergeist f, &block
     raise FillError, "Filling out the remote form was not successful" unless success
-    FillSuccess.new(
-      {:congress_member => self}.merge(ct.nil? ? {} : {campaign_tag: ct})
-    ).save if RECORD_FILL_SUCCESSES
+    FillStatus.new(
+      {congress_member: self, status: "success"}.merge(ct.nil? ? {} : {campaign_tag: ct})
+    ).save if RECORD_FILL_STATUSES
     true
   end
 

@@ -41,9 +41,10 @@ FactoryGirl.define do
     congress_member
   end
 
-  factory :fill_success do
+  factory :fill_status do
     congress_member
     campaign_tag
+    status "success"
   end
   
   factory :campaign_tag do
