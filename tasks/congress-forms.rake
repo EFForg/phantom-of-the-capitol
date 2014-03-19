@@ -1,6 +1,33 @@
 require File.expand_path("../../config/boot.rb", __FILE__)
 
 namespace :'congress-forms' do
+  desc "Git pull, reload into db, and test for each member changed"
+  task :update_git, :contact_congress_directory do |t, args|
+    g = Git.open args[:contact_congress_directory]
+
+    before_commit = g.log.first
+    g.pull
+    after_commit = g.log.first
+
+    if before_commit.to_s == after_commit.to_s
+      puts "Already at latest commit. Aborting!"
+    else
+      files_changed = g.diff(before_commit, after_commit).path('members/').map { |d| d.path }
+
+      puts files_changed.count.to_s + " congress members form files have changed between commits " + before_commit.to_s + " and " + after_commit.to_s
+
+      files_changed.each do |file_changed|
+        f = args[:contact_congress_directory] + '/' + file_changed
+        create_congress_member_exception_wrapper(f) do
+          congress_member_details = YAML.load_file(f)
+          bioguide = congress_member_details["bioguide"]
+          CongressMember.find_or_create_by_bioguide_id(bioguide).actions.each { |a| a.destroy }
+          create_congress_member_from_hash congress_member_details
+          # mark as untested
+        end
+      end
+    end
+  end
   desc "Maps the forms from their native YAML format into the db"
   task :map_forms, :contact_congress_directory do |t, args|
 
