@@ -78,9 +78,9 @@ namespace :'congress-forms' do
     File.open args[:file], 'w' do |f|
       f.write("| Bioguide ID | Website | Recent Success Rate |\n")
       f.write("|-------------|---------|:------------:|\n")
-      CongressMember.all.each do |c|
+      CongressMember.order(:bioguide_id).each do |c|
         uri = URI(c.actions.where(action: "visit").first.value)
-        f.write("| " + c.bioguide_id + " | [" + uri.host + "](" + uri.scheme + "://" + uri.host + ") | [![" + c.bioguide_id + " status](http://localhost:3000/recent-fill-image/" + c.bioguide_id + ")](http://localhost:3000/recent-fill-status/" + c.bioguide_id + ") |\n")
+        f.write("| " + c.bioguide_id + " | [" + uri.host + "](" + uri.scheme + "://" + uri.host + ") | [![" + c.bioguide_id + " status](https://staging-congressforms.eff.org/recent-fill-image/" + c.bioguide_id + ")](https://staging-congressforms.eff.org/recent-fill-status/" + c.bioguide_id + ") |\n")
       end
     end
   end
