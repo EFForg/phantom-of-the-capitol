@@ -73,6 +73,17 @@ namespace :'congress-forms' do
       puts v[0] + " : " + appears_percent.to_s + "% (" + required_percent.to_s + "%)"
     end
   end
+  desc "Generate a markdown file for the recent fill status of all congress members in the database"
+  task :generate_status_markdown, :file do |t, args|
+    File.open args[:file], 'w' do |f|
+      f.write("| Bioguide ID | Website | Recent Success Rate |\n")
+      f.write("|-------------|---------|:------------:|\n")
+      CongressMember.all.each do |c|
+        uri = URI(c.actions.where(action: "visit").first.value)
+        f.write("| " + c.bioguide_id + " | [" + uri.host + "](" + uri.scheme + "://" + uri.host + ") | [![" + c.bioguide_id + " status](http://localhost:3000/recent-fill-image/" + c.bioguide_id + ")](http://localhost:3000/recent-fill-status/" + c.bioguide_id + ") |\n")
+      end
+    end
+  end
 end
 
 def create_congress_member_exception_wrapper file_path
