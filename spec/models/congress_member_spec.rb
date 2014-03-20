@@ -43,6 +43,11 @@ describe CongressMember do
       expect(@congress_member.fill_out_form(MOCK_VALUES)).to be_true
     end
 
+    it "should add a success record to the FillStatus table when successfully filling in a form via CongressMember.fill_out_form" do
+      @congress_member.fill_out_form(MOCK_VALUES)
+      expect(FillStatus.success.count).to eq(1)
+    end
+
     it "should successfully fill form for a congress member and create a new tag when one is provided via CongressMember.fill_out_form" do
       @campaign_tag = "some campaign"
       expect(@congress_member.fill_out_form(MOCK_VALUES, @campaign_tag)).to be_true
@@ -54,6 +59,11 @@ describe CongressMember do
       result = Delayed::Worker.new.run Delayed::Job.last
       expect(result).to be_true
     end
+
+    it "should not update the FillStatus table when delaying a form fill via CongressMember.delay.fill_out_form" do
+      @congress_member.delay.fill_out_form(MOCK_VALUES)
+      expect(FillStatus.count).to eq(0)
+    end
   end
   
   describe "that already exists with actions and an incorrect success criteria" do
@@ -62,7 +72,15 @@ describe CongressMember do
     end
 
     it "should raise an error filling out a form via CongressMember.fill_out_form" do
-      expect { @congress_member.fill_out_form(MOCK_VALUES) }.to raise_error CongressMember::FillError
+      expect { @congress_member.fill_out_form(MOCK_VALUES) }.to raise_error CongressMember::FillFailure
+    end
+
+    it "should add a failure record to the FillStatus table when filling out a form via CongressMember.fill_out_form" do
+      begin
+        @congress_member.fill_out_form(MOCK_VALUES)
+      rescue
+        expect(FillStatus.failure.count).to eq(1)
+      end
     end
   end
 
@@ -84,6 +102,13 @@ describe CongressMember do
       expect { last_job.reload }.not_to raise_error
     end
 
+    it "should add an error record to the FillStatus table when filling out a form via CongressMember.fill_out_form" do
+      begin
+        @congress_member.fill_out_form(MOCK_VALUES)
+      rescue
+        expect(FillStatus.error.count).to eq(1)
+      end
+    end
   end
 
   describe "that already exists with actions including captcha" do

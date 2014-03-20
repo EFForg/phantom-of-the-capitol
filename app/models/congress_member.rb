@@ -5,7 +5,7 @@ class CongressMember < ActiveRecord::Base
   has_many :required_actions, :class_name => 'CongressMemberAction', :conditions => "required = 1 AND SUBSTRING(value, 1, 1) = '$'"
   #has_one :captcha_action, :class_name => 'CongressMemberAction', :condition => "value = '$CAPTCHA_SOLUTION'"
   
-  class FillError < Error
+  class FillFailure < Error
   end
 
   def self.bioguide bioguide_id
@@ -32,11 +32,22 @@ class CongressMember < ActiveRecord::Base
   end
 
   def fill_out_form f={}, ct = nil, &block
-    success = fill_out_form_with_poltergeist f, &block
-    raise FillError, "Filling out the remote form was not successful" unless success
-    FillStatus.new(
-      {congress_member: self, status: "success"}.merge(ct.nil? ? {} : {campaign_tag: ct})
-    ).save if RECORD_FILL_STATUSES
+    status_fields = {congress_member: self, status: "success"}.merge(ct.nil? ? {} : {campaign_tag: ct})
+    begin
+      begin
+        success = fill_out_form_with_poltergeist f, &block
+      rescue Exception => e
+        status_fields[:status] = "error"
+        raise e
+      end
+
+      unless success
+        status_fields[:status] = "failure"
+        raise FillFailure, "Filling out the remote form was not successful" 
+      end
+    ensure
+      FillStatus.new(status_fields).save if RECORD_FILL_STATUSES
+    end
     true
   end
 

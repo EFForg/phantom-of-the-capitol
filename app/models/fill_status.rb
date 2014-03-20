@@ -1,5 +1,7 @@
 class FillStatus < ActiveRecord::Base
   scope :success, conditions: "status = 'success'"
+  scope :error, conditions: "status = 'error'"
+  scope :failure, conditions: "status = 'failure'"
 
   belongs_to :congress_member
   belongs_to :campaign_tag
