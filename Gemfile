@@ -24,6 +24,11 @@ group :test do
   gem 'typhoeus'
 end
 
+group :local do
+  gem 'watir-webdriver'
+  gem 'headless'
+end
+
 # Padrino Stable Gem
 gem 'padrino', '0.11.4'
 
@@ -32,9 +37,8 @@ gem 'redcarpet'
 gem 'rack-parser', :require => 'rack/parser'
 gem 'activerecord', :require => "active_record"
 gem 'mysql2'
+gem 'pg'
 gem 'enumerize'
-gem 'watir-webdriver'
-gem 'headless'
 gem 'mini_magick'
 gem 'delayed_job_active_record'
 gem 'capybara'
