@@ -22,7 +22,6 @@ group :test do
   gem 'rack-test', :require => 'rack/test'
   gem 'factory_girl'
   gem 'typhoeus'
-  gem 'thin'
 end
 
 # Padrino Stable Gem
@@ -41,6 +40,7 @@ gem 'delayed_job_active_record'
 gem 'capybara'
 gem 'poltergeist'
 gem 'git'
+gem 'thin'
 
 # Or Padrino Edge
 # gem 'padrino', :github => 'padrino/padrino-framework'
