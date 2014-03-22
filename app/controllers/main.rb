@@ -4,7 +4,7 @@ CongressForms::App.controller do
   end
 
   before do
-    if CORS_ALLOWED_DOMAINS.include? request.env['HTTP_ORIGIN'] or CORS_ALLOWED_DOMAINS.include? "*"
+    if CORS_ALLOWED_DOMAINS.include? request.env['HTTP_ORIGIN'] or CORS_ALLOWED_DOMAINS.include? request.env['HTTP_REFERER'] or CORS_ALLOWED_DOMAINS.include? "*"
       response.headers['Access-Control-Allow-Origin'] = request.env['HTTP_ORIGIN']
     end
   end
