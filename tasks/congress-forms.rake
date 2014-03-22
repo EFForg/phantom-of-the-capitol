@@ -1,6 +1,19 @@
 require File.expand_path("../../config/boot.rb", __FILE__)
 
 namespace :'congress-forms' do
+  desc "Git"
+  task :stuff do
+    errors = 0
+    Delayed::Job.all.each do |j|
+      if YAML.load(j.handler).object.id == 24
+        errors += 1
+      end
+    end
+    successes = FillStatuses.find_all_by_congress_member_id(24).success.count
+
+    puts "Errors " + errors.to_s
+    puts "Successes " + successes.to_s
+  end
   desc "Git pull, reload into db, and test for each member changed"
   task :update_git, :contact_congress_directory do |t, args|
     g = Git.open args[:contact_congress_directory]
@@ -80,7 +93,7 @@ namespace :'congress-forms' do
       f.write("|-------------|---------|:------------:|\n")
       CongressMember.order(:bioguide_id).each do |c|
         uri = URI(c.actions.where(action: "visit").first.value)
-        f.write("| " + c.bioguide_id + " | [" + uri.host + "](" + uri.scheme + "://" + uri.host + ") | [![" + c.bioguide_id + " status](https://staging-congressforms.eff.org/recent-fill-image/" + c.bioguide_id + ")](https://staging-congressforms.eff.org/recent-fill-status/" + c.bioguide_id + ") |\n")
+        f.write("| " + c.bioguide_id + " | [" + uri.host + "](" + uri.scheme + "://" + uri.host + ") | [![" + c.bioguide_id + " status](https://congress-forms.herokuapp.com/recent-fill-image/" + c.bioguide_id + ")](https://congress-forms.herokuapp.com/recent-fill-status/" + c.bioguide_id + ") |\n")
       end
     end
   end
