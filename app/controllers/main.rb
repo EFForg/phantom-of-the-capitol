@@ -77,7 +77,7 @@ CongressForms::App.controller do
     if [fill_status[:successes], fill_status[:errors], fill_status[:failures]].max == 0
       redirect to('http://img.shields.io/badge/not-tried-lightgray.svg'), 302
     else
-      success_rate = fill_status[:successes].to_f / fill_status[:successes] + fill_status[:errors] + fill_status[:failures]
+      success_rate = fill_status[:successes].to_f / (fill_status[:successes] + fill_status[:errors] + fill_status[:failures])
 
       darkness = 0.8
 
