@@ -2,7 +2,7 @@ class CongressMember < ActiveRecord::Base
   validates_presence_of :bioguide_id
 
   has_many :actions, :class_name => 'CongressMemberAction', :dependent => :destroy
-  has_many :required_actions, :class_name => 'CongressMemberAction', :conditions => "required = 1 AND SUBSTRING(value, 1, 1) = '$'"
+  has_many :required_actions, :class_name => 'CongressMemberAction', :conditions => "required = true AND SUBSTRING(value, 1, 1) = '$'"
   has_many :fill_statuses, :class_name => 'FillStatus', :dependent => :destroy
   #has_one :captcha_action, :class_name => 'CongressMemberAction', :condition => "value = '$CAPTCHA_SOLUTION'"
   
