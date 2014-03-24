@@ -28,7 +28,7 @@
 Padrino.configure_apps do
   # enable :sessions
   set :session_secret, '62d3d950bf30a64537415df72a49c6e77865d5880bdaabfeb2d122154d96a7b8'
-  set :protection, :except => [:json_csrf]
+  set :protection, :except => [:remote_token], :origin_whitelist => CORS_ALLOWED_DOMAINS
   set :protect_from_csrf, false
 end
 
