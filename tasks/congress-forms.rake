@@ -1,34 +1,20 @@
 require File.expand_path("../../config/boot.rb", __FILE__)
 
 namespace :'congress-forms' do
+  desc "Git clone the contact congress repo and load records into the db"
+  task :clone_git do |t, args|
+    URI = "https://github.com/unitedstates/contact-congress.git"
+    NAME = "contact-congress"
+    g = Git.clone(URI, NAME, :path => '/tmp/')
+
+    update_db_with_git_object g, "/tmp/contact-congress"
+  end
   desc "Git pull and reload changed CongressMember records into db"
   task :update_git, :contact_congress_directory do |t, args|
     g = Git.open args[:contact_congress_directory]
-
-    current_commit = Application.contact_congress_commit
-
     g.pull
-    new_commit = g.log.first.to_s
 
-    if current_commit == new_commit
-      puts "Already at latest commit. Aborting!"
-    else
-      files_changed = g.diff(current_commit, new_commit).path('members/').map { |d| d.path }
-
-      puts files_changed.count.to_s + " congress members form files have changed between commits " + current_commit + " and " + new_commit
-
-      files_changed.each do |file_changed|
-        f = args[:contact_congress_directory] + '/' + file_changed
-        create_congress_member_exception_wrapper(f) do
-          congress_member_details = YAML.load_file(f)
-          bioguide = congress_member_details["bioguide"]
-          CongressMember.find_or_create_by_bioguide_id(bioguide).actions.each { |a| a.destroy }
-          create_congress_member_from_hash congress_member_details
-        end
-      end
-      
-      Application.contact_congress_commit = new_commit
-    end
+    update_db_with_git_object g, args[:contact_congress_directory]
   end
   desc "Maps the forms from their native YAML format into the db"
   task :map_forms, :contact_congress_directory do |t, args|
@@ -86,6 +72,32 @@ namespace :'congress-forms' do
       end
     end
   end
+end
+
+def update_db_with_git_object g, contact_congress_directory
+    current_commit = Application.contact_congress_commit
+
+    new_commit = g.log.first.to_s
+
+    if current_commit == new_commit
+      puts "Already at latest commit. Aborting!"
+    else
+      files_changed = g.diff(current_commit, new_commit).path('members/').map { |d| d.path }
+
+      puts files_changed.count.to_s + " congress members form files have changed between commits " + current_commit + " and " + new_commit
+
+      files_changed.each do |file_changed|
+        f = contact_congress_directory + '/' + file_changed
+        create_congress_member_exception_wrapper(f) do
+          congress_member_details = YAML.load_file(f)
+          bioguide = congress_member_details["bioguide"]
+          CongressMember.find_or_create_by_bioguide_id(bioguide).actions.each { |a| a.destroy }
+          create_congress_member_from_hash congress_member_details
+        end
+      end
+      
+      Application.contact_congress_commit = new_commit
+    end
 end
 
 def create_congress_member_exception_wrapper file_path
