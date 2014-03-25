@@ -11,7 +11,16 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 8) do
+ActiveRecord::Schema.define(:version => 9) do
+
+  create_table "application_settings", :force => true do |t|
+    t.string   "key"
+    t.text     "value"
+    t.datetime "created_at", :null => false
+    t.datetime "updated_at", :null => false
+  end
+
+  add_index "application_settings", ["key"], :name => "index_application_settings_on_key", :unique => true
 
   create_table "campaign_tags", :force => true do |t|
     t.string "name"
