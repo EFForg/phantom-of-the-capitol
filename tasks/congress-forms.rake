@@ -82,9 +82,14 @@ def update_db_with_git_object g, contact_congress_directory
     if current_commit == new_commit
       puts "Already at latest commit. Aborting!"
     else
-      files_changed = g.diff(current_commit, new_commit).path('members/').map { |d| d.path }
+      if current_commit.nil?
+        files_changed = Dir[contact_congress_directory+'/members/*.yaml'].map { |d| d.sub(contact_congress_directory, "") }
+        puts "No previous commit found, reloading all congress members into db"
+      else
+        files_changed = g.diff(current_commit, new_commit).path('members/').map { |d| d.path }
+        puts files_changed.count.to_s + " congress members form files have changed between commits " + current_commit.to_s + " and " + new_commit
+      end
 
-      puts files_changed.count.to_s + " congress members form files have changed between commits " + current_commit + " and " + new_commit
 
       files_changed.each do |file_changed|
         f = contact_congress_directory + '/' + file_changed
