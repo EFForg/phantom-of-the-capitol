@@ -1,5 +1,5 @@
 class Application < ActiveRecord::Base
-  set_table_name "application_settings"
+  self.table_name = "application_settings"
   
   def self.method_missing(method, *args, &block)
     return self.send method, *args, &block if self.respond_to? method
