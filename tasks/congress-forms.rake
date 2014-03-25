@@ -1,19 +1,6 @@
 require File.expand_path("../../config/boot.rb", __FILE__)
 
 namespace :'congress-forms' do
-  desc "Git"
-  task :stuff do
-    errors = 0
-    Delayed::Job.all.each do |j|
-      if YAML.load(j.handler).object.id == 24
-        errors += 1
-      end
-    end
-    successes = FillStatuses.find_all_by_congress_member_id(24).success.count
-
-    puts "Errors " + errors.to_s
-    puts "Successes " + successes.to_s
-  end
   desc "Git pull, reload into db, and test for each member changed"
   task :update_git, :contact_congress_directory do |t, args|
     g = Git.open args[:contact_congress_directory]
