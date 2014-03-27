@@ -68,7 +68,7 @@ namespace :'congress-forms' do
       f.write("|-------------|---------|:------------:|\n")
       CongressMember.order(:bioguide_id).each do |c|
         uri = URI(c.actions.where(action: "visit").first.value)
-        f.write("| " + c.bioguide_id + " | [" + uri.host + "](" + uri.scheme + "://" + uri.host + ") | [![" + c.bioguide_id + " status](https://congress-forms.herokuapp.com/recent-fill-image/" + c.bioguide_id + ")](https://congress-forms.herokuapp.com/recent-fill-status/" + c.bioguide_id + ") |\n")
+        f.write("| " + c.bioguide_id + " | [" + uri.host + "](" + uri.scheme + "://" + uri.host + ") | [![" + c.bioguide_id + " status](http://congressforms.eff.org:3000/recent-fill-image/" + c.bioguide_id + ")](http://congressforms.eff.org:3000/recent-fill-status/" + c.bioguide_id + ") |\n")
       end
     end
   end
