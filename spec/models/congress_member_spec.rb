@@ -104,9 +104,10 @@ describe CongressMember do
 
     it "should add an error record to the FillStatus table when filling out a form via CongressMember.fill_out_form" do
       begin
-        @congress_member.fill_out_form(MOCK_VALUES)
+        @congress_member.fill_out_form(MOCK_VALUES.merge({"$NAME_MIDDLE" => "Bart"}))
       rescue
         expect(FillStatus.error.count).to eq(1)
+        expect(YAML.load(FillStatus.error.last.extra)[:delayed_job_id]).to eq(1)
       end
     end
   end
