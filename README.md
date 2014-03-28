@@ -86,3 +86,19 @@ Example for #1 above:
 
     $ curl -H "Content-Type: application/json" -d '{"answer": "cx9bp", "uid": "example_uid"}' http://localhost:9292/fill-out-captcha
     {"status":"success"}
+
+## Status Indications and Helpers
+
+The application has a number of other helpful endpoints to indicate status and failures:
+
+### `/recent-fill-image/<bio_id>`
+
+Provide a `bio_id` as part of the GET request.  Responds with a 302 redirect to a badge indicating the status of form fills since the last time the congress member actions were udated.
+
+### `/recent-fill-status/<bio_id>`
+
+Provide a `bio_id` as part of the GET request.  Responds with a hash giving statistics on the number of successes, failures, and errors encountered when trying to fill in forms since the last time the congress member actions were updated.
+
+### `/most-recent-error-or-failure/<bio_id>`
+
+Provide a `bio_id` as part of the GET request.  Responds with the last error or failure encountered when trying to fill in the form for this congress member.  This endpoint is only valid if `DEBUG_ENDPOINTS` is set to `true` in `config/congress-forms_config.rb`.
