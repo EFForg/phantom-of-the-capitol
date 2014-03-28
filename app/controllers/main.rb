@@ -92,7 +92,7 @@ CongressForms::App.controller do
   end
 
   if DEBUG_ENDPOINTS
-    get :'most-recent-error/:bio_id' do
+    get :'most-recent-error-or-failure/:bio_id' do
       content_type :text
       return "Error: You must provide a bio_id to request the most recent error." unless params.include? :bio_id
       bio_id = params[:bio_id]
@@ -100,11 +100,11 @@ CongressForms::App.controller do
       c = CongressMember.bioguide(bio_id)
       return "Error: Congress member with provided bio id not found." if c.nil?
 
-      last_error = c.fill_statuses.error.last
-      return "Error: Congress member did not report any errors."  if last_error.nil?
+      last_error_or_failure = c.fill_statuses.error_or_failure.last
+      return "Error: Congress member did not report any errors or failures."  if last_error_or_failure.nil?
 
       begin
-        dj = Delayed::Job.find(YAML.load(last_error.extra)[:delayed_job_id])
+        dj = Delayed::Job.find(YAML.load(last_error_or_failure.extra)[:delayed_job_id])
       rescue
         return "Error: Could not find the error for the last congress member, though it exists."
       end
