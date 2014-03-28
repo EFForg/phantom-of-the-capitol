@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 9) do
+ActiveRecord::Schema.define(:version => 10) do
 
   create_table "application_settings", :force => true do |t|
     t.string   "key"
@@ -71,6 +71,7 @@ ActiveRecord::Schema.define(:version => 9) do
     t.datetime "created_at",         :null => false
     t.datetime "updated_at",         :null => false
     t.string   "status"
+    t.string   "extra"
   end
 
 end
