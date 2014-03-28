@@ -46,6 +46,16 @@ class CongressMember < ActiveRecord::Base
         status_fields[:status] = "failure"
         raise FillFailure, "Filling out the remote form was not successful" 
       end
+    rescue Exception => e
+      # we need to add the job manually, since DJ doesn't handle yield blocks
+      self.delay.fill_out_form f, ct
+      last_job = Delayed::Job.last
+      last_job.attempts = 1
+      last_job.run_at = Time.now
+      last_job.last_error = e.message + "\n" + e.backtrace.inspect
+      last_job.save
+      status_fields[:extra] = {delayed_job_id: last_job.id}
+      raise e
     ensure
       FillStatus.new(status_fields).save if RECORD_FILL_STATUSES
     end

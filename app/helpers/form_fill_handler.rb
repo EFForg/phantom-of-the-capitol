@@ -19,13 +19,6 @@ class FillHandler
           end
         end
       rescue Exception => e
-        # we need to add the job manually instead of delaying and running automatically above, since DJ doesn't handle yield blocks
-        @c.delay.fill_out_form fields, campaign_tag
-        last_job = Delayed::Job.last
-        last_job.attempts = 1
-        last_job.run_at = Time.now
-        last_job.last_error = e.message + "\n" + e.backtrace.inspect
-        last_job.save
         @result = false
       end
       ActiveRecord::Base.connection.close
