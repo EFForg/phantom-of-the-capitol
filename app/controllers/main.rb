@@ -90,4 +90,25 @@ CongressForms::App.controller do
       redirect to('http://img.shields.io/badge/success-' + (success_rate * 100).to_i.to_s + '%-' + color_hex + '.svg'), 302
     end
   end
+
+  if DEBUG_ENDPOINTS
+    get :'most-recent-error/:bio_id' do
+      content_type :text
+      return "Error: You must provide a bio_id to request the most recent error." unless params.include? :bio_id
+      bio_id = params[:bio_id]
+
+      c = CongressMember.bioguide(bio_id)
+      return "Error: Congress member with provided bio id not found." if c.nil?
+
+      last_error = c.fill_statuses.error.last
+      return "Error: Congress member did not report any errors."  if last_error.nil?
+
+      begin
+        dj = Delayed::Job.find(YAML.load(last_error.extra)[:delayed_job_id])
+      rescue
+        return "Error: Could not find the error for the last congress member, though it exists."
+      end
+      return dj.last_error
+    end
+  end
 end
