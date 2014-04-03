@@ -82,6 +82,25 @@ describe CongressMember do
         expect(FillStatus.failure.count).to eq(1)
       end
     end
+
+    describe "when DEBUG_ENDPOINTS is set to true" do
+      before do
+        DEBUG_ENDPOINTS = true
+      end
+
+      it "should include a screenshot in the FillStatus for filling out a form via CongressMember.fill_out_form" do
+        begin
+          @congress_member.fill_out_form(MOCK_VALUES)
+        rescue
+        ensure
+          expect(YAML.load(FillStatus.last.extra).include? :screenshot).to eq(true)
+        end
+      end
+
+      after do
+        DEBUG_ENDPOINTS = false
+      end
+    end
   end
 
   describe "that already exists with unfulfillable actions" do
@@ -108,6 +127,25 @@ describe CongressMember do
       rescue
         expect(FillStatus.error.count).to eq(1)
         expect(YAML.load(FillStatus.error.last.extra)[:delayed_job_id]).to eq(1)
+      end
+    end
+
+    describe "when DEBUG_ENDPOINTS is set to true" do
+      before do
+        DEBUG_ENDPOINTS = true
+      end
+
+      it "should include a screenshot in the FillStatus for filling out a form via CongressMember.fill_out_form" do
+        begin
+          @congress_member.fill_out_form(MOCK_VALUES.merge({"$NAME_MIDDLE" => "Bart"}))
+        rescue
+        ensure
+          expect(YAML.load(FillStatus.last.extra).include? :screenshot).to eq(true)
+        end
+      end
+
+      after do
+        DEBUG_ENDPOINTS = false
       end
     end
   end
