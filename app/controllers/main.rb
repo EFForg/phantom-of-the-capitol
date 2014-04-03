@@ -114,7 +114,7 @@ CongressForms::App.controller do
       rescue
         return "Error: Could not find the error for the last congress member, though it exists."
       end
-      return "<p>Error:</p><pre>" + dj.last_error + "</pre>" + (defined?(screenshot) ? "<p>Screenshot:</p><img src='" + screenshot + "'>" : "")
+      return "<p>Last Error/Failure:</p><pre>" + dj.last_error + "</pre>" + (screenshot.nil? ? "" : "<p>Screenshot:</p><img src='" + screenshot + "'>")
     end
   end
 end
