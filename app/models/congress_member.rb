@@ -33,17 +33,20 @@ class CongressMember < ActiveRecord::Base
   end
 
   def fill_out_form f={}, ct = nil, &block
-    status_fields = {congress_member: self, status: "success"}.merge(ct.nil? ? {} : {campaign_tag: ct})
+    status_fields = {congress_member: self, status: "success", extra: {}}.merge(ct.nil? ? {} : {campaign_tag: ct})
     begin
       begin
-        success = fill_out_form_with_poltergeist f, &block
+        success_hash = fill_out_form_with_poltergeist f, &block
       rescue Exception => e
         status_fields[:status] = "error"
-        raise e
+        message = YAML.load(e.message)
+        status_fields[:extra][:screenshot] = message[:screenshot] if message.include? :screenshot
+        raise e, message[:message]
       end
 
-      unless success
+      unless success_hash[:success]
         status_fields[:status] = "failure"
+        status_fields[:extra][:screenshot] = success_hash[:screenshot] if success_hash.include? :screenshot
         raise FillFailure, "Filling out the remote form was not successful" 
       end
     rescue Exception => e
@@ -54,7 +57,7 @@ class CongressMember < ActiveRecord::Base
       last_job.run_at = Time.now
       last_job.last_error = e.message + "\n" + e.backtrace.inspect
       last_job.save
-      status_fields[:extra] = {delayed_job_id: last_job.id}
+      status_fields[:extra][:delayed_job_id] = last_job.id
       raise e
     ensure
       FillStatus.new(status_fields).save if RECORD_FILL_STATUSES
@@ -64,86 +67,106 @@ class CongressMember < ActiveRecord::Base
 
   def fill_out_form_with_watir f={}
     b = Watir::Browser.new
-    actions.order(:step).each do |a|
-      case a.action
-      when "visit"
-        b.goto a.value
-      when "fill_in"
-        if a.value == "$CAPTCHA_SOLUTION"
-          location = b.element(:css => a.captcha_selector).wd.location
+    begin
+      actions.order(:step).each do |a|
+        case a.action
+        when "visit"
+          b.goto a.value
+        when "fill_in"
+          if a.value == "$CAPTCHA_SOLUTION"
+            location = b.element(:css => a.captcha_selector).wd.location
 
-          captcha_elem = b.element(:css => a.captcha_selector)
-          width = captcha_elem.style("width").delete("px")
-          height = captcha_elem.style("height").delete("px")
+            captcha_elem = b.element(:css => a.captcha_selector)
+            width = captcha_elem.style("width").delete("px")
+            height = captcha_elem.style("height").delete("px")
 
-          screenshot_location = random_captcha_location
-          b.driver.save_screenshot(screenshot_location)
-          crop_screenshot_from_coords screenshot_location, location.x, location.y, width, height
+            screenshot_location = random_captcha_location
+            b.driver.save_screenshot(screenshot_location)
+            crop_screenshot_from_coords screenshot_location, location.x, location.y, width, height
 
-          captcha_value = yield screenshot_location.sub(Padrino.root + "/public","")
-          b.element(:css => a.selector).to_subtype.set(captcha_value)
-        else
-          b.element(:css => a.selector).to_subtype.set(f[a.value]) unless f[a.value].nil?
+            captcha_value = yield screenshot_location.sub(Padrino.root + "/public","")
+            b.element(:css => a.selector).to_subtype.set(captcha_value)
+          else
+            b.element(:css => a.selector).to_subtype.set(f[a.value]) unless f[a.value].nil?
+          end
+        when "select"
+          b.element(:css => a.selector).to_subtype.select_value(f[a.value]) unless f[a.value].nil?
+        when "click_on"
+          b.element(:css => a.selector).to_subtype.click
+        when "find"
+          b.element(:css => a.selector).wait_until_present
+        when "check"
+          b.element(:css => a.selector).to_subtype.set
+        when "uncheck"
+          b.element(:css => a.selector).to_subtype.clear
+        when "choose"
+          b.element(:css => a.selector).to_subtype.set
         end
-      when "select"
-        b.element(:css => a.selector).to_subtype.select_value(f[a.value]) unless f[a.value].nil?
-      when "click_on"
-        b.element(:css => a.selector).to_subtype.click
-      when "find"
-        b.element(:css => a.selector).wait_until_present
-      when "check"
-        b.element(:css => a.selector).to_subtype.set
-      when "uncheck"
-        b.element(:css => a.selector).to_subtype.clear
-      when "choose"
-        b.element(:css => a.selector).to_subtype.set
       end
+      success = check_success b.text
+
+      success_hash = {success: success}
+      success_hash[:screenshot] = self.class::save_random_screenshot_watir(b.driver) if !success and DEBUG_ENDPOINTS
+      success_hash
+    rescue Exception => e
+      message = {message: e.message}
+      message[:screenshot] = self.class::save_random_screenshot_watir(b.driver) if DEBUG_ENDPOINTS
+      raise e, YAML.dump(message)
+    ensure
+      b.close
     end
-    success = check_success b.text
-    b.close
-    success
   end
 
   def fill_out_form_with_poltergeist f={}
     session = Capybara::Session.new(:poltergeist)
     session.driver.options[:js_errors] = false
-    actions.order(:step).each do |a|
-      case a.action
-      when "visit"
-        session.visit(a.value)
-      when "fill_in"
-        if a.value == "$CAPTCHA_SOLUTION"
-          location = session.driver.evaluate_script 'document.querySelector("' + a.captcha_selector.gsub('"', '\"') + '").getBoundingClientRect();'
+    begin
+      actions.order(:step).each do |a|
+        case a.action
+        when "visit"
+          session.visit(a.value)
+        when "fill_in"
+          if a.value == "$CAPTCHA_SOLUTION"
+            location = session.driver.evaluate_script 'document.querySelector("' + a.captcha_selector.gsub('"', '\"') + '").getBoundingClientRect();'
 
-          screenshot_location = random_captcha_location
-          session.save_screenshot(screenshot_location, full: true)
-          crop_screenshot_from_coords screenshot_location, location["left"], location["top"], location["width"], location["height"]
+            screenshot_location = random_captcha_location
+            session.save_screenshot(screenshot_location, full: true)
+            crop_screenshot_from_coords screenshot_location, location["left"], location["top"], location["width"], location["height"]
 
-          captcha_value = yield screenshot_location.sub(Padrino.root + "/public","")
-          session.find(a.selector).set(captcha_value)
-        else
-          session.find(a.selector).set(f[a.value]) unless f[a.value].nil?
+            captcha_value = yield screenshot_location.sub(Padrino.root + "/public","")
+            session.find(a.selector).set(captcha_value)
+          else
+            session.find(a.selector).set(f[a.value]) unless f[a.value].nil?
+          end
+        when "select"
+          session.within a.selector do
+            session.find('option[value="' + f[a.value].gsub('"', '\"') + '"]').select_option unless f[a.value].nil?
+          end
+        when "click_on"
+          session.find(a.selector).click
+        when "find"
+          session.find(a.selector)
+        when "check"
+          session.find(a.selector).set(true)
+        when "uncheck"
+          session.find(a.selector).set(false)
+        when "choose"
+          session.find(a.selector).set(true)
         end
-      when "select"
-        session.within a.selector do
-          session.find('option[value="' + f[a.value].gsub('"', '\"') + '"]').select_option unless f[a.value].nil?
-        end
-      when "click_on"
-        session.find(a.selector).click
-      when "find"
-        session.find(a.selector)
-      when "check"
-        session.find(a.selector).set(true)
-      when "uncheck"
-        session.find(a.selector).set(false)
-      when "choose"
-        session.find(a.selector).set(true)
       end
-    end
 
-    success = check_success session.text
-    session.driver.quit
-    success
+      success = check_success session.text
+
+      success_hash = {success: success}
+      success_hash[:screenshot] = self.class::save_random_screenshot_poltergeist(session) if !success and DEBUG_ENDPOINTS
+      success_hash
+    rescue Exception => e
+      message = {message: e.message}
+      message[:screenshot] = self.class::save_random_screenshot_poltergeist(session) if DEBUG_ENDPOINTS
+      raise e, YAML.dump(message)
+    ensure
+      session.driver.quit
+    end
   end
 
   def crop_screenshot_from_coords screenshot_location, x, y, width, height
@@ -154,6 +177,22 @@ class CongressMember < ActiveRecord::Base
 
   def random_captcha_location
     Padrino.root + "/public/captchas/" + SecureRandom.hex(13) + ".png"
+  end
+
+  def self.save_random_screenshot_poltergeist session
+    screenshot_location = random_screenshot_location
+    session.save_screenshot(screenshot_location, full: true)
+    screenshot_location.sub(Padrino.root + "/public","")
+  end
+
+  def self.save_random_screenshot_watir driver
+    screenshot_location = random_screenshot_location
+    b.driver.save_screenshot(screenshot_location)
+    screenshot_location.sub(Padrino.root + "/public","")
+  end
+
+  def self.random_screenshot_location
+    Padrino.root + "/public/screenshots/" + SecureRandom.hex(13) + ".png"
   end
 
   def has_captcha?
