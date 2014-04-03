@@ -116,5 +116,18 @@ CongressForms::App.controller do
       end
       return "<p>Last Error/Failure:</p><pre>" + dj.last_error + "</pre>" + (screenshot.nil? ? "" : "<p>Screenshot:</p><img src='" + screenshot + "'>")
     end
+
+    get :'list-actions/:bio_id' do
+      content_type :json
+      return {status: "error", message: "You must provide a bio_id to retrieve the list of actions."}.to_json unless params.include? :bio_id
+
+      bio_id = params[:bio_id]
+      response = {}
+
+      c = CongressMember.bioguide(bio_id)
+      return {status: "error", message: "Congress member with provided bio id not found"}.to_json if c.nil?
+
+      c.actions.to_json
+    end
   end
 end
