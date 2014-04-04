@@ -127,6 +127,7 @@ CongressForms::App.controller do
       c = CongressMember.bioguide(bio_id)
       return {status: "error", message: "Congress member with provided bio id not found"}.to_json if c.nil?
 
+      response.headers['X-Last-Updated'] = c.updated_at
       c.actions.to_json
     end
   end
