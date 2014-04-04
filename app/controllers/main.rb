@@ -122,12 +122,11 @@ CongressForms::App.controller do
       return {status: "error", message: "You must provide a bio_id to retrieve the list of actions."}.to_json unless params.include? :bio_id
 
       bio_id = params[:bio_id]
-      response = {}
 
       c = CongressMember.bioguide(bio_id)
       return {status: "error", message: "Congress member with provided bio id not found"}.to_json if c.nil?
 
-      response.headers['X-Last-Updated'] = c.updated_at
+      response.headers['X-Last-Updated'] = c.updated_at.to_s
       c.actions.to_json
     end
   end
