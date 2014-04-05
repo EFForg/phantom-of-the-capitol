@@ -93,28 +93,25 @@ CongressForms::App.controller do
 
   if DEBUG_ENDPOINTS
     get :'most-recent-error-or-failure/:bio_id' do
-      content_type :html
-      return "Error: You must provide a bio_id to request the most recent error." unless params.include? :bio_id
+      content_type :json
+      return {status: "error", message: "You must provide a bio_id to request the most recent error."}.to_json unless params.include? :bio_id
       bio_id = params[:bio_id]
 
       c = CongressMember.bioguide(bio_id)
-      return "Error: Congress member with provided bio id not found." if c.nil?
+      return {status: "error", message: "Congress member with provided bio id not found."}.to_json if c.nil?
 
       last_error_or_failure = c.fill_statuses.error_or_failure.last
-      return "Error: Congress member did not report any errors or failures."  if last_error_or_failure.nil?
-
-      begin
-      rescue
-      end
+      return {status: "error", message: "Congress member did not report any errors or failures."}.to_json if last_error_or_failure.nil?
 
       begin
         extra = YAML.load(last_error_or_failure.extra)
         dj = Delayed::Job.find(extra[:delayed_job_id])
-        screenshot = extra[:screenshot] if extra.include? :screenshot
+        response_hash = {error: dj.last_error, run_at: dj.run_at}
+        response_hash[:screenshot] = extra[:screenshot] if extra.include? :screenshot
+        response_hash.to_json
       rescue
-        return "Error: Could not find the error for the last congress member, though it exists."
+        {status: "error", message: "Could not find the error for the last congress member, though it exists."}.to_json
       end
-      return "<p>Last Error/Failure:</p><pre>" + dj.last_error + "</pre>" + (screenshot.nil? ? "" : "<p>Screenshot:</p><img src='" + screenshot + "'>")
     end
 
     get :'list-actions/:bio_id' do
