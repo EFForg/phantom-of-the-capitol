@@ -67,7 +67,7 @@ CongressForms::App.controller do
   get :'recent-fill-image/:bio_id' do
     content_type :json
     response.headers['Cache-Control'] = "no-cache"
-    return {status: "error", message: "You must provide a bio_id to request the recent fill image."}.to_json unless params.include? :bio_id unless params.include? :bio_id
+    return {status: "error", message: "You must provide a bio_id to request the recent fill image."}.to_json unless params.include? :bio_id
 
     bio_id = params[:bio_id]
     c = CongressMember.bioguide(bio_id)
