@@ -71,7 +71,7 @@ CongressForms::App.controller do
 
     bio_id = params[:bio_id]
     c = CongressMember.bioguide(bio_id)
-    return {status: "error", message: "Congress member with provided bio id not found"}.to_json if c.nil?
+    redirect to('http://img.shields.io/badge/YAML-not%20found-red.svg') if c.nil?
 
     fill_status = c.recent_fill_status
 
