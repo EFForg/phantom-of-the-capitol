@@ -94,10 +94,14 @@ def update_db_with_git_object g, contact_congress_directory
       files_changed.each do |file_changed|
         f = contact_congress_directory + '/' + file_changed
         create_congress_member_exception_wrapper(f) do
-          congress_member_details = YAML.load_file(f)
-          bioguide = congress_member_details["bioguide"]
-          CongressMember.find_or_create_by_bioguide_id(bioguide).actions.each { |a| a.destroy }
-          create_congress_member_from_hash congress_member_details
+          begin
+            congress_member_details = YAML.load_file(f)
+            bioguide = congress_member_details["bioguide"]
+            CongressMember.find_or_create_by_bioguide_id(bioguide).actions.each { |a| a.destroy }
+            create_congress_member_from_hash congress_member_details
+          rescue Errno::ENOENT
+            puts "File " + f + " is missing, skipping..."
+          end
         end
       end
       
