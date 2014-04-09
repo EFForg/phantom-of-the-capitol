@@ -4,6 +4,7 @@ class CongressMember < ActiveRecord::Base
   has_many :actions, :class_name => 'CongressMemberAction', :dependent => :destroy
   has_many :required_actions, :class_name => 'CongressMemberAction', :conditions => "required = true AND SUBSTRING(value, 1, 1) = '$'"
   has_many :fill_statuses, :class_name => 'FillStatus', :dependent => :destroy
+  has_many :recent_fill_statuses, :class_name => 'FillStatus', :conditions => proc{"created_at > '#{self.updated_at}'"}
   #has_one :captcha_action, :class_name => 'CongressMemberAction', :condition => "value = '$CAPTCHA_SOLUTION'"
   
   class FillFailure < Error
@@ -225,7 +226,7 @@ class CongressMember < ActiveRecord::Base
   end
 
   def recent_fill_status
-    statuses = fill_statuses.where('created_at > ?', updated_at)
+    statuses = recent_fill_statuses
     {
       successes: statuses.success.count,
       errors: statuses.error.count,
