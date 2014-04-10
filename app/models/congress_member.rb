@@ -92,9 +92,19 @@ class CongressMember < ActiveRecord::Base
           end
         when "select"
           if f[a.value].nil?
-            b.element(:css => a.selector).to_subtype.select_value(a.value)
+            elem = b.element(:css => a.selector).to_subtype
+            begin
+              elem.select_value(a.value)
+            rescue Watir::Exception::NoValueFoundException
+              elem.select(a.value)
+            end
           else
-            b.element(:css => a.selector).to_subtype.select_value(f[a.value])
+            elem = b.element(:css => a.selector).to_subtype
+            begin
+              elem.select_value(f[a.value])
+            rescue Watir::Exception::NoValueFoundException
+              elem.select(f[a.value])
+            end
           end
         when "click_on"
           b.element(:css => a.selector).to_subtype.click
@@ -146,9 +156,19 @@ class CongressMember < ActiveRecord::Base
         when "select"
           session.within a.selector do
             if f[a.value].nil?
-              session.find('option[value="' + a.value.gsub('"', '\"') + '"]').select_option
+              begin
+                elem = session.find('option[value="' + a.value.gsub('"', '\"') + '"]')
+              rescue Capybara::ElementNotFound
+                elem = session.find('option', text: a.value)
+              end
+              elem.select_option
             else
-              session.find('option[value="' + f[a.value].gsub('"', '\"') + '"]').select_option
+              begin
+                elem = session.find('option[value="' + f[a.value].gsub('"', '\"') + '"]')
+              rescue Capybara::ElementNotFound
+                elem = session.find('option', text: f[a.value])
+              end
+              elem.select_option
             end
           end
         when "click_on"
@@ -196,7 +216,7 @@ class CongressMember < ActiveRecord::Base
 
   def self.save_random_screenshot_watir driver
     screenshot_location = random_screenshot_location
-    b.driver.save_screenshot(screenshot_location)
+    driver.save_screenshot(screenshot_location)
     screenshot_location.sub(Padrino.root + "/public","")
   end
 
