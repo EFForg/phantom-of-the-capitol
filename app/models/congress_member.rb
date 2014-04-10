@@ -91,7 +91,11 @@ class CongressMember < ActiveRecord::Base
             b.element(:css => a.selector).to_subtype.set(f[a.value]) unless f[a.value].nil?
           end
         when "select"
-          b.element(:css => a.selector).to_subtype.select_value(f[a.value]) unless f[a.value].nil?
+          if f[a.value].nil?
+            b.element(:css => a.selector).to_subtype.select_value(a.value)
+          else
+            b.element(:css => a.selector).to_subtype.select_value(f[a.value])
+          end
         when "click_on"
           b.element(:css => a.selector).to_subtype.click
         when "find"
@@ -141,7 +145,11 @@ class CongressMember < ActiveRecord::Base
           end
         when "select"
           session.within a.selector do
-            session.find('option[value="' + f[a.value].gsub('"', '\"') + '"]').select_option unless f[a.value].nil?
+            if f[a.value].nil?
+              session.find('option[value="' + a.value.gsub('"', '\"') + '"]').select_option
+            else
+              session.find('option[value="' + f[a.value].gsub('"', '\"') + '"]').select_option
+            end
           end
         when "click_on"
           session.find(a.selector).click
