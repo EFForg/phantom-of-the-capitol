@@ -261,4 +261,11 @@ class CongressMember < ActiveRecord::Base
       failures: statuses.failure.count
     }
   end
+
+  def form_domain_url
+    visit_action = actions.where(action: "visit").first
+    return nil if visit_action.nil?
+    url = URI.parse(visit_action.value)
+    url.scheme + "://" + url.host
+  end
 end

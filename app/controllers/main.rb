@@ -132,5 +132,10 @@ CongressForms::App.controller do
 
       {last_updated: c.updated_at, actions: c.actions}.to_json
     end
+
+    get :'list-congress-members' do
+      content_type :json
+      CongressMember.all(order: :bioguide_id).to_json(only: :bioguide_id, methods: :form_domain_url)
+    end
   end
 end
