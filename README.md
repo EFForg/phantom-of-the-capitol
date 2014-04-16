@@ -27,25 +27,29 @@ Create the database, then
 
 ## Populating the database
 
-Grab a copy of contact-congress and store it somewhere:
+Clone a copy of the contact-congress and store it somewhere:
 
  - `git clone https://github.com/unitedstates/contact-congress`
 
 Then cd back over to congress-forms and run
 
- - `bundle exec rake congress-forms:map_forms[contact_congress_yaml_directory]`
+ - `bundle exec rake congress-forms:map_forms[contact_congress_directory]`
 
-replacing `contact_congress_yaml_directory` with the directory path.
+replacing `contact_congress_directory` with the path where you cloned the `contact-congress` project.
 
 ## Running
 
-Just run `config.ru`
+Just run `rackup`
 
 ## Testing
 
 If you haven't set up the test db, create it, then
 
  - `vim config/database.rb # fill in the test db info`
+
+Create and prepare the test database:
+
+ - `PADRINO_ENV=test be rake ar:create ar:schema:load`
 
 And run
 
