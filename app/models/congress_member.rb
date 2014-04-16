@@ -42,7 +42,8 @@ class CongressMember < ActiveRecord::Base
         status_fields[:status] = "error"
         message = YAML.load(e.message)
         status_fields[:extra][:screenshot] = message[:screenshot] if message.is_a?(Hash) and message.include? :screenshot
-        raise e, message[:message]
+        raise e, message[:message] if message.is_a?(Hash)
+        raise e, message
       end
 
       unless success_hash[:success]
@@ -118,6 +119,7 @@ class CongressMember < ActiveRecord::Base
           b.element(:css => a.selector).to_subtype.set
         end
       end
+
       success = check_success b.text
 
       success_hash = {success: success}
