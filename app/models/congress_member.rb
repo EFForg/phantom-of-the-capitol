@@ -6,7 +6,7 @@ class CongressMember < ActiveRecord::Base
   has_many :fill_statuses, :class_name => 'FillStatus', :dependent => :destroy
   has_many :recent_fill_statuses, :class_name => 'FillStatus', :conditions => proc{"created_at > '#{self.updated_at}'"}
   #has_one :captcha_action, :class_name => 'CongressMemberAction', :condition => "value = '$CAPTCHA_SOLUTION'"
-  
+
   class FillFailure < Error
   end
 
@@ -41,14 +41,14 @@ class CongressMember < ActiveRecord::Base
       rescue Exception => e
         status_fields[:status] = "error"
         message = YAML.load(e.message)
-        status_fields[:extra][:screenshot] = message[:screenshot] if message.include? :screenshot
+        status_fields[:extra][:screenshot] = message[:screenshot] if message.is_a?(Hash) and message.include? :screenshot
         raise e, message[:message]
       end
 
       unless success_hash[:success]
         status_fields[:status] = "failure"
         status_fields[:extra][:screenshot] = success_hash[:screenshot] if success_hash.include? :screenshot
-        raise FillFailure, "Filling out the remote form was not successful" 
+        raise FillFailure, "Filling out the remote form was not successful"
       end
     rescue Exception => e
       # we need to add the job manually, since DJ doesn't handle yield blocks
