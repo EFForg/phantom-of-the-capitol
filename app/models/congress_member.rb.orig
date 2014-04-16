@@ -41,6 +41,9 @@ class CongressMember < ActiveRecord::Base
       rescue Exception => e
         status_fields[:status] = "error"
         message = YAML.load(e.message)
+        puts "#########################################"
+        puts e.inspect
+        puts e.backtrace.inspect
         status_fields[:extra][:screenshot] = message[:screenshot] if message.is_a?(Hash) and message.include? :screenshot
         raise e, message[:message] if message.is_a?(Hash)
         raise e, message
@@ -130,7 +133,7 @@ class CongressMember < ActiveRecord::Base
       message[:screenshot] = self.class::save_random_screenshot_watir(b.driver) if DEBUG_ENDPOINTS
       raise e, YAML.dump(message)
     ensure
-      b.close
+      #b.close
     end
   end
 
@@ -161,14 +164,14 @@ class CongressMember < ActiveRecord::Base
               begin
                 elem = session.find('option[value="' + a.value.gsub('"', '\"') + '"]')
               rescue Capybara::ElementNotFound
-                elem = session.find('option', text: Regexp.compile("^" + Regexp.escape(a.value) + "$"))
+                elem = session.find('option', text: a.value)
               end
               elem.select_option
             else
               begin
                 elem = session.find('option[value="' + f[a.value].gsub('"', '\"') + '"]')
               rescue Capybara::ElementNotFound
-                elem = session.find('option', text: Regexp.compile("^" + Regexp.escape(f[a.value]) + "$"))
+                elem = session.find('option', text: f[a.value])
               end
               elem.select_option
             end
@@ -184,6 +187,9 @@ class CongressMember < ActiveRecord::Base
         when "choose"
           session.find(a.selector).set(true)
         end
+
+        puts "STEP " + a.step.to_s
+        #puts self.class::save_random_screenshot_poltergeist(session)
       end
 
       success = check_success session.text
@@ -262,6 +268,25 @@ class CongressMember < ActiveRecord::Base
       errors: statuses.error.count,
       failures: statuses.failure.count
     }
+  end
+
+  def recent_fill_image
+    fill_status = recent_fill_status
+
+    if [fill_status[:successes], fill_status[:errors], fill_status[:failures]].max == 0
+      "not-tried-lightgray.svg"
+    else
+      success_rate = fill_status[:successes].to_f / (fill_status[:successes] + fill_status[:errors] + fill_status[:failures])
+
+      darkness = 0.8
+
+      red = (1 - ([success_rate - 0.5, 0].max * 2)) * 255 * darkness
+      green = [success_rate * 2, 1].min * 255 * darkness
+      blue = 0
+
+      color_hex = sprintf("%02X%02X%02X", red, green, blue)
+      'success-' + (success_rate * 100).to_i.to_s + '%-' + color_hex + '.svg'
+    end
   end
 
   def form_domain_url
