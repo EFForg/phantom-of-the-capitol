@@ -264,6 +264,25 @@ class CongressMember < ActiveRecord::Base
     }
   end
 
+  def recent_fill_image
+    fill_status = recent_fill_status
+
+    if [fill_status[:successes], fill_status[:errors], fill_status[:failures]].max == 0
+      "not-tried-lightgray.svg"
+    else
+      success_rate = fill_status[:successes].to_f / (fill_status[:successes] + fill_status[:errors] + fill_status[:failures])
+
+      darkness = 0.8
+
+      red = (1 - ([success_rate - 0.5, 0].max * 2)) * 255 * darkness
+      green = [success_rate * 2, 1].min * 255 * darkness
+      blue = 0
+
+      color_hex = sprintf("%02X%02X%02X", red, green, blue)
+      'success-' + (success_rate * 100).to_i.to_s + '%-' + color_hex + '.svg'
+    end
+  end
+
   def form_domain_url
     visit_action = actions.where(action: "visit").first
     return nil if visit_action.nil?
