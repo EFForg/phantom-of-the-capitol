@@ -135,7 +135,7 @@ CongressForms::App.controller do
 
     get :'list-congress-members' do
       content_type :json
-      CongressMember.all(order: :bioguide_id).to_json(only: :bioguide_id, methods: [:form_domain_url, :recent_fill_image])
+      CongressMember.all(order: :bioguide_id).to_json(only: :bioguide_id, methods: :form_domain_url)
     end
   end
 end
