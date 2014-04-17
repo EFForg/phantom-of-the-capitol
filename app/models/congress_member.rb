@@ -120,7 +120,11 @@ class CongressMember < ActiveRecord::Base
         when "uncheck"
           b.element(:css => a.selector).to_subtype.clear
         when "choose"
-          b.element(:css => a.selector).to_subtype.set
+          if a.options.nil?
+            b.element(:css => a.selector).to_subtype.set
+          else
+            b.element(:css => a.selector + '[value="' + f[a.value].gsub('"', '\"') + '"]').to_subtype.set
+          end
         end
       end
 
@@ -194,7 +198,11 @@ class CongressMember < ActiveRecord::Base
         when "uncheck"
           session.find(a.selector).set(false)
         when "choose"
-          session.find(a.selector).set(true)
+          if a.options.nil?
+            session.find(a.selector).set(true)
+          else
+            session.find(a.selector + '[value="' + f[a.value].gsub('"', '\"') + '"]').set(true)
+          end
         end
       end
 
