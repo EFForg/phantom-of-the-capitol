@@ -164,6 +164,8 @@ class CongressMember < ActiveRecord::Base
             if f[a.value].nil?
               begin
                 elem = session.find('option[value="' + a.value.gsub('"', '\"') + '"]')
+              rescue Capybara::Ambiguous
+                elem = session.find('option[value="' + a.value.gsub('"', '\"') + '"]:nth-child(1)')
               rescue Capybara::ElementNotFound
                 elem = session.find('option', text: Regexp.compile("^" + Regexp.escape(a.value) + "$"))
               end
@@ -171,6 +173,8 @@ class CongressMember < ActiveRecord::Base
             else
               begin
                 elem = session.find('option[value="' + f[a.value].gsub('"', '\"') + '"]')
+              rescue Capybara::Ambiguous
+                elem = session.find('option[value="' + f[a.value].gsub('"', '\"') + '"]:nth-child(1)')
               rescue Capybara::ElementNotFound
                 elem = session.find('option', text: Regexp.compile("^" + Regexp.escape(f[a.value]) + "$"))
               end
