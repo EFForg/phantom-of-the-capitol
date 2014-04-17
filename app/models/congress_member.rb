@@ -194,7 +194,11 @@ class CongressMember < ActiveRecord::Base
         when "uncheck"
           session.find(a.selector).set(false)
         when "choose"
-          session.choose(f[a.value])
+          if a.selector.nil?
+            session.choose(f[a.value])
+          else
+            session.choose(a.selector)
+          end
         end
       end
 
