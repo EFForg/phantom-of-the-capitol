@@ -117,6 +117,8 @@ class CongressMember < ActiveRecord::Base
           b.element(:css => a.selector).to_subtype.clear
         when "choose"
           b.element(:css => a.selector).to_subtype.set
+        when "find_text"
+          b.element(:text => a.text).wait_until_present
         end
       end
 
@@ -183,6 +185,8 @@ class CongressMember < ActiveRecord::Base
           session.find(a.selector).set(false)
         when "choose"
           session.find(a.selector).set(true)
+        when "find_text"
+          session.find('*', text: Regexp.compile("^" + Regexp.escape(a.value) + "$"))
         end
       end
 
