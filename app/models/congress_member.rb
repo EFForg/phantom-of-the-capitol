@@ -110,7 +110,11 @@ class CongressMember < ActiveRecord::Base
         when "click_on"
           b.element(:css => a.selector).to_subtype.click
         when "find"
-          b.element(:css => a.selector).wait_until_present
+          if a.value.nil?
+            b.element(:css => a.selector).wait_until_present
+          else
+            b.element(:css => a.selector).parent.element(:text => a.value).wait_until_present
+          end
         when "check"
           b.element(:css => a.selector).to_subtype.set
         when "uncheck"
@@ -176,7 +180,11 @@ class CongressMember < ActiveRecord::Base
         when "click_on"
           session.find(a.selector).click
         when "find"
-          session.find(a.selector)
+          if a.value.nil?
+            session.find(a.selector)
+          else
+            session.find(a.selector, text: Regexp.compile("^" + Regexp.escape(a.value) + "$"))
+          end
         when "check"
           session.find(a.selector).set(true)
         when "uncheck"
