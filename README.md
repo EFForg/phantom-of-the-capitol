@@ -49,7 +49,7 @@ If you haven't set up the test db, create it, then
 
 Create and prepare the test database:
 
- - `PADRINO_ENV=test be rake ar:create ar:schema:load`
+ - `PADRINO_ENV=test bundle exec rake ar:create ar:schema:load`
 
 And run
 
