@@ -169,7 +169,7 @@ class CongressMember < ActiveRecord::Base
               begin
                 elem = session.find('option[value="' + a.value.gsub('"', '\"') + '"]')
               rescue Capybara::Ambiguous
-                elem = session.find('option[value="' + a.value.gsub('"', '\"') + '"]:nth-child(1)')
+                elem = session.first('option[value="' + a.value.gsub('"', '\"') + '"]')
               rescue Capybara::ElementNotFound
                 elem = session.find('option', text: Regexp.compile("^" + Regexp.escape(a.value) + "$"))
               end
@@ -178,7 +178,7 @@ class CongressMember < ActiveRecord::Base
               begin
                 elem = session.find('option[value="' + f[a.value].gsub('"', '\"') + '"]')
               rescue Capybara::Ambiguous
-                elem = session.find('option[value="' + f[a.value].gsub('"', '\"') + '"]:nth-child(1)')
+                elem = session.first('option[value="' + f[a.value].gsub('"', '\"') + '"]')
               rescue Capybara::ElementNotFound
                 elem = session.find('option', text: Regexp.compile("^" + Regexp.escape(f[a.value]) + "$"))
               end
