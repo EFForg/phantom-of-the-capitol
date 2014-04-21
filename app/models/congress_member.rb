@@ -67,6 +67,9 @@ class CongressMember < ActiveRecord::Base
     true
   end
 
+  # it doesn't look like this method is ever called, but if it is used
+  # later, we might want to implement the "wait" option for the "find"
+  # directive (see fill_out_form_with_poltergeist)
   def fill_out_form_with_watir f={}
     b = Watir::Browser.new
     begin
@@ -142,6 +145,7 @@ class CongressMember < ActiveRecord::Base
     end
   end
 
+  DEFAULT_FIND_WAIT_TIME = 5  
   def fill_out_form_with_poltergeist f={}
     session = Capybara::Session.new(:poltergeist)
     session.driver.options[:js_errors] = false
@@ -188,10 +192,15 @@ class CongressMember < ActiveRecord::Base
         when "click_on"
           session.find(a.selector).click
         when "find"
+          wait_val = DEFAULT_FIND_WAIT_TIME
+          if a.options
+            options_hash = YAML.load a.options
+            wait_val = options_hash['wait'] || DEFAULT_FIND_WAIT_TIME
+          end
           if a.value.nil?
-            session.find(a.selector)
+            session.find(a.selector, wait: wait_val)
           else
-            session.find(a.selector, text: Regexp.compile("^" + Regexp.escape(a.value) + "$"))
+            session.find(a.selector, text: Regexp.compile("^" + Regexp.escape(a.value) + "$"), wait: wait_val)
           end
         when "check"
           session.find(a.selector).set(true)
