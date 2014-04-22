@@ -3,8 +3,8 @@ ActiveRecord::Base.configurations[:development] = {
   :encoding  => 'utf8',
   :reconnect => true,
   :database  => 'congress_forms_development',
-  :pool      => 5,
-  :username  => 'root',
+  :pool      => 100,
+  :username  => 'congress_forms',
   :password  => '',
   :host      => 'localhost'
 }
@@ -14,8 +14,8 @@ ActiveRecord::Base.configurations[:production] = {
   :encoding  => 'utf8',
   :reconnect => true,
   :database  => 'congress_forms_production',
-  :pool      => 5,
-  :username  => 'root',
+  :pool      => 100,
+  :username  => 'congress_forms',
   :password  => '',
   :host      => 'localhost'
 }
@@ -25,8 +25,8 @@ ActiveRecord::Base.configurations[:test] = {
   :encoding  => 'utf8',
   :reconnect => true,
   :database  => 'congress_forms_test',
-  :pool      => 5,
-  :username  => 'root',
+  :pool      => 100,
+  :username  => 'congress_forms',
   :password  => '',
   :host      => 'localhost'
 }
