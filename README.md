@@ -4,12 +4,33 @@ This project relies on [Contact Congress](https://github.com/unitedstates/contac
 
 [![Build Status](https://travis-ci.org/Hainish/congress-forms.png)](http://travis-ci.org/Hainish/congress-forms)
 
-## Requirements
+## Installation and Setup
+
+### The easy way (for developers)
+
+#### Requirements
+
+ - `apt-get install vagrant virtualbox`
+
+#### Installation
+
+ - `vagrant up`
+ - `vim config/congress-forms_config.rb # edit settings here`
+
+#### Running
+
+ - `vagrant ssh`
+ - `cd /vagrant`
+ - `rackup`
+
+### The hard way (or when running in production)
+
+#### Requirements
 
  - `apt-get install imagemagick libmysql++-dev libpq-dev git`
  - Download and install the latest phantomjs from http://phantomjs.org/
 
-## Installation
+#### Installation
 
  - `apt-get install ruby`
 
@@ -25,7 +46,7 @@ Create the database, then
  - `cp config/congress-forms_config.rb.example config/congress-forms_config.rb`
  - `bundle exec rake ar:create ar:schema:load`
 
-## Populating the database
+#### Populating the database
 
 Clone a copy of the contact-congress and store it somewhere:
 
@@ -37,7 +58,7 @@ Then cd back over to congress-forms and run
 
 replacing `contact_congress_directory` with the path where you cloned the `contact-congress` project.
 
-## Running
+#### Running
 
 Just run `rackup`
 
