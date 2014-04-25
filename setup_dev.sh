@@ -51,4 +51,4 @@ EOF
 
 ln -s /home/vagrant/phantomjs-1.9.7-linux-x86_64/bin/phantomjs /usr/bin/phantomjs
 
-echo -e "\n\nYou're all done!  Now type `varnish ssh`, cd into /vagrant, and type `rackup` to run!"
+echo -e "\n\nYou're all done!  Now type 'varnish ssh', cd into /vagrant, and type 'rackup' to run!"
