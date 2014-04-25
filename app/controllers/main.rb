@@ -71,12 +71,12 @@ CongressForms::App.controller do
 
     bio_id = params[:bio_id]
     c = CongressMember.bioguide(bio_id)
-    redirect to('http://img.shields.io/badge/YAML-not%20found-red.svg') if c.nil?
+    redirect to('https://img.shields.io/badge/YAML-not%20found-red.svg') if c.nil?
 
     fill_status = c.recent_fill_status
 
     if [fill_status[:successes], fill_status[:errors], fill_status[:failures]].max == 0
-      redirect to('http://img.shields.io/badge/not-tried-lightgray.svg'), 302
+      redirect to('https://img.shields.io/badge/not-tried-lightgray.svg'), 302
     else
       success_rate = fill_status[:successes].to_f / (fill_status[:successes] + fill_status[:errors] + fill_status[:failures])
 
@@ -87,7 +87,7 @@ CongressForms::App.controller do
       blue = 0
 
       color_hex = sprintf("%02X%02X%02X", red, green, blue)
-      redirect to('http://img.shields.io/badge/success-' + (success_rate * 100).to_i.to_s + '%-' + color_hex + '.svg'), 302
+      redirect to('https://img.shields.io/badge/success-' + (success_rate * 100).to_i.to_s + '%-' + color_hex + '.svg'), 302
     end
   end
 
