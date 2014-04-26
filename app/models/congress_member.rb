@@ -116,6 +116,8 @@ class CongressMember < ActiveRecord::Base
           if a.value.nil?
             b.element(:css => a.selector).wait_until_present
           else
+            b.element(:css => a.selector).wait_until_present
+            b.element(:css => a.selector).parent.wait_until_present
             b.element(:css => a.selector).parent.element(:text => a.value).wait_until_present
           end
         when "check"
