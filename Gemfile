@@ -46,6 +46,8 @@ gem 'capybara'
 gem 'poltergeist'
 gem 'git'
 gem 'thin'
+gem 'carrierwave'
+gem 'fog'
 
 # Or Padrino Edge
 # gem 'padrino', :github => 'padrino/padrino-framework'

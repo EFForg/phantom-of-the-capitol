@@ -45,6 +45,7 @@ Capybara.default_wait_time = 5
 # Add your before (RE)load hooks here
 #
 Padrino.before_load do
+  Padrino.dependency_paths << Padrino.root("app/uploaders/*.rb")
 end
 
 ##
