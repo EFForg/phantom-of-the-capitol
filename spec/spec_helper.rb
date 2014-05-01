@@ -6,7 +6,10 @@ RSpec.configure do |conf|
   conf.include Rack::Test::Methods
   conf.include FactoryGirl::Syntax::Methods
 
-  conf.before(:each) { DatabaseCleaner.clean_with :truncation }
+  conf.before(:each) do
+    DatabaseCleaner.clean_with :truncation
+    allow_any_instance_of(CaptchaUploader).to receive(:'store!')
+  end
 
   conf.before(:suite) do
     LocalhostServer.new(TESTSERVER.new, 3001)
