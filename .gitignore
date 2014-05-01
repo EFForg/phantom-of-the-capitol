@@ -11,3 +11,5 @@ config/database.rb
 *.swp
 config/congress-forms_config.rb
 config/constants.rb
+.bundle
+.vagrant
