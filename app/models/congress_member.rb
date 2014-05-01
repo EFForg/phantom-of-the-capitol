@@ -88,8 +88,9 @@ class CongressMember < ActiveRecord::Base
             screenshot_location = random_captcha_location
             b.driver.save_screenshot(screenshot_location)
             crop_screenshot_from_coords screenshot_location, location.x, location.y, width, height
+            url = store_image_from_location screenshot_location
 
-            captcha_value = yield screenshot_location.sub(Padrino.root + "/public","")
+            captcha_value = yield url
             b.element(:css => a.selector).to_subtype.set(captcha_value)
           else
             b.element(:css => a.selector).to_subtype.set(f[a.value]) unless f[a.value].nil?
@@ -163,8 +164,9 @@ class CongressMember < ActiveRecord::Base
             screenshot_location = random_captcha_location
             session.save_screenshot(screenshot_location, full: true)
             crop_screenshot_from_coords screenshot_location, location["left"], location["top"], location["width"], location["height"]
+            url = store_image_from_location screenshot_location
 
-            captcha_value = yield screenshot_location.sub(Padrino.root + "/public","")
+            captcha_value = yield url
             session.find(a.selector).set(captcha_value)
           else
             session.find(a.selector).set(f[a.value]) unless f[a.value].nil?
@@ -235,6 +237,12 @@ class CongressMember < ActiveRecord::Base
     img = MiniMagick::Image.open(screenshot_location)
     img.crop width.to_s + 'x' + height.to_s + "+" + x.to_s + "+" + y.to_s
     img.write screenshot_location
+  end
+
+  def store_image_from_location location
+    c = CaptchaUploader.new
+    c.store!(File.open(location))
+    c.url
   end
 
   def random_captcha_location
