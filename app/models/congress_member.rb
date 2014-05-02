@@ -85,9 +85,9 @@ class CongressMember < ActiveRecord::Base
             width = captcha_elem.style("width").delete("px")
             height = captcha_elem.style("height").delete("px")
 
-            screenshot_location = random_captcha_location
+            screenshot_location = self.class::random_captcha_location
             b.driver.save_screenshot(screenshot_location)
-            crop_screenshot_from_coords screenshot_location, location.x, location.y, width, height
+            self.class::crop_screenshot_from_coords screenshot_location, location.x, location.y, width, height
             url = self.class::store_captcha_from_location screenshot_location
 
             captcha_value = yield url
@@ -161,9 +161,9 @@ class CongressMember < ActiveRecord::Base
           if a.value == "$CAPTCHA_SOLUTION"
             location = session.driver.evaluate_script 'document.querySelector("' + a.captcha_selector.gsub('"', '\"') + '").getBoundingClientRect();'
 
-            screenshot_location = random_captcha_location
+            screenshot_location = self.class::random_captcha_location
             session.save_screenshot(screenshot_location, full: true)
-            crop_screenshot_from_coords screenshot_location, location["left"], location["top"], location["width"], location["height"]
+            self.class::crop_screenshot_from_coords screenshot_location, location["left"], location["top"], location["width"], location["height"]
             url = self.class::store_captcha_from_location screenshot_location
 
             captcha_value = yield url
@@ -233,7 +233,7 @@ class CongressMember < ActiveRecord::Base
     end
   end
 
-  def crop_screenshot_from_coords screenshot_location, x, y, width, height
+  def self.crop_screenshot_from_coords screenshot_location, x, y, width, height
     img = MiniMagick::Image.open(screenshot_location)
     img.crop width.to_s + 'x' + height.to_s + "+" + x.to_s + "+" + y.to_s
     img.write screenshot_location
@@ -263,7 +263,7 @@ class CongressMember < ActiveRecord::Base
     store_screenshot_from_location screenshot_location
   end
 
-  def random_captcha_location
+  def self.random_captcha_location
     Padrino.root + "/public/captchas/" + SecureRandom.hex(13) + ".png"
   end
 
