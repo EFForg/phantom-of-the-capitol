@@ -137,11 +137,11 @@ class CongressMember < ActiveRecord::Base
       success = check_success b.text
 
       success_hash = {success: success}
-      success_hash[:screenshot] = self.class::save_random_screenshot_watir(b.driver) if !success and DEBUG_ENDPOINTS
+      success_hash[:screenshot] = self.class::save_screenshot_and_store_watir(b.driver) if !success and DEBUG_ENDPOINTS
       success_hash
     rescue Exception => e
       message = {message: e.message}
-      message[:screenshot] = self.class::save_random_screenshot_watir(b.driver) if DEBUG_ENDPOINTS
+      message[:screenshot] = self.class::save_screenshot_and_store_watir(b.driver) if DEBUG_ENDPOINTS
       raise e, YAML.dump(message)
     ensure
       b.close
@@ -222,11 +222,11 @@ class CongressMember < ActiveRecord::Base
       success = check_success session.text
 
       success_hash = {success: success}
-      success_hash[:screenshot] = self.class::save_random_screenshot_poltergeist(session) if !success and DEBUG_ENDPOINTS
+      success_hash[:screenshot] = self.class::save_screenshot_and_store_poltergeist(session) if !success and DEBUG_ENDPOINTS
       success_hash
     rescue Exception => e
       message = {message: e.message}
-      message[:screenshot] = self.class::save_random_screenshot_poltergeist(session) if DEBUG_ENDPOINTS
+      message[:screenshot] = self.class::save_screenshot_and_store_poltergeist(session) if DEBUG_ENDPOINTS
       raise e, YAML.dump(message)
     ensure
       session.driver.quit
@@ -245,20 +245,26 @@ class CongressMember < ActiveRecord::Base
     c.url
   end
 
-  def random_captcha_location
-    Padrino.root + "/public/captchas/" + SecureRandom.hex(13) + ".png"
+  def self.store_screenshot_from_location location
+    s = ScreenshotUploader.new
+    s.store!(File.open(location))
+    s.url
   end
 
-  def self.save_random_screenshot_poltergeist session
-    screenshot_location = random_screenshot_location
-    session.save_screenshot(screenshot_location, full: true)
-    screenshot_location.sub(Padrino.root + "/public","")
-  end
-
-  def self.save_random_screenshot_watir driver
+  def self.save_screenshot_and_store_watir driver
     screenshot_location = random_screenshot_location
     driver.save_screenshot(screenshot_location)
-    screenshot_location.sub(Padrino.root + "/public","")
+    store_screenshot_from_location screenshot_location
+  end
+
+  def self.save_screenshot_and_store_poltergeist session
+    screenshot_location = random_screenshot_location
+    session.save_screenshot(screenshot_location, full: true)
+    store_screenshot_from_location screenshot_location
+  end
+
+  def random_captcha_location
+    Padrino.root + "/public/captchas/" + SecureRandom.hex(13) + ".png"
   end
 
   def self.random_screenshot_location
