@@ -85,10 +85,7 @@ class CongressMember < ActiveRecord::Base
             width = captcha_elem.style("width").delete("px")
             height = captcha_elem.style("height").delete("px")
 
-            screenshot_location = self.class::random_captcha_location
-            b.driver.save_screenshot(screenshot_location)
-            self.class::crop_screenshot_from_coords screenshot_location, location.x, location.y, width, height
-            url = self.class::store_captcha_from_location screenshot_location
+            url = self.class::save_captcha_and_store_watir b.driver, location.x, location.y, width, height
 
             captcha_value = yield url
             b.element(:css => a.selector).to_subtype.set(captcha_value)
@@ -161,10 +158,7 @@ class CongressMember < ActiveRecord::Base
           if a.value == "$CAPTCHA_SOLUTION"
             location = session.driver.evaluate_script 'document.querySelector("' + a.captcha_selector.gsub('"', '\"') + '").getBoundingClientRect();'
 
-            screenshot_location = self.class::random_captcha_location
-            session.save_screenshot(screenshot_location, full: true)
-            self.class::crop_screenshot_from_coords screenshot_location, location["left"], location["top"], location["width"], location["height"]
-            url = self.class::store_captcha_from_location screenshot_location
+            url = self.class::save_captcha_and_store_poltergeist session, location["left"], location["top"], location["width"], location["height"]
 
             captcha_value = yield url
             session.find(a.selector).set(captcha_value)
@@ -254,13 +248,35 @@ class CongressMember < ActiveRecord::Base
   def self.save_screenshot_and_store_watir driver
     screenshot_location = random_screenshot_location
     driver.save_screenshot(screenshot_location)
-    store_screenshot_from_location screenshot_location
+    url = store_screenshot_from_location screenshot_location
+    File.unlink screenshot_location
+    url
   end
 
   def self.save_screenshot_and_store_poltergeist session
     screenshot_location = random_screenshot_location
     session.save_screenshot(screenshot_location, full: true)
-    store_screenshot_from_location screenshot_location
+    url = store_screenshot_from_location screenshot_location
+    File.unlink screenshot_location
+    url
+  end
+
+  def self.save_captcha_and_store_watir driver, x, y, width, height 
+    screenshot_location = random_captcha_location
+    driver.save_screenshot(screenshot_location)
+    crop_screenshot_from_coords screenshot_location, x, y, width, height
+    url = store_captcha_from_location screenshot_location
+    File.unlink screenshot_location
+    url
+  end
+
+  def self.save_captcha_and_store_poltergeist session, x, y, width, height
+    screenshot_location = random_captcha_location
+    session.save_screenshot(screenshot_location, full: true)
+    crop_screenshot_from_coords screenshot_location, x, y, width, height
+    url = store_captcha_from_location screenshot_location
+    File.unlink screenshot_location
+    url
   end
 
   def self.random_captcha_location
