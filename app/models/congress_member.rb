@@ -37,7 +37,11 @@ class CongressMember < ActiveRecord::Base
     status_fields = {congress_member: self, status: "success", extra: {}}.merge(ct.nil? ? {} : {campaign_tag: ct})
     begin
       begin
-        success_hash = fill_out_form_with_poltergeist f, &block
+        if REQUIRES_WATIR.include? self.bioguide_id
+          success_hash = fill_out_form_with_watir f, &block
+        else
+          success_hash = fill_out_form_with_poltergeist f, &block
+        end
       rescue Exception => e
         status_fields[:status] = "error"
         message = YAML.load(e.message)
@@ -67,8 +71,7 @@ class CongressMember < ActiveRecord::Base
     true
   end
 
-  # it doesn't look like this method is ever called, but if it is used
-  # later, we might want to implement the "wait" option for the "find"
+  # we might want to implement the "wait" option for the "find"
   # directive (see fill_out_form_with_poltergeist)
   def fill_out_form_with_watir f={}
     b = Watir::Browser.new

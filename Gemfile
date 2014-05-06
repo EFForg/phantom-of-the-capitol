@@ -25,11 +25,6 @@ group :test do
   gem 'typhoeus'
 end
 
-group :local do
-  gem 'watir-webdriver'
-  gem 'headless'
-end
-
 # Padrino Stable Gem
 gem 'padrino', '0.11.4'
 
@@ -48,6 +43,9 @@ gem 'git'
 gem 'thin'
 gem 'carrierwave'
 gem 'fog'
+gem 'watir-webdriver'
+gem 'headless'
+
 
 # Or Padrino Edge
 # gem 'padrino', :github => 'padrino/padrino-framework'
