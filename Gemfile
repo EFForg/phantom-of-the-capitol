@@ -27,7 +27,6 @@ end
 
 group :local do
   gem 'watir-webdriver'
-  gem 'headless'
 end
 
 # Padrino Stable Gem
@@ -49,6 +48,7 @@ gem 'git'
 gem 'thin'
 gem 'carrierwave'
 gem 'fog'
+gem 'headless'
 
 
 # Or Padrino Edge
