@@ -39,6 +39,8 @@ class CongressMember < ActiveRecord::Base
       begin
         if REQUIRES_WEBKIT.include? self.bioguide_id
           success_hash = fill_out_form_with_webkit f, &block
+        elsif REQUIRES_WATIR.include? self.bioguide_id
+          success_hash = fill_out_form_with_watir f, &block
         else
           success_hash = fill_out_form_with_poltergeist f, &block
         end
