@@ -27,7 +27,7 @@ This project relies on [Contact Congress](https://github.com/unitedstates/contac
 
 #### Requirements
 
- - `apt-get install imagemagick libmysql++-dev libpq-dev git`
+ - `apt-get install imagemagick libmysql++-dev libpq-dev git libqt4-dev`
  - Download and install the latest phantomjs from http://phantomjs.org/
 
 #### Installation

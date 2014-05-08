@@ -25,6 +25,11 @@ group :test do
   gem 'typhoeus'
 end
 
+group :local do
+  gem 'watir-webdriver'
+  gem 'headless'
+end
+
 # Padrino Stable Gem
 gem 'padrino', '0.11.4'
 
@@ -39,12 +44,11 @@ gem 'mini_magick'
 gem 'delayed_job_active_record'
 gem 'capybara'
 gem 'poltergeist'
+gem 'capybara-webkit'
 gem 'git'
 gem 'thin'
 gem 'carrierwave'
 gem 'fog'
-gem 'watir-webdriver'
-gem 'headless'
 
 
 # Or Padrino Edge

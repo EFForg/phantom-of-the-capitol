@@ -37,8 +37,8 @@ class CongressMember < ActiveRecord::Base
     status_fields = {congress_member: self, status: "success", extra: {}}.merge(ct.nil? ? {} : {campaign_tag: ct})
     begin
       begin
-        if REQUIRES_WATIR.include? self.bioguide_id
-          success_hash = fill_out_form_with_watir f, &block
+        if REQUIRES_WEBKIT.include? self.bioguide_id
+          success_hash = fill_out_form_with_webkit f, &block
         else
           success_hash = fill_out_form_with_poltergeist f, &block
         end
@@ -149,9 +149,18 @@ class CongressMember < ActiveRecord::Base
   end
 
   DEFAULT_FIND_WAIT_TIME = 5  
-  def fill_out_form_with_poltergeist f={}
-    session = Capybara::Session.new(:poltergeist)
-    session.driver.options[:js_errors] = false
+
+  def fill_out_form_with_poltergeist f={}, &block
+    fill_out_form_with_capybara f, :poltergeist, &block
+  end
+
+  def fill_out_form_with_webkit f={}, &block
+    fill_out_form_with_capybara f, :webkit, &block
+  end
+
+  def fill_out_form_with_capybara f={}, driver
+    session = Capybara::Session.new(driver)
+    session.driver.options[:js_errors] = false if driver == :poltergeist
     begin
       actions.order(:step).each do |a|
         case a.action
@@ -160,7 +169,7 @@ class CongressMember < ActiveRecord::Base
         when "fill_in"
           if a.value == "$CAPTCHA_SOLUTION"
             location = session.driver.evaluate_script 'document.querySelector("' + a.captcha_selector.gsub('"', '\"') + '").getBoundingClientRect();'
-
+            
             url = self.class::save_captcha_and_store_poltergeist session, location["left"], location["top"], location["width"], location["height"]
 
             captcha_value = yield url
@@ -226,7 +235,13 @@ class CongressMember < ActiveRecord::Base
       message[:screenshot] = self.class::save_screenshot_and_store_poltergeist(session) if DEBUG_ENDPOINTS
       raise e, YAML.dump(message)
     ensure
-      session.driver.quit
+      case driver
+      when :poltergeist
+        session.driver.quit
+      when :webkit
+        # ugly, but it works
+        session.driver.browser.instance_variable_get("@connection").send(:kill_process)
+      end
     end
   end
 

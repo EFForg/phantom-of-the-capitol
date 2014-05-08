@@ -3,7 +3,7 @@
 # stop setup script if any command fails
 set -e
 
-DEPENDENCIES="mysql-server curl imagemagick libmysql++-dev libpq-dev git"
+DEPENDENCIES="mysql-server curl imagemagick libmysql++-dev libpq-dev git libqt4-dev"
 
 random() {
     head -c $1 /dev/urandom | base64
