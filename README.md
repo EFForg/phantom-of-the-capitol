@@ -124,6 +124,14 @@ Provide a `bio_id` as part of the GET request.  Responds with a 302 redirect to 
 
 Provide a `bio_id` as part of the GET request.  Responds with a hash giving statistics on the number of successes, failures, and errors encountered when trying to fill in forms since the last time the congress member actions were updated.
 
-### `/most-recent-error-or-failure/<bio_id>`
+### `/recent-statuses-detailed/<bio_id>`
 
-Provide a `bio_id` as part of the GET request.  Responds with the last error or failure encountered when trying to fill in the form for this congress member.  This endpoint is only valid if `DEBUG_ENDPOINTS` is set to `true` in `config/congress-forms_config.rb`.
+Provide a `bio_id` as part of the GET request.  Responds with a detailed list of recent statuses when trying to fill in the form for this congress member.  'Recent' means since the last time this congress member has been updated with new success criteria or actions.  This endpoint is only valid if `DEBUG_ENDPOINTS` is set to `true` in `config/congress-forms_config.rb`.
+
+### `/list-actions/<bio_id>`
+
+Provide a `bio_id` as part of the GET request.  Responds with a detailed list of all actions that are performed to fill out the form for this congress member.  This endpoint is only valid if `DEBUG_ENDPOINTS` is set to `true` in `config/congress-forms_config.rb`.
+
+### `/list-congress-members`
+
+Responds with a list of all congress members and their websites.  This endpoint is only valid if `DEBUG_ENDPOINTS` is set to `true` in `config/congress-forms_config.rb`.
