@@ -121,7 +121,7 @@ class CongressMember < ActiveRecord::Base
           else
             b.element(:css => a.selector).wait_until_present
             b.element(:css => a.selector).parent.wait_until_present
-            b.element(:css => a.selector).parent.element(:text => a.value).wait_until_present
+            b.element(:css => a.selector).parent.element(:text => Regexp.compile(a.value)).wait_until_present
           end
         when "check"
           b.element(:css => a.selector).to_subtype.set
