@@ -9,6 +9,7 @@ RSpec.configure do |conf|
   conf.before(:each) do
     DatabaseCleaner.clean_with :truncation
     allow_any_instance_of(CaptchaUploader).to receive(:'store!')
+    allow_any_instance_of(ScreenshotUploader).to receive(:'store!')
   end
 
   conf.before(:suite) do
