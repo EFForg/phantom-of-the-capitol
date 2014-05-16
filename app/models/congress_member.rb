@@ -212,7 +212,7 @@ class CongressMember < ActiveRecord::Base
           if a.value.nil?
             session.find(a.selector, wait: wait_val)
           else
-            session.find(a.selector, text: Regexp.compile("^" + Regexp.escape(a.value) + "$"), wait: wait_val)
+            session.find(a.selector, text: Regexp.compile(a.value), wait: wait_val)
           end
         when "check"
           session.find(a.selector).set(true)
