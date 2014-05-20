@@ -22,7 +22,6 @@ group :test do
   gem 'rspec'
   gem 'rack-test', :require => 'rack/test'
   gem 'factory_girl'
-  gem 'typhoeus'
 end
 
 group :local do
@@ -50,6 +49,7 @@ gem 'carrierwave'
 gem 'fog'
 gem 'headless'
 gem 'newrelic_rpm'
+gem 'typhoeus'
 
 
 # Or Padrino Edge

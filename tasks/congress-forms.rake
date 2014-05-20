@@ -1,4 +1,5 @@
 require File.expand_path("../../config/boot.rb", __FILE__)
+require File.expand_path("../../app/helpers/states.rb", __FILE__)
 
 namespace :'congress-forms' do
   desc "Git clone the contact congress repo and load records into the db"
@@ -71,6 +72,72 @@ namespace :'congress-forms' do
         f.write("| " + c.bioguide_id + " | [" + uri.host + "](" + uri.scheme + "://" + uri.host + ") | [![" + c.bioguide_id + " status](http://ec2-54-215-28-56.us-west-1.compute.amazonaws.com:3000/recent-fill-image/" + c.bioguide_id + ")](http://ec2-54-215-28-56.us-west-1.compute.amazonaws.com:3000/recent-fill-status/" + c.bioguide_id + ") |\n")
       end
     end
+  end
+  desc "Run through filling out of all congress members"
+  task :fill_out_all, :regex do |t, args|
+    response = Typhoeus.get("https://corsgithub.herokuapp.com/sinak/congress-zip-plus-four/master/legislators.json")
+    congress_defaults = JSON.parse(response.body.gsub(/^define\(|\)$/, ''))
+
+    response = Typhoeus.get("https://corsgithub.herokuapp.com/unitedstates/contact-congress/master/support/variables.yaml")
+    defaults = YAML.load(response.body)
+
+    possible_validation = {
+      "$ADDRESS_STREET" => "example_address",
+      "$ADDRESS_CITY" => "example_city",
+      "$ADDRESS_STATE_POSTAL_ABBREV" => "example_state",
+      "$ADDRESS_STATE_FULL" => "example_state"
+    }
+
+    captchad = []
+    notfound = []
+
+    CongressMember.where("bioguide_id REGEXP '" + args[:regex].gsub("'","") + "'").each do |c|
+      if congress_defaults.include? c.bioguide_id
+        if !c.has_captcha?
+          fields_hash = {}
+
+          fields_hash["$ADDRESS_ZIP4"] = congress_defaults[c.bioguide_id]["zip4"] || defaults["$ADDRESS_ZIP4"]["example"]
+          fields_hash["$ADDRESS_ZIP5"] = congress_defaults[c.bioguide_id]["zip5"] || defaults["$ADDRESS_ZIP5"]["example"]
+
+          c.required_actions.each do |ra|
+            if ra.value == "$ADDRESS_ZIP4" or ra.value == "$ADDRESS_ZIP5"
+            elsif possible_validation.keys.include? ra.value
+              if ra.value == "$ADDRESS_STATE_FULL"
+                fields_hash[ra.value] = STATES[congress_defaults[c.bioguide_id][possible_validation[ra.value]]] || defaults[ra.value]["example"]
+              else
+                fields_hash[ra.value] = congress_defaults[c.bioguide_id][possible_validation[ra.value]] || defaults[ra.value]["example"]
+              end
+            elsif defaults.keys.include? ra.value
+              if ra.options.nil?
+                fields_hash[ra.value] = defaults[ra.value]["example"]
+              else
+                options = YAML.load(ra.options)
+                values = options.is_a?(Hash) ? options.values : options
+
+                #if values.include? defaults[ra.value]["example"]
+                  #fields_hash[ra.value] = defaults[ra.value]["example"]
+                #else
+
+                fields_hash[ra.value] = values[Random.rand(values.length)]
+
+                #end
+              end
+            end
+          end
+          begin
+            c.fill_out_form fields_hash
+          rescue
+          end
+        else
+          captchad.push(c.bioguide_id)
+        end
+      else
+        notfound.push(c.bioguide_id)
+      end
+    end
+
+    puts "The following members have captchas and must be checked manually: " + captchad.inspect
+    puts "No congressional defaults found for the following members: " + notfound.inspect
   end
 end
 
