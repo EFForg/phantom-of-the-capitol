@@ -35,6 +35,11 @@ class FillHandler
     FillHandler::check_result @result
   end
 
+  def delete
+    fill_captcha "answer"
+    super
+  end
+
   def fill_captcha answer
     return false unless @thread
 
