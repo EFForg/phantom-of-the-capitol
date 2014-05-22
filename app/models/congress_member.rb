@@ -99,11 +99,13 @@ class CongressMember < ActiveRecord::Base
           end
         when "select"
           if f[a.value].nil?
-            elem = b.element(:css => a.selector).to_subtype
-            begin
-              elem.select_value(a.value)
-            rescue Watir::Exception::NoValueFoundException
-              elem.select(a.value)
+            unless PLACEHOLDER_VALUES.include? a.value
+              elem = b.element(:css => a.selector).to_subtype
+              begin
+                elem.select_value(a.value)
+              rescue Watir::Exception::NoValueFoundException
+                elem.select(a.value)
+              end
             end
           else
             elem = b.element(:css => a.selector).to_subtype
@@ -182,14 +184,16 @@ class CongressMember < ActiveRecord::Base
         when "select"
           session.within a.selector do
             if f[a.value].nil?
-              begin
-                elem = session.find('option[value="' + a.value.gsub('"', '\"') + '"]')
-              rescue Capybara::Ambiguous
-                elem = session.first('option[value="' + a.value.gsub('"', '\"') + '"]')
-              rescue Capybara::ElementNotFound
-                elem = session.find('option', text: Regexp.compile("^" + Regexp.escape(a.value) + "$"))
+              unless PLACEHOLDER_VALUES.include? a.value
+                begin
+                  elem = session.find('option[value="' + a.value.gsub('"', '\"') + '"]')
+                rescue Capybara::Ambiguous
+                  elem = session.first('option[value="' + a.value.gsub('"', '\"') + '"]')
+                rescue Capybara::ElementNotFound
+                  elem = session.find('option', text: Regexp.compile("^" + Regexp.escape(a.value) + "$"))
+                end
+                elem.select_option
               end
-              elem.select_option
             else
               begin
                 elem = session.find('option[value="' + f[a.value].gsub('"', '\"') + '"]')
