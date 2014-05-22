@@ -89,11 +89,17 @@ namespace :'congress-forms' do
     }
 
     captchad = []
+    noncaptchad = []
     notfound = []
 
     CongressMember.where("bioguide_id REGEXP '" + args[:regex].gsub("'","") + "'").each do |c|
       if congress_defaults.include? c.bioguide_id
         if !c.has_captcha?
+          noncaptchad.push(c) 
+        else
+          captchad.push(c)
+        end
+        (captchad + noncaptchad).each do |c|
           fields_hash = {}
 
           fields_hash["$ADDRESS_ZIP4"] = congress_defaults[c.bioguide_id]["zip4"] || defaults["$ADDRESS_ZIP4"]["example"]
@@ -125,18 +131,18 @@ namespace :'congress-forms' do
             end
           end
           begin
-            c.fill_out_form fields_hash
+            c.fill_out_form fields_hash do |c|
+              puts "Please type in the value for the captcha at " + c + "\n"
+              STDIN.gets
+            end
           rescue
           end
-        else
-          captchad.push(c.bioguide_id)
         end
       else
         notfound.push(c.bioguide_id)
       end
     end
 
-    puts "The following members have captchas and must be checked manually: " + captchad.inspect
     puts "No congressional defaults found for the following members: " + notfound.inspect
   end
 end
