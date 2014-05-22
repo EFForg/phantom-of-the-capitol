@@ -133,7 +133,7 @@ namespace :'congress-forms' do
           begin
             c.fill_out_form fields_hash do |c|
               puts "Please type in the value for the captcha at " + c + "\n"
-              STDIN.gets
+              STDIN.gets.strip
             end
           rescue
           end
