@@ -18,7 +18,7 @@ class FillHash
   def remove_after_timeout index
     Thread.new do
       sleep @timeout
-      @fh[index].delete
+      @fh[index].finish_workflow
       @fh.delete index
     end
   end

@@ -35,9 +35,8 @@ class FillHandler
     FillHandler::check_result @result
   end
 
-  def delete
+  def finish_workflow
     fill_captcha "answer"
-    super
   end
 
   def fill_captcha answer

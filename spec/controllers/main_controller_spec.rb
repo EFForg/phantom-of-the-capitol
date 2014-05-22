@@ -231,7 +231,7 @@ describe "Main controller" do
         expect(JSON.load(last_response.body)["status"]).to eq("error")
       end
 
-      it "should destroy the fiber after giving a answer" do
+      it "should destroy the thread after giving a answer" do
         post_json :'fill-out-captcha', {
           "uid" => @uid,
           "answer" => "placeholder"
@@ -245,7 +245,7 @@ describe "Main controller" do
         expect(last_response_json["message"]).to eq("The unique id provided was not found.")
       end
 
-      it "should destroy the fiber after a time interval" do
+      it "should destroy the thread after a time interval" do
         sleep(5)
         post_json :'fill-out-captcha', {
           "uid" => @uid,
@@ -255,7 +255,7 @@ describe "Main controller" do
         expect(last_response_json["status"]).to eq("error")
         expect(last_response_json["message"]).to eq("The unique id provided was not found.")
       end
-
+      
       it "should return json indicating an error without uid or answer" do
         post_json @route, {"answer" => "placeholder"}.to_json
 
