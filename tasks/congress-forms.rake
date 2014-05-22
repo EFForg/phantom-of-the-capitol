@@ -99,47 +99,48 @@ namespace :'congress-forms' do
         else
           captchad.push(c)
         end
-        (captchad + noncaptchad).each do |c|
-          fields_hash = {}
-
-          fields_hash["$ADDRESS_ZIP4"] = congress_defaults[c.bioguide_id]["zip4"] || defaults["$ADDRESS_ZIP4"]["example"]
-          fields_hash["$ADDRESS_ZIP5"] = congress_defaults[c.bioguide_id]["zip5"] || defaults["$ADDRESS_ZIP5"]["example"]
-
-          c.required_actions.each do |ra|
-            if ra.value == "$ADDRESS_ZIP4" or ra.value == "$ADDRESS_ZIP5"
-            elsif possible_validation.keys.include? ra.value
-              if ra.value == "$ADDRESS_STATE_FULL"
-                fields_hash[ra.value] = STATES[congress_defaults[c.bioguide_id][possible_validation[ra.value]]] || defaults[ra.value]["example"]
-              else
-                fields_hash[ra.value] = congress_defaults[c.bioguide_id][possible_validation[ra.value]] || defaults[ra.value]["example"]
-              end
-            elsif defaults.keys.include? ra.value
-              if ra.options.nil?
-                fields_hash[ra.value] = defaults[ra.value]["example"]
-              else
-                options = YAML.load(ra.options)
-                values = options.is_a?(Hash) ? options.values : options
-
-                #if values.include? defaults[ra.value]["example"]
-                  #fields_hash[ra.value] = defaults[ra.value]["example"]
-                #else
-
-                fields_hash[ra.value] = values[Random.rand(values.length)]
-
-                #end
-              end
-            end
-          end
-          begin
-            c.fill_out_form fields_hash do |c|
-              puts "Please type in the value for the captcha at " + c + "\n"
-              STDIN.gets.strip
-            end
-          rescue
-          end
-        end
       else
         notfound.push(c.bioguide_id)
+      end
+    end
+
+    (captchad + noncaptchad).each do |c|
+      fields_hash = {}
+
+      fields_hash["$ADDRESS_ZIP4"] = congress_defaults[c.bioguide_id]["zip4"] || defaults["$ADDRESS_ZIP4"]["example"]
+      fields_hash["$ADDRESS_ZIP5"] = congress_defaults[c.bioguide_id]["zip5"] || defaults["$ADDRESS_ZIP5"]["example"]
+
+      c.required_actions.each do |ra|
+        if ra.value == "$ADDRESS_ZIP4" or ra.value == "$ADDRESS_ZIP5"
+        elsif possible_validation.keys.include? ra.value
+          if ra.value == "$ADDRESS_STATE_FULL"
+            fields_hash[ra.value] = STATES[congress_defaults[c.bioguide_id][possible_validation[ra.value]]] || defaults[ra.value]["example"]
+          else
+            fields_hash[ra.value] = congress_defaults[c.bioguide_id][possible_validation[ra.value]] || defaults[ra.value]["example"]
+          end
+        elsif defaults.keys.include? ra.value
+          if ra.options.nil?
+            fields_hash[ra.value] = defaults[ra.value]["example"]
+          else
+            options = YAML.load(ra.options)
+            values = options.is_a?(Hash) ? options.values : options
+
+            #if values.include? defaults[ra.value]["example"]
+              #fields_hash[ra.value] = defaults[ra.value]["example"]
+            #else
+
+            fields_hash[ra.value] = values[Random.rand(values.length)]
+
+            #end
+          end
+        end
+      end
+      begin
+        c.fill_out_form fields_hash do |c|
+          puts "Please type in the value for the captcha at " + c + "\n"
+          STDIN.gets.strip
+        end
+      rescue
       end
     end
 
