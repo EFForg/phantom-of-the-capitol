@@ -48,7 +48,6 @@ gem 'thin'
 gem 'carrierwave'
 gem 'fog'
 gem 'headless'
-gem 'newrelic_rpm'
 gem 'typhoeus'
 
 

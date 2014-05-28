@@ -18,8 +18,6 @@ require 'capybara/poltergeist'
 Capybara.run_server = false
 Capybara.default_wait_time = 5
 
-require 'newrelic_rpm'
-
 ##
 # ## Enable devel logging
 #
