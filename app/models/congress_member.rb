@@ -185,13 +185,31 @@ class CongressMember < ActiveRecord::Base
           session.within a.selector do
             if f[a.value].nil?
               unless PLACEHOLDER_VALUES.include? a.value
-                elem = session.first('option[value="' + a.value.gsub('"', '\"') + '"]')
-                elem = session.first('option', text: Regexp.compile("^" + Regexp.escape(a.value) + "$")) if elem.nil?
+                begin
+                  elem = session.find('option[value="' + a.value.gsub('"', '\"') + '"]')
+                rescue Capybara::Ambiguous
+                  elem = session.first('option[value="' + a.value.gsub('"', '\"') + '"]')
+                rescue Capybara::ElementNotFound
+                  begin
+                    elem = session.find('option', text: Regexp.compile("^" + Regexp.escape(a.value) + "$"))
+                  rescue Capybara::Ambiguous
+                    elem = session.first('option', text: Regexp.compile("^" + Regexp.escape(a.value) + "$"))
+                  end
+                end
                 elem.select_option
               end
             else
-              elem = session.first('option[value="' + f[a.value].gsub('"', '\"') + '"]')
-              elem = session.first('option', text: Regexp.compile("^" + Regexp.escape(f[a.value]) + "$")) if elem.nil?
+              begin
+                elem = session.find('option[value="' + f[a.value].gsub('"', '\"') + '"]')
+              rescue Capybara::Ambiguous
+                elem = session.first('option[value="' + f[a.value].gsub('"', '\"') + '"]')
+              rescue Capybara::ElementNotFound
+                begin
+                  elem = session.find('option', text: Regexp.compile("^" + Regexp.escape(f[a.value]) + "$"))
+                rescue Capybara::Ambiguous
+                  elem = session.first('option', text: Regexp.compile("^" + Regexp.escape(f[a.value]) + "$"))
+                end
+              end
               elem.select_option
             end
           end
