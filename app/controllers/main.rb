@@ -1,4 +1,7 @@
+require 'securerandom'
+
 CongressForms::App.controller do
+
   get :index do
     render :index
   end
@@ -25,18 +28,18 @@ CongressForms::App.controller do
   fh = FillHash.new
   post :'fill-out-form' do
     content_type :json
-    return {status: "error", message: "You must provide a bio_id, fields, and a uid to fill out form."}.to_json unless params.include? "bio_id" and params.include? "fields" and params.include? "uid"
+    return {status: "error", message: "You must provide a bio_id and fields to fill out form."}.to_json unless params.include? "bio_id" and params.include? "fields"
 
     bio_id = params["bio_id"]
     fields = params["fields"]
-    uid = params["uid"]
 
     c = CongressMember.bioguide(bio_id)
     return {status: "error", message: "Congress member with provided bio id not found"}.to_json if c.nil?
 
     handler = FillHandler.new(c)
     result = handler.fill fields, params["campaign_tag"]
-    fh[uid] = handler if result[:status] == "captcha_needed"
+    result[:uid] = SecureRandom.hex
+    fh[result[:uid]] = handler if result[:status] == "captcha_needed"
     result.to_json
   end
 
