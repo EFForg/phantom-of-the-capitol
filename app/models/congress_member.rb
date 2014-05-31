@@ -83,7 +83,7 @@ class CongressMember < ActiveRecord::Base
         when "visit"
           b.goto a.value
         when "wait"
-          sleep a.value
+          sleep a.value.to_i
         when "fill_in"
           if a.value == "$CAPTCHA_SOLUTION"
             location = b.element(:css => a.captcha_selector).wd.location
@@ -173,7 +173,7 @@ class CongressMember < ActiveRecord::Base
         when "visit"
           session.visit(a.value)
         when "wait"
-          sleep a.value
+          sleep a.value.to_i
         when "fill_in"
           if a.value == "$CAPTCHA_SOLUTION"
             location = session.driver.evaluate_script 'document.querySelector("' + a.captcha_selector.gsub('"', '\"') + '").getBoundingClientRect();'
