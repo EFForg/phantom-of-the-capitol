@@ -13,7 +13,7 @@ class CongressMemberAction < ActiveRecord::Base
 
   extend Enumerize
 
-  enumerize :action, in: %w(visit fill_in select click_on find check uncheck choose)
+  enumerize :action, in: %w(visit fill_in select click_on find check uncheck choose wait)
 
   def as_required_json o={}
     as_json(REQUIRED_JSON.merge o)
