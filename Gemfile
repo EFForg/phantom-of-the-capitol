@@ -24,10 +24,6 @@ group :test do
   gem 'factory_girl'
 end
 
-group :local do
-  gem 'watir-webdriver'
-end
-
 # Padrino Stable Gem
 gem 'padrino', '0.11.4'
 
@@ -49,6 +45,7 @@ gem 'carrierwave'
 gem 'fog'
 gem 'headless'
 gem 'typhoeus'
+gem 'watir-webdriver'
 
 
 # Or Padrino Edge
