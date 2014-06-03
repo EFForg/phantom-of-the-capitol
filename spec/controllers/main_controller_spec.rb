@@ -131,8 +131,7 @@ describe "Main controller" do
     it "should return json indicating an error when trying to fill out form for an undefined congress member" do
       post_json @route, {
         "bio_id" => "TEST",
-        "fields" => MOCK_VALUES,
-        "uid" => @uid
+        "fields" => MOCK_VALUES
       }.to_json
       expect(JSON.load(last_response.body)["status"]).to eq("error")
       expect(JSON.load(last_response.body)["message"]).not_to be_nil # don't be brittle
@@ -141,8 +140,7 @@ describe "Main controller" do
     it "should return json indicating an error when trying to fill out form without fields" do
       c = create :congress_member_with_actions
       post_json @route, {
-        "bio_id" => c.bioguide_id,
-        "uid" => @uid
+        "bio_id" => c.bioguide_id
       }.to_json
       last_response_json = JSON.load(last_response.body)
       expect(last_response_json["status"]).to eq("error")
@@ -153,8 +151,7 @@ describe "Main controller" do
       c = create :congress_member_with_actions, success_criteria: YAML.dump({"headers"=>{"status"=>200}, "body"=>{"contains"=>"Won't get me!"}})
       post_json @route, {
         "bio_id" => c.bioguide_id,
-        "fields" => MOCK_VALUES,
-        "uid" => @uid
+        "fields" => MOCK_VALUES
       }.to_json
       last_response_json = JSON.load(last_response.body)
       expect(last_response_json["status"]).to eq("error")
@@ -166,8 +163,7 @@ describe "Main controller" do
       c = create :congress_member_with_actions
       post_json @route, {
         "bio_id" => c.bioguide_id,
-        "fields" => MOCK_VALUES,
-        "uid" => @uid
+        "fields" => MOCK_VALUES
       }.to_json
       expect(last_response.status).to eq(200)
       expect(JSON.load(last_response.body)["status"]).to eq("success")
