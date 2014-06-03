@@ -143,11 +143,11 @@ class CongressMember < ActiveRecord::Base
       success = check_success b.text
 
       success_hash = {success: success}
-      success_hash[:screenshot] = self.class::save_screenshot_and_store_watir(b.driver) if !success and DEBUG_ENDPOINTS
+      success_hash[:screenshot] = self.class::save_screenshot_and_store_watir(b.driver) if !success
       success_hash
     rescue Exception => e
       message = {message: e.message}
-      message[:screenshot] = self.class::save_screenshot_and_store_watir(b.driver) if DEBUG_ENDPOINTS
+      message[:screenshot] = self.class::save_screenshot_and_store_watir(b.driver)
       raise e, YAML.dump(message)
     ensure
       b.close
@@ -246,11 +246,11 @@ class CongressMember < ActiveRecord::Base
       success = check_success session.text
 
       success_hash = {success: success}
-      success_hash[:screenshot] = self.class::save_screenshot_and_store_poltergeist(session) if !success and DEBUG_ENDPOINTS
+      success_hash[:screenshot] = self.class::save_screenshot_and_store_poltergeist(session) if !success
       success_hash
     rescue Exception => e
       message = {message: e.message}
-      message[:screenshot] = self.class::save_screenshot_and_store_poltergeist(session) if DEBUG_ENDPOINTS
+      message[:screenshot] = self.class::save_screenshot_and_store_poltergeist(session)
       raise e, YAML.dump(message)
     ensure
       case driver
