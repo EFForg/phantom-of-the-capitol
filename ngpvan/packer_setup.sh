@@ -36,7 +36,9 @@ source /home/ubuntu/.rvm/scripts/rvm
 rvm install ruby-2.1.0
 
 cd .
-bundle install
+rvm gemset create congress-forms
+rvm alias create congress-forms ruby-2.1.0@congress-forms
+bundle install --path /home/ubuntu/.rvm/gems/ruby-2.1.0@congress-forms/gems/
 
 echo "Loading schema..."
 bundle exec rake ar:create ar:schema:load > /dev/null
@@ -51,5 +53,6 @@ EOF
 
 sudo ln -s /home/ubuntu/phantomjs-1.9.7-linux-x86_64/bin/phantomjs /usr/bin/phantomjs
 sudo chmod go-w /congress-forms
+sudo cp /congress-forms/ngpvan/upstart-congress-forms.conf /etc/init/upstart-congress-forms.conf
 
 echo "Setup Complete"

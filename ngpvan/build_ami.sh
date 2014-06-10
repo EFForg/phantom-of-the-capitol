@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 debugFlag=""
-if [ $1 = "-debug" ]; then 
+if [ $1 = "--debug" ]; then 
   echo "Packer debug mode enabled."
   debugFlag="-debug"
 fi
