@@ -1,5 +1,26 @@
-REQUIRES_WEBKIT = %w[L000566 D000563 F000461 L000567 B000490 B001287]
-REQUIRES_WATIR = %w[C000880 C000560 P000608]
+REQUIRES_WEBKIT = %w[L000566 D000563 F000461 L000567 B000490 B001287 C000880 C000560 P000608]
+REQUIRES_WATIR = %w[]
+
+CAPTCHA_LOCATIONS = {
+  "C000880" => {
+    "left" => "247",
+    "top" => "1966",
+    "width" => "280",
+    "height" => "50"
+  },
+  "C000560" => {
+    "left" => "211",
+    "top" => "1423",
+    "width" => "300",
+    "height" => "57"
+  },
+  "P000608" => {
+    "left" => "109",
+    "top" => "1452",
+    "width" => "300",
+    "height" => "57"
+  }
+}
 
 PLACEHOLDER_VALUES = [
   '$NAME_PREFIX',
