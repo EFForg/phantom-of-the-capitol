@@ -10,7 +10,7 @@ CAPTCHA_LOCATIONS = {
   },
   "C000560" => {
     "left" => "211",
-    "top" => "1423",
+    "top" => "1409",
     "width" => "300",
     "height" => "57"
   },
