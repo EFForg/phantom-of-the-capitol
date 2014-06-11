@@ -83,22 +83,12 @@ describe CongressMember do
       end
     end
 
-    describe "when DEBUG_ENDPOINTS is set to true" do
-      before do
-        DEBUG_ENDPOINTS = true
-      end
-
-      it "should include a screenshot in the FillStatus for filling out a form via CongressMember.fill_out_form" do
-        begin
-          @congress_member.fill_out_form(MOCK_VALUES)
-        rescue
-        ensure
-          expect(YAML.load(FillStatus.last.extra).include? :screenshot).to eq(true)
-        end
-      end
-
-      after do
-        DEBUG_ENDPOINTS = false
+    it "should include a screenshot in the FillStatus for filling out a form via CongressMember.fill_out_form" do
+      begin
+        @congress_member.fill_out_form(MOCK_VALUES)
+      rescue
+      ensure
+        expect(YAML.load(FillStatus.last.extra).include? :screenshot).to eq(true)
       end
     end
   end
@@ -130,22 +120,12 @@ describe CongressMember do
       end
     end
 
-    describe "when DEBUG_ENDPOINTS is set to true" do
-      before do
-        DEBUG_ENDPOINTS = true
-      end
-
-      it "should include a screenshot in the FillStatus for filling out a form via CongressMember.fill_out_form" do
-        begin
-          @congress_member.fill_out_form(MOCK_VALUES.merge({"$NAME_MIDDLE" => "Bart"}))
-        rescue
-        ensure
-          expect(YAML.load(FillStatus.last.extra).include? :screenshot).to eq(true)
-        end
-      end
-
-      after do
-        DEBUG_ENDPOINTS = false
+    it "should include a screenshot in the FillStatus for filling out a form via CongressMember.fill_out_form" do
+      begin
+        @congress_member.fill_out_form(MOCK_VALUES.merge({"$NAME_MIDDLE" => "Bart"}))
+      rescue
+      ensure
+        expect(YAML.load(FillStatus.last.extra).include? :screenshot).to eq(true)
       end
     end
   end
