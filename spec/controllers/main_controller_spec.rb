@@ -14,18 +14,19 @@ describe "Main controller" do
     end
 
     it "should run through the entire workflow for a captcha form successfully" do
-      @uid = "test"
       @c = create :congress_member_with_actions_and_captcha
-      Typhoeus.post(
+      fill_out_form_response = Typhoeus.post(
         "localhost:9922/fill-out-form",
         method: :post,
         body: {
           bio_id: @c.bioguide_id,
-          uid: @uid,
           fields: MOCK_VALUES
         }.to_json,
         headers: { :'Content-Type' => "application/json" }
       )
+
+      @uid = JSON.load(fill_out_form_response.body)["uid"]
+
       captcha_response = Typhoeus.post(
         "localhost:9922/fill-out-captcha",
         method: :post,
@@ -124,15 +125,13 @@ describe "Main controller" do
   describe "route /fill-out-form" do
     before do
       @route = :'fill-out-form'
-      @uid = "someuid"
       @campaign_tag = "know your rights"
     end
 
     it "should return json indicating an error when trying to fill out form for an undefined congress member" do
       post_json @route, {
         "bio_id" => "TEST",
-        "fields" => MOCK_VALUES,
-        "uid" => @uid
+        "fields" => MOCK_VALUES
       }.to_json
       expect(JSON.load(last_response.body)["status"]).to eq("error")
       expect(JSON.load(last_response.body)["message"]).not_to be_nil # don't be brittle
@@ -141,19 +140,7 @@ describe "Main controller" do
     it "should return json indicating an error when trying to fill out form without fields" do
       c = create :congress_member_with_actions
       post_json @route, {
-        "bio_id" => c.bioguide_id,
-        "uid" => @uid
-      }.to_json
-      last_response_json = JSON.load(last_response.body)
-      expect(last_response_json["status"]).to eq("error")
-      expect(last_response_json["message"]).not_to be_nil # don't be brittle
-    end
-
-    it "should return json indicating an error when trying to fill out form without uid" do
-      c = create :congress_member_with_actions
-      post_json @route, {
-        "bio_id" => c.bioguide_id,
-        "fields" => MOCK_VALUES
+        "bio_id" => c.bioguide_id
       }.to_json
       last_response_json = JSON.load(last_response.body)
       expect(last_response_json["status"]).to eq("error")
@@ -164,8 +151,7 @@ describe "Main controller" do
       c = create :congress_member_with_actions, success_criteria: YAML.dump({"headers"=>{"status"=>200}, "body"=>{"contains"=>"Won't get me!"}})
       post_json @route, {
         "bio_id" => c.bioguide_id,
-        "fields" => MOCK_VALUES,
-        "uid" => @uid
+        "fields" => MOCK_VALUES
       }.to_json
       last_response_json = JSON.load(last_response.body)
       expect(last_response_json["status"]).to eq("error")
@@ -177,8 +163,7 @@ describe "Main controller" do
       c = create :congress_member_with_actions
       post_json @route, {
         "bio_id" => c.bioguide_id,
-        "fields" => MOCK_VALUES,
-        "uid" => @uid
+        "fields" => MOCK_VALUES
       }.to_json
       expect(last_response.status).to eq(200)
       expect(JSON.load(last_response.body)["status"]).to eq("success")
@@ -190,9 +175,9 @@ describe "Main controller" do
       post_json @route, {
         "bio_id" => c.bioguide_id,
         "fields" => MOCK_VALUES,
-        "uid" => @uid,
         "campaign_tag" => @campaign_tag
       }.to_json
+
       expect(last_response.status).to eq(200)
       expect(JSON.load(last_response.body)["status"]).to eq("success")
       expect(CampaignTag.last.name).to eq(@campaign_tag)
@@ -203,9 +188,11 @@ describe "Main controller" do
         c = create :congress_member_with_actions_and_captcha
         post_json @route, {
           "bio_id" => c.bioguide_id,
-          "fields" => MOCK_VALUES,
-          "uid" => @uid
+          "fields" => MOCK_VALUES
         }.to_json
+
+        @uid = JSON.load(last_response.body)["uid"]
+
       end
 
       it "should result in a status of 'captcha_needed'" do
