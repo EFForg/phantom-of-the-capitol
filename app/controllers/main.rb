@@ -9,6 +9,7 @@ CongressForms::App.controller do
   before do
     if CORS_ALLOWED_DOMAINS.include? request.env['HTTP_ORIGIN'] or CORS_ALLOWED_DOMAINS.include? "*"
       response.headers['Access-Control-Allow-Origin'] = request.env['HTTP_ORIGIN']
+      response.headers['Access-Control-Allow-Credentials'] = "true"
     end
   end
 
