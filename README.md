@@ -14,12 +14,12 @@ This project relies on [Contact Congress](https://github.com/unitedstates/contac
 
 #### Installation
 
- - `vagrant up`
+ - `vagrant up local`
  - `vim config/congress-forms_config.rb # edit settings here`
 
 #### Running
 
- - `vagrant ssh`
+ - `vagrant ssh local`
  - `cd /vagrant`
  - `bundle exec rackup`
 
