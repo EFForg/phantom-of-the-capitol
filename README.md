@@ -21,7 +21,7 @@ This project relies on [Contact Congress](https://github.com/unitedstates/contac
 
  - `vagrant ssh`
  - `cd /vagrant`
- - `sudo bundle exec rackup`
+ - `bundle exec rackup`
 
 ### The hard way (or when running in production)
 

@@ -16,13 +16,13 @@
   "provisioners": [{
     "type": "shell",
     "inline": [
-      "sudo mkdir -m 777 /ubuntu/"
+      "sudo mkdir -m 777 /vagrant/"
     ]
   },
   {
 	"type": "file",
 	"source": "../",
-	"destination": "/ubuntu"
+	"destination": "/vagrant"
   },
   {
     "type": "shell",
