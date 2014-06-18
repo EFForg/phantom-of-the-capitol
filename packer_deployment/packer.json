@@ -26,7 +26,7 @@
   },
   {
     "type": "shell",
-	"execute_command":	"sh {{ .Path }} ubuntu",
+	"execute_command":	"echo '' | {{ .Vars }} sudo -E -S sh {{ .Path }} ubuntu",
     "scripts": [
       "../setup_dev.sh",
 	  "service_setup.sh"
