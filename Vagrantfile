@@ -16,7 +16,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       aws.instance_type = "t1.micro"
     
       override.ssh.username = "ubuntu"
-      override.ssh.private_key_path = "/etc/ssh/congress-forms.pem"
+      override.ssh.private_key_path = "~/.ssh/congressforms.pem"
     end
     ec2_config.vm.provision :shell, :path => "setup_dev.sh", :args => "ubuntu"
     ec2_config.vm.provision :shell, :path => "./packer_deployment/service_setup.sh"
