@@ -13,7 +13,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       aws.keypair_name = "congress-forms"
       aws.ami = "ami-b08b6cd8"
       aws.security_groups = "congress-forms"
-      aws.instance_type = "t1.micro"
+      aws.instance_type = "m1.small"
     
       override.ssh.username = "ubuntu"
       override.ssh.private_key_path = "~/.ssh/congressforms.pem"
