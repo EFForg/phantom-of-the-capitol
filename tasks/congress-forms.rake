@@ -3,8 +3,13 @@ require File.expand_path("../../app/helpers/states.rb", __FILE__)
 
 namespace :'congress-forms' do
   desc "Git clone the contact congress repo and load records into the db"
-  task :clone_git do |t, args|
-    URI = "https://github.com/unitedstates/contact-congress.git"
+  task :clone_git, :repo do |t, args|
+    if not args[:repo].nil?
+      repository = args[:repo]
+    else
+      repository = "unitedstates/contact-congress"
+    end
+    URI = "https://github.com/#{repository}.git"
     NAME = "contact-congress"
     g = Git.clone(URI, NAME, :path => '/tmp/')
 

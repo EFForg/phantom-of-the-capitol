@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# $1 = user to run scripts as
+# $2 = (optional) repository for congress YAML files
+
 # stop setup script if any command fails
 set -e
 
@@ -29,11 +32,11 @@ sed -i "s@^  :password.*@  :password => '$mysql_congress_forms',@" config/databa
 
 # Doing this to make sure vagrant doesn't install RVM and Ruby as root; there's probably a cleaner way
 su -c "curl -sSL https://get.rvm.io | bash -s stable; source /home/$1/.rvm/scripts/rvm; rvm install ruby-2.1.0; 
-gem install bundler -v 1.5.1
+gem install bundler -v 1.5.1;
 rvm gemset create congress-forms; rvm alias create congress-forms ruby-2.1.0@congress-forms; 
 bundle install --path /home/$1/.rvm/gems/ruby-2.1.0@congress-forms/gems/; 
-echo \"Loading schema...\"; bundle exec rake ar:create ar:schema:load > /dev/null; 
-echo \"Loading congress members...\"; bundle exec rake congress-forms:clone_git > /dev/null;" "$1"
+echo \"Loading schema...\"; bundle exec rake ar:create ar:schema:load > /dev/null;
+echo \"Loading congress members...\"; bundle exec rake congress-forms:clone_git[$2] > /dev/null;" "$1"
 
 echo "Setting up PhantomJS..."
 cd /home/$1/

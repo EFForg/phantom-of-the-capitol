@@ -14,11 +14,29 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       aws.ami = "ami-b08b6cd8"
       aws.security_groups = "congress-forms"
       aws.instance_type = "m1.small"
-    
+
       override.ssh.username = "ubuntu"
       override.ssh.private_key_path = "~/.ssh/congressforms.pem"
     end
     ec2_config.vm.provision :shell, :path => "setup_dev.sh", :args => "ubuntu"
+    ec2_config.vm.provision :shell, :path => "./packer_deployment/service_setup.sh"
+  end
+
+  config.vm.define :ec2janecasey do |ec2_config|
+    ec2_config.vm.box = "dummy"
+    ec2_config.vm.box_url = "https://github.com/mitchellh/vagrant-aws/raw/master/dummy.box"
+    ec2_config.vm.provider :aws do |aws, override|
+      aws.access_key_id = ENV['AWS_ACCESS_KEY']
+      aws.secret_access_key = ENV['AWS_SECRET_KEY']
+      aws.keypair_name = "congress-forms"
+      aws.ami = "ami-b08b6cd8"
+      aws.security_groups = "congress-forms"
+      aws.instance_type = "m1.small"
+
+      override.ssh.username = "ubuntu"
+      override.ssh.private_key_path = "~/.ssh/congressforms.pem"
+    end
+    ec2_config.vm.provision :shell, :path => "setup_dev.sh", :args => "ubuntu ngpvan/jane-caseys-congress-form"
     ec2_config.vm.provision :shell, :path => "./packer_deployment/service_setup.sh"
   end
 
