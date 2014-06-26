@@ -59,7 +59,7 @@ class CongressMember < ActiveRecord::Base
       end
     rescue Exception => e
       # we need to add the job manually, since DJ doesn't handle yield blocks
-      self.delay.fill_out_form f, ct
+      self.delay(queue: "error_or_failure").fill_out_form f, ct
       last_job = Delayed::Job.last
       last_job.attempts = 1
       last_job.run_at = Time.now
