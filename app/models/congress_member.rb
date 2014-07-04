@@ -102,22 +102,26 @@ class CongressMember < ActiveRecord::Base
             b.element(:css => a.selector).to_subtype.set(f[a.value]) unless f[a.value].nil?
           end
         when "select"
-          if f[a.value].nil?
-            unless PLACEHOLDER_VALUES.include? a.value
+          begin
+            if f[a.value].nil?
+              unless PLACEHOLDER_VALUES.include? a.value
+                elem = b.element(:css => a.selector).to_subtype
+                begin
+                  elem.select_value(a.value)
+                rescue Watir::Exception::NoValueFoundException
+                  elem.select(a.value)
+                end
+              end
+            else
               elem = b.element(:css => a.selector).to_subtype
               begin
-                elem.select_value(a.value)
+                elem.select_value(f[a.value])
               rescue Watir::Exception::NoValueFoundException
-                elem.select(a.value)
+                elem.select(f[a.value])
               end
             end
-          else
-            elem = b.element(:css => a.selector).to_subtype
-            begin
-              elem.select_value(f[a.value])
-            rescue Watir::Exception::NoValueFoundException
-              elem.select(f[a.value])
-            end
+          rescue Watir::Exception::NoValueFoundException => e
+            raise e, e.message unless a.options == "DEPENDENT"
           end
         when "click_on"
           b.element(:css => a.selector).to_subtype.click
@@ -188,36 +192,40 @@ class CongressMember < ActiveRecord::Base
             session.find(a.selector).set(f[a.value]) unless f[a.value].nil?
           end
         when "select"
-          session.within a.selector do
-            if f[a.value].nil?
-              unless PLACEHOLDER_VALUES.include? a.value
+          begin
+            session.within a.selector do
+              if f[a.value].nil?
+                unless PLACEHOLDER_VALUES.include? a.value
+                  begin
+                    elem = session.find('option[value="' + a.value.gsub('"', '\"') + '"]')
+                  rescue Capybara::Ambiguous
+                    elem = session.first('option[value="' + a.value.gsub('"', '\"') + '"]')
+                  rescue Capybara::ElementNotFound
+                    begin
+                      elem = session.find('option', text: Regexp.compile("^" + Regexp.escape(a.value) + "$"))
+                    rescue Capybara::Ambiguous
+                      elem = session.first('option', text: Regexp.compile("^" + Regexp.escape(a.value) + "$"))
+                    end
+                  end
+                  elem.select_option
+                end
+              else
                 begin
-                  elem = session.find('option[value="' + a.value.gsub('"', '\"') + '"]')
+                  elem = session.find('option[value="' + f[a.value].gsub('"', '\"') + '"]')
                 rescue Capybara::Ambiguous
-                  elem = session.first('option[value="' + a.value.gsub('"', '\"') + '"]')
+                  elem = session.first('option[value="' + f[a.value].gsub('"', '\"') + '"]')
                 rescue Capybara::ElementNotFound
                   begin
-                    elem = session.find('option', text: Regexp.compile("^" + Regexp.escape(a.value) + "$"))
+                    elem = session.find('option', text: Regexp.compile("^" + Regexp.escape(f[a.value]) + "$"))
                   rescue Capybara::Ambiguous
-                    elem = session.first('option', text: Regexp.compile("^" + Regexp.escape(a.value) + "$"))
+                    elem = session.first('option', text: Regexp.compile("^" + Regexp.escape(f[a.value]) + "$"))
                   end
                 end
                 elem.select_option
               end
-            else
-              begin
-                elem = session.find('option[value="' + f[a.value].gsub('"', '\"') + '"]')
-              rescue Capybara::Ambiguous
-                elem = session.first('option[value="' + f[a.value].gsub('"', '\"') + '"]')
-              rescue Capybara::ElementNotFound
-                begin
-                  elem = session.find('option', text: Regexp.compile("^" + Regexp.escape(f[a.value]) + "$"))
-                rescue Capybara::Ambiguous
-                  elem = session.first('option', text: Regexp.compile("^" + Regexp.escape(f[a.value]) + "$"))
-                end
-              end
-              elem.select_option
             end
+          rescue Capybara::ElementNotFound
+            raise e, e.message unless a.options == "DEPENDENT"
           end
         when "click_on"
           session.find(a.selector).click
