@@ -19,10 +19,11 @@ mysql-server-5.5 mysql-server/root_password password $mysql_root
 mysql-server-5.5 mysql-server/root_password_again password $mysql_root
 EOF
 
-su -c "sudo apt-get update; sudo apt-get -y install $DEPENDENCIES" "$1"
+su -c "sudo add-apt-repository \"deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc) universe\"; sudo apt-get update; sudo apt-get -y install $DEPENDENCIES" "$1"
 
 mysql -u root -p"$mysql_root" -e "create database if not exists congress_forms_development;  GRANT ALL PRIVILEGES ON congress_forms_development.* TO 'congress_forms'@'localhost' IDENTIFIED BY '$mysql_congress_forms';"
 mysql -u root -p"$mysql_root" -e "create database if not exists congress_forms_test;  GRANT ALL PRIVILEGES ON congress_forms_test.* TO 'congress_forms'@'localhost';"
+
 
 cd /vagrant
 cp -a config/database-example.rb config/database.rb
