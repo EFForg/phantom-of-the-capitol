@@ -2,7 +2,7 @@ require 'aws-sdk'
 
 ami_id = ARGV[0]
 environment = ""
-unless ARGV[1].nil? || ARGV[1].empty
+unless ARGV[1].nil? || ARGV[1].empty?
 	environment = "-#{ARGV[1]}"
 end 
 launch_config_name = "congress-forms#{environment} #{Time.now.to_i}"
