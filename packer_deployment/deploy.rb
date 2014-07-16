@@ -9,19 +9,10 @@ launch_config_name = "congress-forms#{environment} #{Time.now.to_i}"
 
 auto_scaling = AWS::AutoScaling.new
 
-puts ami_id
-puts launch_config_name
-
-
 auto_scaling.launch_configurations.create(launch_config_name, 
                                           ami_id,
                                           "m1.small")
-
-auto_scaling.groups.each do |group|
-	puts group
-end
-
-congress_forms_group = auto_scaling.groups['congress-forms#{environment}']
+congress_forms_group = auto_scaling.groups["congress-forms#{environment}"]
 old_launch_configuration = congress_forms_group.launch_configuration
 old_ami = old_launch_configuration.image_id
 
