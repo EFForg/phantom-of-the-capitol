@@ -11,7 +11,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       aws.access_key_id = ENV['AWS_ACCESS_KEY']
       aws.secret_access_key = ENV['AWS_SECRET_KEY']
       aws.keypair_name = "congress-forms"
-      aws.ami = "ami-b08b6cd8"
+      aws.ami = "ami-36b9705e"
       aws.security_groups = "congress-forms"
       aws.instance_type = "m1.small"
 
