@@ -6,7 +6,12 @@
 # stop setup script if any command fails
 set -e
 
-DEPENDENCIES="mysql-server curl imagemagick libmysql++-dev libpq-dev git libqt4-dev xvfb"
+if [ "ubuntu" != $1 ]
+then
+    DEPENDENCIES="mysql-server curl imagemagick libmysql++-dev libpq-dev git libqt4-dev xvfb"
+else
+    DEPENDENCIES="mysql-server"
+fi
 
 random() {
     head -c $1 /dev/urandom | base64
@@ -19,7 +24,7 @@ mysql-server-5.5 mysql-server/root_password password $mysql_root
 mysql-server-5.5 mysql-server/root_password_again password $mysql_root
 EOF
 
-su -c "sudo add-apt-repository \"deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc) universe\"; sudo apt-get update; sudo apt-get -y install $DEPENDENCIES" "$1"
+su -c "sudo apt-get update; sudo apt-get -y install $DEPENDENCIES" "$1"
 
 mysql -u root -p"$mysql_root" -e "create database if not exists congress_forms_development;  GRANT ALL PRIVILEGES ON congress_forms_development.* TO 'congress_forms'@'localhost' IDENTIFIED BY '$mysql_congress_forms';"
 mysql -u root -p"$mysql_root" -e "create database if not exists congress_forms_test;  GRANT ALL PRIVILEGES ON congress_forms_test.* TO 'congress_forms'@'localhost';"
@@ -32,7 +37,12 @@ cp -a config/congress-forms_config.rb.example config/congress-forms_config.rb
 sed -i "s@^  :password.*@  :password => '$mysql_congress_forms',@" config/database.rb
 
 # Doing this to make sure vagrant doesn't install RVM and Ruby as root; there's probably a cleaner way
-su -c "curl -sSL https://get.rvm.io | bash -s stable; source /home/$1/.rvm/scripts/rvm; rvm install ruby-2.1.0; 
+if [ "ubuntu" != $1 ]
+then
+    su -c "curl -sSL https://get.rvm.io | bash -s stable; source /home/$1/.rvm/scripts/rvm; rvm install ruby-2.1.0" "$1"
+fi
+
+su -c "source /home/$1/.rvm/scripts/rvm; rvm use ruby-2.1.0;
 gem install bundler -v 1.5.1;
 rvm gemset create congress-forms; rvm alias create congress-forms ruby-2.1.0@congress-forms; 
 bundle install --path /home/$1/.rvm/gems/ruby-2.1.0@congress-forms/gems/; 
