@@ -51,7 +51,7 @@ namespace :'congress-forms' do
       reqiure 'pp'
       pp people.sort_by { |k, v| v}.reverse.inspect
     end
-    desc "for error_or_failure jobs that have no zip4, display the address, let the user enter the zip4, and retry"
+    desc "for error_or_failure jobs that have no zip4, display the address, let the user enter the zip4, save and retry"
     task :manual_zip4_retry do |t, args|
       jobs = Delayed::Job.where(queue: "error_or_failure")
       jobs.each do |job|
@@ -60,6 +60,8 @@ namespace :'congress-forms' do
           if handler.args[0]['$ADDRESS_ZIP4'].nil?
             puts handler.args[0]['$ADDRESS_STREET'] + ", " + handler.args[0]['$ADDRESS_ZIP5']
             handler.args[0]['$ADDRESS_ZIP4'] = STDIN.gets.strip
+            job.handler = YAML.dump(handler)
+            job.save
             result = handler.object.fill_out_form handler.args[0] do |img|
               puts img
               STDIN.gets.strip
