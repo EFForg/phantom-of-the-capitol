@@ -23,17 +23,17 @@ namespace :'congress-forms' do
 	    puts img
 	    STDIN.gets.strip
 	  end
-	  job.destroy
 	rescue
 	end
+	job.destroy
       end
       noncaptcha_jobs.each do |job|
 	begin
 	  handler = YAML.load job.handler
 	  result = handler.object.fill_out_form handler.args[0]
-	  job.destroy
 	rescue
 	end
+	job.destroy
       end
     end
     desc "calculate # of jobs per congressperson on the Delayed::Job error_or_failure queue"
