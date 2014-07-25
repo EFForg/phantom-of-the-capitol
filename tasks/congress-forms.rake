@@ -54,6 +54,7 @@ namespace :'congress-forms' do
     desc "for error_or_failure jobs that have no zip4, display the address, let the user enter the zip4, save and retry"
     task :manual_zip4_retry do |t, args|
       jobs = Delayed::Job.where(queue: "error_or_failure")
+      puts "Jobs: " + jobs.count.to_s
       jobs.each do |job|
         begin
           handler = YAML.load job.handler
