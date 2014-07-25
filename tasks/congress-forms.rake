@@ -17,24 +17,6 @@ namespace :'congress-forms' do
 
     update_db_with_git_object g, args[:contact_congress_directory]
   end
-  desc "Maps the forms from their native YAML format into the db"
-  task :map_forms, :contact_congress_directory do |t, args|
-
-    DatabaseCleaner.strategy = :truncation, {:only => %w[congress_member_actions]}
-    DatabaseCleaner.clean
-
-    Dir[args[:contact_congress_directory]+'/members/*.yaml'].each do |f|
-      create_congress_member_exception_wrapper(f) do
-        congress_member_details = YAML.load_file(f)
-        create_congress_member_from_hash congress_member_details
-      end
-    end
-    constants = YAML.load_file(args[:contact_congress_directory]+'/support/constants.yaml')
-    File.open(File.expand_path("../../config/constants.rb", __FILE__), 'w') do |f|
-      f.write "CONSTANTS = "
-      f.write constants
-    end
-  end
   desc "Analyze how common the expected values of fields are"
   task :common_fields do |t, args|
     values_hash = {}
