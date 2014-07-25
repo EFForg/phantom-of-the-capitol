@@ -53,7 +53,7 @@ namespace :'congress-forms' do
     end
     desc "for error_or_failure jobs that have no zip4, display the address, let the user enter the zip4, and retry"
     task :manual_zip4_retry do |t, args|
-      jobs = Delayed::Job.all
+      jobs = Delayed::Job.where(queue: "error_or_failure")
       jobs.each do |job|
         handler = YAML.load job.handler
         if handler.args[0]['$ADDRESS_ZIP4'].nil?
@@ -69,7 +69,7 @@ namespace :'congress-forms' do
     end
     desc "delete jobs that were generated during the fill_out_all rake task"
     task :delayed_job_delete_rake do |t, args|
-      jobs = Delayed::Job.all
+      jobs = Delayed::Job.where(queue: "error_or_failure")
       jobs.each do |job|
         handler = YAML.load job.handler
         job.destroy if handler.args[1] == "rake"
