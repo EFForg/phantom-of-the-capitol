@@ -51,6 +51,30 @@ namespace :'congress-forms' do
       reqiure 'pp'
       pp people.sort_by { |k, v| v}.reverse.inspect
     end
+    desc "for error_or_failure jobs that have no zip4, display the address, let the user enter the zip4, and retry"
+    task :manual_zip4_retry do |t, args|
+      jobs = Delayed::Job.all
+      jobs.each do |job|
+        handler = YAML.load job.handler
+        if handler.args[0]['$ADDRESS_ZIP4'].nil?
+          puts handler.args[0]['$ADDRESS_STREET'] + ", " + handler.args[0]['$ADDRESS_ZIP5']
+          handler.args[0]['$ADDRESS_ZIP4'] = STDIN.gets.strip
+          result = handler.object.fill_out_form handler.args[0] do |img|
+            puts img
+            STDIN.gets.strip
+          end
+          job.destroy if result == true
+        end
+      end
+    end
+    desc "delete jobs that were generated during the fill_out_all rake task"
+    task :delayed_job_delete_rake do |t, args|
+      jobs = Delayed::Job.all
+      jobs.each do |job|
+        handler = YAML.load job.handler
+        job.destroy if handler.args[1] == "rake"
+      end
+    end
   end
   desc "Git clone the contact congress repo and load records into the db"
   task :clone_git, :destination_directory do |t, args|
