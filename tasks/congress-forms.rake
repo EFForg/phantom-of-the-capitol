@@ -36,6 +36,21 @@ namespace :'congress-forms' do
 	end
       end
     end
+    desc "calculate # of jobs per congressperson on the Delayed::Job error_or_failure queue"
+    task :jobs_per_congressperson do |t, args|
+      jobs = Delayed::Job.where(queue: "error_or_failure")
+      people = {}
+      jobs.each do |job|
+        handler = YAML.load job.handler
+        if people.keys.include? handler.object.bioguide_id
+          people[handler.object.bioguide_id] += 1
+        else
+          people[handler.object.bioguide_id] = 1
+        end
+      end
+      reqiure 'pp'
+      pp people.sort_by { |k, v| v}.reverse.inspect
+    end
   end
   desc "Git clone the contact congress repo and load records into the db"
   task :clone_git, :destination_directory do |t, args|
