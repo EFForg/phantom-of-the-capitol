@@ -55,15 +55,18 @@ namespace :'congress-forms' do
     task :manual_zip4_retry do |t, args|
       jobs = Delayed::Job.where(queue: "error_or_failure")
       jobs.each do |job|
-        handler = YAML.load job.handler
-        if handler.args[0]['$ADDRESS_ZIP4'].nil?
-          puts handler.args[0]['$ADDRESS_STREET'] + ", " + handler.args[0]['$ADDRESS_ZIP5']
-          handler.args[0]['$ADDRESS_ZIP4'] = STDIN.gets.strip
-          result = handler.object.fill_out_form handler.args[0] do |img|
-            puts img
-            STDIN.gets.strip
+        begin
+          handler = YAML.load job.handler
+          if handler.args[0]['$ADDRESS_ZIP4'].nil?
+            puts handler.args[0]['$ADDRESS_STREET'] + ", " + handler.args[0]['$ADDRESS_ZIP5']
+            handler.args[0]['$ADDRESS_ZIP4'] = STDIN.gets.strip
+            result = handler.object.fill_out_form handler.args[0] do |img|
+              puts img
+              STDIN.gets.strip
+            end
+            job.destroy if result == true
           end
-          job.destroy if result == true
+        rescue
         end
       end
     end
