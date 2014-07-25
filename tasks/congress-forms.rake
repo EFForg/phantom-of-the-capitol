@@ -2,6 +2,41 @@ require File.expand_path("../../config/boot.rb", __FILE__)
 require File.expand_path("../../app/helpers/states.rb", __FILE__)
 
 namespace :'congress-forms' do
+  namespace :'delayed_job' do
+    desc "perform all fills on the Delayed::Job error_or_failure queue, captchad fills first"
+    task :perform_fills do |t, args|
+      jobs = Delayed::Job.where(queue: "error_or_failure")
+      captcha_jobs = []
+      noncaptcha_jobs = []
+      jobs.each do |job|
+	handler = YAML.load job.handler
+	if handler.object.has_captcha?
+	  captcha_jobs.push job
+	else
+	  noncaptcha_jobs.push job
+	end
+      end
+      captcha_jobs.each do |job|
+	begin
+	  handler = YAML.load job.handler
+	  result = handler.object.fill_out_form handler.args[0] do |img|
+	    puts img
+	    STDIN.gets.strip
+	  end
+	  job.destroy
+	rescue
+	end
+      end
+      noncaptcha_jobs.each do |job|
+	begin
+	  handler = YAML.load job.handler
+	  result = handler.object.fill_out_form handler.args[0]
+	  job.destroy
+	rescue
+	end
+      end
+    end
+  end
   desc "Git clone the contact congress repo and load records into the db"
   task :clone_git, :destination_directory do |t, args|
     URI = "https://github.com/unitedstates/contact-congress.git"
