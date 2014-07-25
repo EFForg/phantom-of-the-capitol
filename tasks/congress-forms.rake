@@ -62,17 +62,6 @@ namespace :'congress-forms' do
       puts v[0] + " : " + appears_percent.to_s + "% (" + required_percent.to_s + "%)"
     end
   end
-  desc "Generate a markdown file for the recent fill status of all congress members in the database"
-  task :generate_status_markdown, :file do |t, args|
-    File.open args[:file], 'w' do |f|
-      f.write("| Bioguide ID | Website | Recent Success Rate |\n")
-      f.write("|-------------|---------|:------------:|\n")
-      CongressMember.order(:bioguide_id).each do |c|
-        uri = URI(c.actions.where(action: "visit").first.value)
-        f.write("| " + c.bioguide_id + " | [" + uri.host + "](" + uri.scheme + "://" + uri.host + ") | [![" + c.bioguide_id + " status](http://ec2-54-215-28-56.us-west-1.compute.amazonaws.com:3000/recent-fill-image/" + c.bioguide_id + ")](http://ec2-54-215-28-56.us-west-1.compute.amazonaws.com:3000/recent-fill-status/" + c.bioguide_id + ") |\n")
-      end
-    end
-  end
   desc "Run through filling out of all congress members"
   task :fill_out_all, :regex do |t, args|
     response = Typhoeus.get("https://raw.githubusercontent.com/sinak/congress-zip-plus-four/master/legislators.json")
