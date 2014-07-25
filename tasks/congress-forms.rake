@@ -54,19 +54,24 @@ namespace :'congress-forms' do
     desc "for error_or_failure jobs that have no zip4, display the address, let the user enter the zip4, save and retry"
     task :manual_zip4_retry do |t, args|
       jobs = Delayed::Job.where(queue: "error_or_failure")
-      puts "Jobs: " + jobs.count.to_s
+      non_zip4_jobs = []
       jobs.each do |job|
+        handler = YAML.load job.handler
+        if handler.args[0]['$ADDRESS_ZIP4'].nil?
+          non_zip4_jobs.push job
+        end
+      end
+      puts "# of jobs without zip4: " + non_zip4_jobs.count.to_s
+      non_zip4_jobs.each do |job|
+        handler = YAML.load job.handler
         begin
-          handler = YAML.load job.handler
-          if handler.args[0]['$ADDRESS_ZIP4'].nil?
-            puts handler.args[0]['$ADDRESS_STREET'] + ", " + handler.args[0]['$ADDRESS_ZIP5']
-            handler.args[0]['$ADDRESS_ZIP4'] = STDIN.gets.strip
-            job.handler = YAML.dump(handler)
-            job.save
-            result = handler.object.fill_out_form handler.args[0] do |img|
-              puts img
-              STDIN.gets.strip
-            end
+          puts handler.args[0]['$ADDRESS_STREET'] + ", " + handler.args[0]['$ADDRESS_ZIP5']
+          handler.args[0]['$ADDRESS_ZIP4'] = STDIN.gets.strip
+          job.handler = YAML.dump(handler)
+          job.save
+          result = handler.object.fill_out_form handler.args[0] do |img|
+            puts img
+            STDIN.gets.strip
           end
         rescue
         end
