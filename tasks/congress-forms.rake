@@ -64,10 +64,10 @@ namespace :'congress-forms' do
               puts img
               STDIN.gets.strip
             end
-            job.destroy if result == true
           end
         rescue
         end
+        job.destroy
       end
     end
     desc "delete jobs that were generated during the fill_out_all rake task"
