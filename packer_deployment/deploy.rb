@@ -13,7 +13,7 @@ auto_scaling.launch_configurations.create(launch_config_name,
                                           ami_id,
                                           "m1.small",
                                           :security_groups =>
-                                            ['congress-forms'])
+                                            ['sg-b21081d7'])
 congress_forms_group = auto_scaling.groups["congress-forms#{environment}"]
 old_launch_configuration = congress_forms_group.launch_configuration
 old_ami = old_launch_configuration.image_id
