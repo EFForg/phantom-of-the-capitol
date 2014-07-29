@@ -79,7 +79,7 @@ namespace :'congress-forms' do
       end
     end
     desc "delete jobs that were generated during the fill_out_all rake task"
-    task :delayed_job_delete_rake do |t, args|
+    task :delete_rake do |t, args|
       jobs = Delayed::Job.where(queue: "error_or_failure")
       jobs.each do |job|
         handler = YAML.load job.handler
