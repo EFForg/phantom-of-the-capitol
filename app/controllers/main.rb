@@ -11,7 +11,7 @@ CongressForms::App.controller do
       response.headers['Access-Control-Allow-Origin'] = request.env['HTTP_ORIGIN']
       response.headers['Access-Control-Allow-Credentials'] = "true"
     end
-    response.headers['X-Backend-Hostname'] = Socket.gethostname
+    response.headers['X-Backend-Hostname'] = Socket.gethostname.strip
   end
 
   post :'retrieve-form-elements' do

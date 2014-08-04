@@ -19,7 +19,7 @@ fi
 # }
 
 # mysql_root=$(random 20)
-mysql_congress_forms="givemefreedomorgivemedeath"
+mysql_congress_forms=""
 # sudo debconf-set-selections <<EOF
 # mysql-server-5.5 mysql-server/root_password password $mysql_root
 # mysql-server-5.5 mysql-server/root_password_again password $mysql_root
@@ -31,11 +31,11 @@ su -c "sudo apt-get update; sudo apt-get -y install $DEPENDENCIES" "$1"
 # mysql -u root -p"$mysql_root" -e "create database if not exists congress_forms_test;  GRANT ALL PRIVILEGES ON congress_forms_test.* TO 'congress_forms'@'localhost';"
 
 
-cd /vagrant
-cp -a config/database-example.rb config/database.rb
-cp -a config/congress-forms_config.rb.example config/congress-forms_config.rb
+# cd /vagrant
+# cp -a config/database-example.rb config/database.rb
+# cp -a config/congress-forms_config.rb.example config/congress-forms_config.rb
 
-sed -i "s@^  :password.*@  :password => '$mysql_congress_forms',@" config/database.rb
+# sed -i "s@^  :password.*@  :password => '$mysql_congress_forms',@" config/database.rb
 
 # Doing this to make sure vagrant doesn't install RVM and Ruby as root; there's probably a cleaner way
 if [ "ubuntu" != $1 ]
