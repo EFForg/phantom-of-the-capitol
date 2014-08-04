@@ -6,13 +6,13 @@
 # stop setup script if any command fails
 set -e
 
-# if [ "ubuntu" != $1 ]
-# then
-#     DEPENDENCIES="mysql-server curl imagemagick libmysql++-dev libpq-dev git libqt4-dev xvfb"
-# else
-#     sleep 30
-#     DEPENDENCIES="mysql-server"
-# fi
+if [ "ubuntu" != $1 ]
+then
+    DEPENDENCIES="curl imagemagick libmysql++-dev libpq-dev git libqt4-dev xvfb"
+else
+    sleep 30
+    DEPENDENCIES="mysql-server"
+fi
 
 # random() {
 #     head -c $1 /dev/urandom | base64
@@ -25,7 +25,7 @@ mysql_congress_forms="givemefreedomorgivemedeath"
 # mysql-server-5.5 mysql-server/root_password_again password $mysql_root
 # EOF
 
-# su -c "sudo apt-get update; sudo apt-get -y install $DEPENDENCIES" "$1"
+su -c "sudo apt-get update; sudo apt-get -y install $DEPENDENCIES" "$1"
 
 # mysql -u root -p"$mysql_root" -e "create database if not exists congress_forms_development;  GRANT ALL PRIVILEGES ON congress_forms_development.* TO 'congress_forms'@'localhost' IDENTIFIED BY '$mysql_congress_forms';"
 # mysql -u root -p"$mysql_root" -e "create database if not exists congress_forms_test;  GRANT ALL PRIVILEGES ON congress_forms_test.* TO 'congress_forms'@'localhost';"
