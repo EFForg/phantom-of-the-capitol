@@ -6,10 +6,8 @@ vendor/gems/*
 !vendor/gems/cache/
 .sass-cache/*
 db/*.db
-config/database.rb
 .*.sw*
 *.swp
-config/congress-forms_config.rb
 .bundle
 .vagrant
 .idea
