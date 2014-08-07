@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # $1 = user to run scripts as
-# $2 = the host and port for CF's DB
+# $2 = the host for CF's DB (port is 3306 if host is given)
 
 # stop setup script if any command fails
 set -e
