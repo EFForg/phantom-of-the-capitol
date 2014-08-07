@@ -29,7 +29,7 @@
     "type": "shell",
 	"execute_command":	"echo '' | {{ .Vars }} sudo -E -S sh {{ .Path }} ubuntu",
     "scripts": [
-      "../setup_dev.sh",
+      "../setup_dev.sh ubuntu {{cf_db_host}}",
 	  "service_setup.sh"
     ]
   }
