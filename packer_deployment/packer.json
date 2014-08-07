@@ -1,7 +1,8 @@
 {
   "variables": {
     "aws_access_key": "{{env `aws_access_key`}}",
-    "aws_secret_key": "{{env `aws_secret_key`}}"
+    "aws_secret_key": "{{env `aws_secret_key`}}",
+    "cf_db_host": ""
   },
   "builders": [{
     "type": "amazon-ebs",

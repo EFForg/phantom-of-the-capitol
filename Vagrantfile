@@ -43,7 +43,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.define :local do |local_config|
     local_config.vm.box = "precise64"
     local_config.vm.box_url = "http://files.vagrantup.com/precise64.box"
-    local_config.vm.provision :shell, :path => "setup_dev.sh", :args => "vagrant"
+    local_config.vm.provision :shell, :path => "setup_dev.sh", :args => "vagrant poop"
     local_config.vm.network "forwarded_port", guest: 9292, host: 9292
   end
 end

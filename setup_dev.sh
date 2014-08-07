@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 # $1 = user to run scripts as
+# $2 = the host and port for CF's DB
 
 # stop setup script if any command fails
 set -e
@@ -12,6 +13,12 @@ else
     sleep 30
 fi
 
+if [ ! -z $2 ]
+then
+	host="export CF_DB_HOST=$2"
+	su -c "echo $host >> ~/.bash_profile" "$1"
+fi
+
 su -c "sudo apt-get update; sudo apt-get -y install $DEPENDENCIES" "$1"
 
 # Doing this to make sure vagrant doesn't install RVM and Ruby as root; there's probably a cleaner way
@@ -19,6 +26,10 @@ if [ "ubuntu" != $1 ]
 then
     su -c "curl -sSL https://get.rvm.io | bash -s stable; source /home/$1/.rvm/scripts/rvm; rvm install ruby-2.1.0" "$1"
 fi
+
+
+
+source ~/.bash_profile
 
 su -c "source /home/$1/.rvm/scripts/rvm; rvm use ruby-2.1.0;
 gem install bundler -v 1.5.1;
