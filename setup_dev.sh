@@ -15,7 +15,7 @@ fi
 
 if [ ! -z $2 ]
 then
-	host="export CF_DB_HOST=$2"
+	host="export CF_DB_HOST=$2:3306"
 	su -c "echo $host >> ~/.bash_profile" "$1"
 fi
 
