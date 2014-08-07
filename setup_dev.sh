@@ -15,8 +15,9 @@ fi
 
 if [ ! -z $2 ]
 then
-	host="export CF_DB_HOST=$2:3306"
+	host="export CF_DB_HOST=$2"
 	su -c "echo $host >> ~/.bash_profile" "$1"
+	su -c "echo ""export CF_DB_PORT=3306"" >> ~/.bash_profile" "$1"
 fi
 
 su -c "sudo apt-get update; sudo apt-get -y install $DEPENDENCIES" "$1"
