@@ -29,15 +29,16 @@ cd $the_final_path
 su -c "sudo apt-get update; sudo apt-get -y install $DEPENDENCIES" "$1"
 
 # Doing this to make sure vagrant doesn't install RVM and Ruby as root; there's probably a cleaner way
-#if [ "ubuntu" != $1 ]
-#then
+if [ "ubuntu" != $1 ]
+then
     su -c "curl -sSL https://get.rvm.io | bash -s stable; source /home/$1/.rvm/scripts/rvm; rvm install ruby-2.1.0" "$1"
-#fi
+fi
 
 su -c "source /home/$1/.rvm/scripts/rvm; rvm use ruby-2.1.0;
 gem install bundler -v 1.5.1;
 rvm gemset create congress-forms; rvm alias create congress-forms ruby-2.1.0@congress-forms; 
-bundle install --path /home/$1/.rvm/gems/ruby-2.1.0@congress-forms/gems/" "$1"
+echo 'hey'
+bundle install --path /home/$1/.rvm/gems/ruby-2.1.0@congress-forms/gems/;" "$1"
 
 echo "Setting up PhantomJS..."
 cd /home/$1/
