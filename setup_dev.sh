@@ -14,7 +14,7 @@ else
     DEPENDENCIES="mysql-server"
 fi
 
-the_final_path=pwd
+the_final_path=$(pwd)
 
 if [ ! -z $2 ]
 then
