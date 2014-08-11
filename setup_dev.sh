@@ -14,8 +14,6 @@ else
     DEPENDENCIES="mysql-server"
 fi
 
-the_final_path=$(pwd)
-
 if [ ! -z $2 ]
 then
 	cd
@@ -24,9 +22,9 @@ then
 	su -c "echo ""export CF_DB_PORT=3306"" >> ~/.bash_profile" "$1"
 fi
 
-cd $the_final_path
-
 su -c "sudo apt-get update; sudo apt-get -y install $DEPENDENCIES" "$1"
+
+cd /vagrant
 
 # Doing this to make sure vagrant doesn't install RVM and Ruby as root; there's probably a cleaner way
 if [ "ubuntu" != $1 ]
@@ -35,10 +33,8 @@ then
 fi
 
 su -c "source /home/$1/.rvm/scripts/rvm; rvm use ruby-2.1.0;
-gem install bundler -v '= 1.5.1';
-gem install json -v '1.8.1';
+gem install bundler -v '= 1.5.1'; gem install json -v '1.8.1';
 rvm gemset create congress-forms; rvm alias create congress-forms ruby-2.1.0@congress-forms; 
-cd /vagrant;
 bundle install --path /home/$1/.rvm/gems/ruby-2.1.0@congress-forms/gems/;" "$1"
 
 echo "Setting up PhantomJS..."
