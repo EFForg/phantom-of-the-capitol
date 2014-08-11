@@ -37,6 +37,9 @@ fi
 su -c "source /home/$1/.rvm/scripts/rvm; rvm use ruby-2.1.0;
 gem install bundler -v 1.5.1;
 rvm gemset create congress-forms; rvm alias create congress-forms ruby-2.1.0@congress-forms; 
+pwd
+cd /vagrant
+pwd
 echo 'hey'
 bundle install --path /home/$1/.rvm/gems/ruby-2.1.0@congress-forms/gems/;" "$1"
 
