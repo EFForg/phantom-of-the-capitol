@@ -20,6 +20,7 @@ then
 	host="export CF_DB_HOST=$2"
 	su -c "echo $host >> ~/.bash_profile" "$1"
 	su -c "echo ""export CF_DB_PORT=3306"" >> ~/.bash_profile" "$1"
+	source .bash_profile
 fi
 
 su -c "sudo apt-get update; sudo apt-get -y install $DEPENDENCIES" "$1"
@@ -44,8 +45,5 @@ tar -jxvf phantomjs.tar.bz2 > /dev/null
 
 sudo ln -s /home/$1/phantomjs-1.9.7-linux-x86_64/bin/phantomjs /usr/bin/phantomjs
 sudo chmod go-w /vagrant
-
-cd
-source .bash_profile
 
 echo -e "\n\nYou're all done!  Now type 'vagrant ssh', cd into /vagrant, and type 'bundle exec rackup' to run!"
