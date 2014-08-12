@@ -14,6 +14,23 @@ else
     DEPENDENCIES="mysql-server"
 fi
 
+random() {
+    head -c $1 /dev/urandom | base64
+}
+
+if [ ! -z $2 ]
+then
+	echo "Do nothing"
+else
+	DEPENDENCIES="mysql-server curl imagemagick libmysql++-dev libpq-dev git libqt4-dev xvfb"
+	mysql_root=$(random 20)
+
+	sudo debconf-set-selections <<EOF
+	mysql-server-5.5 mysql-server/root_password password $mysql_root
+	mysql-server-5.5 mysql-server/root_password_again password $mysql_root
+EOF
+fi
+
 if [ ! -z $2 ]
 then
 	cd
@@ -25,6 +42,15 @@ fi
 
 su -c "sudo apt-get update; sudo apt-get -y install $DEPENDENCIES" "$1"
 
+if [ ! -z $2 ]
+then
+	echo "Do nothing"
+else
+	mysql -u root -p"$mysql_root" -e "create database if not exists congress_forms_development;  GRANT ALL PRIVILEGES ON congress_forms_development.* TO 'congress_forms'@'localhost';"
+	mysql -u root -p"$mysql_root" -e "create database if not exists congress_forms_test;  GRANT ALL PRIVILEGES ON congress_forms_test.* TO 'congress_forms'@'localhost';"
+fi
+
+
 cd /vagrant
 
 # Doing this to make sure vagrant doesn't install RVM and Ruby as root; there's probably a cleaner way
@@ -33,10 +59,20 @@ then
     su -c "curl -sSL https://get.rvm.io | bash -s stable; source /home/$1/.rvm/scripts/rvm; rvm install ruby-2.1.0" "$1"
 fi
 
-su -c "source /home/$1/.rvm/scripts/rvm; rvm use ruby-2.1.0;
-gem install bundler -v '= 1.5.1'; gem install json -v '1.8.1';
-rvm gemset create congress-forms; rvm alias create congress-forms ruby-2.1.0@congress-forms; 
-bundle install --path /home/$1/.rvm/gems/ruby-2.1.0@congress-forms/gems/;" "$1"
+if [ ! -z $2 ]
+then
+	su -c "source /home/$1/.rvm/scripts/rvm; rvm use ruby-2.1.0;
+	gem install bundler -v '= 1.5.1'; gem install json -v '1.8.1';
+	rvm gemset create congress-forms; rvm alias create congress-forms ruby-2.1.0@congress-forms; 
+	bundle install --path /home/$1/.rvm/gems/ruby-2.1.0@congress-forms/gems/;" "$1"
+else
+	su -c "source /home/$1/.rvm/scripts/rvm; rvm use ruby-2.1.0;
+	gem install bundler -v 1.5.1;
+	rvm gemset create congress-forms; rvm alias create congress-forms ruby-2.1.0@congress-forms; 
+	bundle install --path /home/$1/.rvm/gems/ruby-2.1.0@congress-forms/gems/; 
+	echo \"Loading schema...\"; bundle exec rake ar:create ar:schema:load > /dev/null;
+	echo \"Loading congress members...\"; bundle exec rake congress-forms:clone_git[$2] > /dev/null;" "$1"
+fi
 
 echo "Setting up PhantomJS..."
 cd /home/$1/
