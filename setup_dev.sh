@@ -52,6 +52,13 @@ fi
 
 
 cd /vagrant
+if [ ! -z $2 ]
+then
+	echo "Do nothing"
+else
+	cp -a config/database-example.rb config/database.rb
+	cp -a config/congress-forms_config.rb.example config/congress-forms_config.rb
+fi
 
 # Doing this to make sure vagrant doesn't install RVM and Ruby as root; there's probably a cleaner way
 if [ "ubuntu" != $1 ]
