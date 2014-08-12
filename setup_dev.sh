@@ -45,6 +45,7 @@ tar -jxvf phantomjs.tar.bz2 > /dev/null
 sudo ln -s /home/$1/phantomjs-1.9.7-linux-x86_64/bin/phantomjs /usr/bin/phantomjs
 sudo chmod go-w /vagrant
 
+cd
 source ~/.bash_profile
 
 echo -e "\n\nYou're all done!  Now type 'vagrant ssh', cd into /vagrant, and type 'bundle exec rackup' to run!"
