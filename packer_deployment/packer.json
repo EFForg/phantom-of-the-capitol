@@ -27,7 +27,7 @@
   },
   {
     "type": "shell",
-	"execute_command":	"echo '' | {{ .Vars }} sudo -E -S sh {{ .Path }} ubuntu  {{user `cf_db_host`}}",
+	"execute_command":	"echo '' | {{ .Vars }} sudo -E -S sh {{ .Path }} ubuntu {{user `cf_db_host`}}",
     "scripts": [
       "../setup_dev.sh",
 	  "service_setup.sh"
