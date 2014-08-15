@@ -25,9 +25,7 @@ then
 	su -c "echo $host >> ~/.bash_profile" "$1"
 	su -c "echo ""export CF_DB_PORT=3306"" >> ~/.bash_profile" "$1"
 	echo "remove this"
-	ll
 	. ~/.bash_profile
-	#source .bash_profile
 else
 	DEPENDENCIES="mysql-server curl imagemagick libmysql++-dev libpq-dev git libqt4-dev xvfb"
 	mysql_root=$(random 20)
