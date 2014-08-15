@@ -20,7 +20,13 @@ random() {
 
 if [ ! -z $2 ]
 then
-	echo "Do nothing"
+	cd
+	host="export CF_DB_HOST=$2"
+	su -c "echo $host >> ~/.bash_profile" "$1"
+	su -c "echo ""export CF_DB_PORT=3306"" >> ~/.bash_profile" "$1"
+	echo "remove this"
+	ll
+	source .bash_profile
 else
 	DEPENDENCIES="mysql-server curl imagemagick libmysql++-dev libpq-dev git libqt4-dev xvfb"
 	mysql_root=$(random 20)
@@ -31,33 +37,15 @@ else
 EOF
 fi
 
-if [ ! -z $2 ]
-then
-	cd
-	host="export CF_DB_HOST=$2"
-	su -c "echo $host >> ~/.bash_profile" "$1"
-	su -c "echo ""export CF_DB_PORT=3306"" >> ~/.bash_profile" "$1"
-	echo "remove this"
-	ll
-	source .bash_profile
-fi
-
 su -c "sudo apt-get update; sudo apt-get -y install $DEPENDENCIES" "$1"
-
-if [ ! -z $2 ]
-then
-	echo "Do nothing"
-else
-	mysql -u root -p"$mysql_root" -e "create database if not exists congress_forms_development;  GRANT ALL PRIVILEGES ON congress_forms_development.* TO 'congress_forms'@'localhost';"
-	mysql -u root -p"$mysql_root" -e "create database if not exists congress_forms_test;  GRANT ALL PRIVILEGES ON congress_forms_test.* TO 'congress_forms'@'localhost';"
-fi
-
 
 cd /vagrant
 if [ ! -z $2 ]
 then
 	echo "Do nothing"
 else
+	mysql -u root -p"$mysql_root" -e "create database if not exists congress_forms_development;  GRANT ALL PRIVILEGES ON congress_forms_development.* TO 'congress_forms'@'localhost';"
+	mysql -u root -p"$mysql_root" -e "create database if not exists congress_forms_test;  GRANT ALL PRIVILEGES ON congress_forms_test.* TO 'congress_forms'@'localhost';"
 	cp -a config/database-example.rb config/database.rb
 	cp -a config/congress-forms_config.rb.example config/congress-forms_config.rb
 fi
