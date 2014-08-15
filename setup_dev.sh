@@ -37,6 +37,7 @@ then
 	host="export CF_DB_HOST=$2"
 	su -c "echo $host >> ~/.bash_profile" "$1"
 	su -c "echo ""export CF_DB_PORT=3306"" >> ~/.bash_profile" "$1"
+	echo "remove this"
 	source .bash_profile
 fi
 
