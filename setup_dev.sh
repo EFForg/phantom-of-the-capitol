@@ -8,10 +8,9 @@ set -e
 
 if [ "ubuntu" != $1 ]
 then
-    DEPENDENCIES="mysql-server curl imagemagick libmysql++-dev libpq-dev git libqt4-dev xvfb"
+    DEPENDENCIES="curl imagemagick libmysql++-dev libpq-dev git libqt4-dev xvfb"
 else
     sleep 30
-    DEPENDENCIES="mysql-server"
 fi
 
 random() {
