@@ -44,8 +44,8 @@ then
 else
 	mysql -u root -p"$mysql_root" -e "create database if not exists congress_forms_development;  GRANT ALL PRIVILEGES ON congress_forms_development.* TO 'congress_forms'@'localhost';"
 	mysql -u root -p"$mysql_root" -e "create database if not exists congress_forms_test;  GRANT ALL PRIVILEGES ON congress_forms_test.* TO 'congress_forms'@'localhost';"
-	cp -a config/database-example.rb config/database.rb
-	cp -a config/congress-forms_config.rb.example config/congress-forms_config.rb
+	#cp -a config/database-example.rb config/database.rb
+	#cp -a config/congress-forms_config.rb.example config/congress-forms_config.rb
 fi
 
 # Doing this to make sure vagrant doesn't install RVM and Ruby as root; there's probably a cleaner way
