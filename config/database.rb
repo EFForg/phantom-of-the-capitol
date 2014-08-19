@@ -10,6 +10,30 @@ ActiveRecord::Base.configurations[:development] = {
   :port      => ENV['CF_DB_PORT'] ||= ''
 }
 
+ActiveRecord::Base.configurations[:production] = {
+    :adapter   => 'mysql2',
+    :encoding  => 'utf8',
+    :reconnect => true,
+    :database  => 'congress_forms_production',
+    :pool      => 100,
+    :username  => 'congress_forms',
+    :password  => '',
+    :host      => ENV['CF_DB_HOST'] ||= 'localhost',
+    :port      => ENV['CF_DB_PORT'] ||= ''
+}
+
+ActiveRecord::Base.configurations[:test] = {
+    :adapter   => 'mysql2',
+    :encoding  => 'utf8',
+    :reconnect => true,
+    :database  => 'congress_forms_test',
+    :pool      => 100,
+    :username  => 'congress_forms',
+    :password  => '',
+    :host      => ENV['CF_DB_HOST'] ||= 'localhost',
+    :port      => ENV['CF_DB_PORT'] ||= ''
+}
+
 # Setup our logger
 ActiveRecord::Base.logger = logger
 
