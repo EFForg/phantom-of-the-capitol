@@ -1,34 +1,13 @@
 ActiveRecord::Base.configurations[:development] = {
-  :adapter => 'mysql2',
+  :adapter   => 'mysql2',
   :encoding  => 'utf8',
   :reconnect => true,
   :database  => 'congress_forms_development',
   :pool      => 100,
   :username  => 'congress_forms',
   :password  => '',
-  :host      => 'localhost'
-}
-
-ActiveRecord::Base.configurations[:production] = {
-  :adapter => 'mysql2',
-  :encoding  => 'utf8',
-  :reconnect => true,
-  :database  => 'congress_forms_production',
-  :pool      => 100,
-  :username  => 'congress_forms',
-  :password  => '',
-  :host      => 'localhost'
-}
-
-ActiveRecord::Base.configurations[:test] = {
-  :adapter => 'mysql2',
-  :encoding  => 'utf8',
-  :reconnect => true,
-  :database  => 'congress_forms_test',
-  :pool      => 100,
-  :username  => 'congress_forms',
-  :password  => '',
-  :host      => 'localhost'
+  :host      => ENV['CF_DB_HOST'] ||= 'localhost',
+  :port      => ENV['CF_DB_PORT'] ||= ''
 }
 
 # Setup our logger
