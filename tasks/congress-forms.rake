@@ -1,5 +1,6 @@
 require File.expand_path("../../config/boot.rb", __FILE__)
 require File.expand_path("../../app/helpers/states.rb", __FILE__)
+require File.expand_path("../../app/helpers/colorize.rb", __FILE__)
 
 namespace :'congress-forms' do
   namespace :'delayed_job' do
@@ -48,9 +49,20 @@ namespace :'congress-forms' do
           people[handler.object.bioguide_id] = 1
         end
       end
-      people.sort_by { |k, v| v}.reverse.each do |k, v|
-        puts k + ": " + v.to_s
+      captchad_hash = {}
+      total_captchad_jobs = 0
+      people.each do |k, v|
+        if CongressMember.bioguide(k).has_captcha?
+          captchad_hash[k] = true
+          total_captchad_jobs += v
+        end
       end
+      puts "The captcha'd congress members are displayed in red.\n\n"
+      people.sort_by { |k, v| v}.reverse.each do |k, v|
+        key_colored = captchad_hash[k] ? red(k) : k
+        puts key_colored + ": " + v.to_s
+      end
+      puts "\nTotal captcha'd jobs: "+total_captchad_jobs.to_s
     end
     desc "for error_or_failure jobs that have no zip4, display the address, let the user enter the zip4, save and retry"
     task :manual_zip4_retry do |t, args|
