@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # $1 = user to run scripts as
-# $2 = (optional) repository for congress YAML files
+# $2 = (optional) host for congress-forms database
 
 # stop setup script if any command fails
 set -e
@@ -28,10 +28,6 @@ if [ ! -z $2 ]
 then
 	cd
 	sed -i "s/localhost/$2/g" /vagrant/config/database.rb
-	host="export CF_DB_HOST=$2"
-	su -c "echo $host >> ~/.bash_profile" "$1"
-	su -c "echo ""export CF_DB_PORT=3306"" >> ~/.bash_profile" "$1"
-	. ~/.bash_profile
 fi
 
 su -c "sudo apt-get update; sudo apt-get -y install $DEPENDENCIES" "$1"
