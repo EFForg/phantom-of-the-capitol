@@ -4,22 +4,28 @@ require File.expand_path("../../app/helpers/colorize.rb", __FILE__)
 
 namespace :'congress-forms' do
   namespace :'delayed_job' do
-    desc "perform all fills on the Delayed::Job error_or_failure queue, captchad fills first"
-    task :perform_fills do |t, args|
+    desc "perform all fills on the Delayed::Job error_or_failure queue, captchad fills first, optionally provide bioguide regex"
+    task :perform_fills, :regex do |t, args|
+      regex = args[:regex].blank? ? nil : Regexp.compile(args[:regex])
+
       jobs = Delayed::Job.where(queue: "error_or_failure")
       captcha_jobs = []
       noncaptcha_jobs = []
+
       jobs.each do |job|
 	handler = YAML.load job.handler
-	if handler.object.has_captcha?
-	  captcha_jobs.push job
-	else
-	  noncaptcha_jobs.push job
-	end
+        if regex.nil? or regex.match(handler.object.bioguide_id)
+          if handler.object.has_captcha?
+            captcha_jobs.push job
+          else
+            noncaptcha_jobs.push job
+          end
+        end
       end
       captcha_jobs.each do |job|
 	begin
 	  handler = YAML.load job.handler
+          puts red("Job #" + job.id.to_s + ", bioguide " + handler.object.bioguide_id)
 	  result = handler.object.fill_out_form handler.args[0] do |img|
 	    puts img
 	    STDIN.gets.strip
@@ -31,6 +37,7 @@ namespace :'congress-forms' do
       noncaptcha_jobs.each do |job|
 	begin
 	  handler = YAML.load job.handler
+          puts red("Job #" + job.id.to_s + ", bioguide " + handler.object.bioguide_id)
 	  result = handler.object.fill_out_form handler.args[0]
 	rescue
 	end
