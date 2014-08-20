@@ -48,7 +48,7 @@ namespace :'congress-forms' do
           people[handler.object.bioguide_id] = 1
         end
       end
-      reqiure 'pp'
+      require 'pp'
       pp people.sort_by { |k, v| v}.reverse.inspect
     end
     desc "for error_or_failure jobs that have no zip4, display the address, let the user enter the zip4, save and retry"
