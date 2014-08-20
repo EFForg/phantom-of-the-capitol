@@ -5,8 +5,9 @@ require File.expand_path("../../app/helpers/colorize.rb", __FILE__)
 namespace :'congress-forms' do
   namespace :'delayed_job' do
     desc "perform all fills on the Delayed::Job error_or_failure queue, captchad fills first, optionally provide bioguide regex"
-    task :perform_fills, :regex do |t, args|
+    task :perform_fills, :regex, :overrides do |t, args|
       regex = args[:regex].blank? ? nil : Regexp.compile(args[:regex])
+      overrides = args[:overrides].blank? ? {} : eval(args[:overrides])
 
       jobs = Delayed::Job.where(queue: "error_or_failure")
       captcha_jobs = []
@@ -26,7 +27,7 @@ namespace :'congress-forms' do
 	begin
 	  handler = YAML.load job.handler
           puts red("Job #" + job.id.to_s + ", bioguide " + handler.object.bioguide_id)
-	  result = handler.object.fill_out_form handler.args[0] do |img|
+	  result = handler.object.fill_out_form handler.args[0].merge(overrides) do |img|
 	    puts img
 	    STDIN.gets.strip
 	  end
@@ -38,7 +39,7 @@ namespace :'congress-forms' do
 	begin
 	  handler = YAML.load job.handler
           puts red("Job #" + job.id.to_s + ", bioguide " + handler.object.bioguide_id)
-	  result = handler.object.fill_out_form handler.args[0]
+	  result = handler.object.fill_out_form handler.args[0].merge(overrides)
 	rescue
 	end
 	job.destroy
