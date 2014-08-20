@@ -20,7 +20,7 @@ namespace :'congress-forms' do
 	begin
 	  handler = YAML.load job.handler
 	  result = handler.object.fill_out_form handler.args[0] do |img|
-	    puts img
+	    piuts img
 	    STDIN.gets.strip
 	  end
 	rescue
@@ -48,8 +48,9 @@ namespace :'congress-forms' do
           people[handler.object.bioguide_id] = 1
         end
       end
-      require 'pp'
-      pp people.sort_by { |k, v| v}.reverse.inspect
+      people.sort_by { |k, v| v}.reverse.each do |k, v|
+        puts k + ": " + v.to_s
+      end
     end
     desc "for error_or_failure jobs that have no zip4, display the address, let the user enter the zip4, save and retry"
     task :manual_zip4_retry do |t, args|
