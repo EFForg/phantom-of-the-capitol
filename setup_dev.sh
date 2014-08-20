@@ -27,7 +27,7 @@ EOF
 if [ ! -z $2 ]
 then
 	cd
-	sed -i 's/localhost/$2/g' /vagrant/config/database.rb
+	sed -i "s/localhost/$2/g" /vagrant/config/database.rb
 	host="export CF_DB_HOST=$2"
 	su -c "echo $host >> ~/.bash_profile" "$1"
 	su -c "echo ""export CF_DB_PORT=3306"" >> ~/.bash_profile" "$1"
