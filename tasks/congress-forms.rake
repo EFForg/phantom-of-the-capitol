@@ -21,7 +21,7 @@ namespace :'congress-forms' do
 	begin
 	  handler = YAML.load job.handler
 	  result = handler.object.fill_out_form handler.args[0] do |img|
-	    piuts img
+	    puts img
 	    STDIN.gets.strip
 	  end
 	rescue
