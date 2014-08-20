@@ -6,9 +6,10 @@
 # stop setup script if any command fails
 set -e
 
+DEPENDENCIES="mysql-server"
 if [ "ubuntu" != $1 ]
 then
-    DEPENDENCIES="mysql-server curl imagemagick libmysql++-dev libpq-dev git libqt4-dev xvfb"
+    DEPENDENCIES=DEPENDENCIES + " curl imagemagick libmysql++-dev libpq-dev git libqt4-dev xvfb"
 else
     sleep 30
 fi
