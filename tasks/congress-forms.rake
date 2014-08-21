@@ -14,7 +14,7 @@ namespace :'congress-forms' do
       noncaptcha_jobs = []
 
       master_hash = {}
-      cm_hash = {}
+      cm_hash = build_cm_hash
 
       jobs.each do |job|
         cm_id, = congress_member_id_and_args_from_handler(job.handler)
@@ -56,7 +56,7 @@ namespace :'congress-forms' do
       jobs = Delayed::Job.where(queue: "error_or_failure")
 
       people = {}
-      cm_hash = {}
+      cm_hash = build_cm_hash
 
       jobs.each do |job|
         cm_id, = congress_member_id_and_args_from_handler(job.handler)
@@ -352,4 +352,12 @@ def congress_member_id_and_args_from_handler handler
   args = root_hash["args"].to_ruby
 
   [id, args]
+end
+
+def build_cm_hash
+  cm_hash = {}
+  CongressMember.all.each do |cm|
+    cm_hash[cm.id.to_s] = cm
+  end
+  cm_hash
 end
