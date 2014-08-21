@@ -13,14 +13,14 @@ namespace :'congress-forms' do
       captcha_jobs = []
       noncaptcha_jobs = []
 
-      master_hash = {}
       cm_hash = build_cm_hash
+      captcha_hash = build_captcha_hash
 
       jobs.each do |job|
         cm_id, = congress_member_id_and_args_from_handler(job.handler)
         cm = retrieve_congress_member_cached(cm_hash, cm_id)
         if regex.nil? or regex.match(cm.bioguide_id)
-          if set_or_retrieve_val(master_hash, cm, "has_captcha?")
+          if retrieve_captchad_cached(captcha_hash, cm.id)
             captcha_jobs.push job
           else
             noncaptcha_jobs.push job
@@ -317,15 +317,14 @@ def create_action_add_to_member action, step, member
   cmf.save
 end
 
-def set_or_retrieve_val master_hash, object, method_name
-  master_hash[method_name] = {} unless master_hash.include? method_name
-  return master_hash[method_name][object.bioguide_id] if master_hash[method_name].include? object.bioguide_id
-  master_hash[method_name][object.bioguide_id] = object.send(method_name)
-end
-
 def retrieve_congress_member_cached cm_hash, cm_id
   return cm_hash[cm_id] if cm_hash.include? cm_id
   cm_hash[cm_id] = CongressMember.find(cm_id)
+end
+
+def retrieve_captchad_cached captcha_hash, cm_id
+  return captcha_hash[cm_id] if captcha_hash.include? cm_id
+  captcha_hash[cm_id] = CongressMember.find(cm_id).has_captcha?
 end
 
 def congress_member_id_and_args_from_handler handler
@@ -360,4 +359,12 @@ def build_cm_hash
     cm_hash[cm.id.to_s] = cm
   end
   cm_hash
+end
+
+def build_captcha_hash
+  captcha_hash = {}
+  CongressMemberAction.where(value: "$CAPTCHA_SOLUTION").each do |cma|
+    captcha_hash[cma.congress_member_id] = true
+  end
+  captcha_hash
 end
