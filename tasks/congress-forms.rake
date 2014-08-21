@@ -324,7 +324,8 @@ end
 
 def retrieve_captchad_cached captcha_hash, cm_id
   return captcha_hash[cm_id] if captcha_hash.include? cm_id
-  captcha_hash[cm_id] = CongressMember.find(cm_id).has_captcha?
+  return false
+  #captcha_hash[cm_id] = CongressMember.find(cm_id).has_captcha?
 end
 
 def congress_member_id_and_args_from_handler handler
