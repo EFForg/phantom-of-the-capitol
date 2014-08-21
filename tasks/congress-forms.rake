@@ -13,10 +13,14 @@ namespace :'congress-forms' do
       captcha_jobs = []
       noncaptcha_jobs = []
 
+      master_hash = {}
+      cm_hash = {}
+
       jobs.each do |job|
-	handler = YAML.load job.handler
-        if regex.nil? or regex.match(handler.object.bioguide_id)
-          if handler.object.has_captcha?
+        cm_id, = congress_member_id_and_args_from_handler(job.handler)
+        cm = retrieve_congress_member_cached(cm_hash, cm_id)
+        if regex.nil? or regex.match(cm.bioguide_id)
+          if set_or_retrieve_val(master_hash, cm, "has_captcha?")
             captcha_jobs.push job
           else
             noncaptcha_jobs.push job
@@ -25,9 +29,10 @@ namespace :'congress-forms' do
       end
       captcha_jobs.each do |job|
 	begin
-	  handler = YAML.load job.handler
-          puts red("Job #" + job.id.to_s + ", bioguide " + handler.object.bioguide_id)
-	  result = handler.object.fill_out_form handler.args[0].merge(overrides) do |img|
+          cm_id, cm_args = congress_member_id_and_args_from_handler(job.handler)
+          cm = retrieve_congress_member_cached(cm_hash, cm_id)
+          puts red("Job #" + job.id.to_s + ", bioguide " + cm.bioguide_id)
+	  result = cm.fill_out_form cm_args[0].merge(overrides) do |img|
 	    puts img
 	    STDIN.gets.strip
 	  end
@@ -37,9 +42,10 @@ namespace :'congress-forms' do
       end
       noncaptcha_jobs.each do |job|
 	begin
-	  handler = YAML.load job.handler
+          cm_id, cm_args = congress_member_id_and_args_from_handler(job.handler)
+          cm = retrieve_congress_member_cached(cm_hash, cm_id)
           puts red("Job #" + job.id.to_s + ", bioguide " + handler.object.bioguide_id)
-	  result = handler.object.fill_out_form handler.args[0].merge(overrides)
+	  result = handler.object.fill_out_form cm_args[0].merge(overrides)
 	rescue
 	end
 	job.destroy
@@ -48,13 +54,17 @@ namespace :'congress-forms' do
     desc "calculate # of jobs per congressperson on the Delayed::Job error_or_failure queue"
     task :jobs_per_congressperson do |t, args|
       jobs = Delayed::Job.where(queue: "error_or_failure")
+
       people = {}
+      cm_hash = {}
+
       jobs.each do |job|
-        handler = YAML.load job.handler
-        if people.keys.include? handler.object.bioguide_id
-          people[handler.object.bioguide_id] += 1
+        cm_id, = congress_member_id_and_args_from_handler(job.handler)
+        cm = retrieve_congress_member_cached(cm_hash, cm_id)
+        if people.keys.include? cm.bioguide_id
+          people[cm.bioguide_id] += 1
         else
-          people[handler.object.bioguide_id] = 1
+          people[cm.bioguide_id] = 1
         end
       end
       captchad_hash = {}
@@ -305,4 +315,41 @@ def create_action_add_to_member action, step, member
   yield cmf
   cmf.congress_member = member
   cmf.save
+end
+
+def set_or_retrieve_val master_hash, object, method_name
+  master_hash[method_name] = {} unless master_hash.include? method_name
+  return master_hash[method_name][object.bioguide_id] if master_hash[method_name].include? object.bioguide_id
+  master_hash[method_name][object.bioguide_id] = object.send(method_name)
+end
+
+def retrieve_congress_member_cached cm_hash, cm_id
+  return cm_hash[cm_id] if cm_hash.include? cm_id
+  cm_hash[cm_id] = CongressMember.find(cm_id)
+end
+
+def congress_member_id_and_args_from_handler handler
+  parser = Psych::Parser.new Psych::TreeBuilder.new
+  parser.parse(handler)
+
+  def hash_from_mapping mapping
+    children = mapping.children
+
+    keys = children.values_at(* children.each_index.select{|i| i.even?}).map{|v| v.value}
+    values = children.values_at(* children.each_index.select{|i| i.odd?})
+
+    keys.zip(values).to_h
+  end
+
+  root_mapping = parser.handler.root.children[0].children[0]
+  root_hash = hash_from_mapping(root_mapping)
+
+  object_mapping = root_hash["object"] 
+  attributes_mapping = hash_from_mapping(object_mapping)["attributes"]
+  id_scalar = hash_from_mapping(attributes_mapping)["id"]
+  id = id_scalar.value
+
+  args = root_hash["args"].to_ruby
+
+  [id, args]
 end
