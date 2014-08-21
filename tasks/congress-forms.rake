@@ -44,8 +44,8 @@ namespace :'congress-forms' do
         begin
           cm_id, cm_args = congress_member_id_and_args_from_handler(job.handler)
           cm = retrieve_congress_member_cached(cm_hash, cm_id)
-          puts red("Job #" + job.id.to_s + ", bioguide " + handler.object.bioguide_id)
-          result = handler.object.fill_out_form cm_args[0].merge(overrides)
+          puts red("Job #" + job.id.to_s + ", bioguide " + cm.bioguide_id)
+          result = cm.fill_out_form cm_args[0].merge(overrides)
         rescue
         end
         job.destroy
