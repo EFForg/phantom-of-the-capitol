@@ -37,10 +37,10 @@ class CongressMember < ActiveRecord::Base
     status_fields = {congress_member: self, status: "success", extra: {}}.merge(ct.nil? ? {} : {campaign_tag: ct})
     begin
       begin
-        if REQUIRES_WEBKIT.include? self.bioguide_id
-          success_hash = fill_out_form_with_webkit f, &block
-        elsif REQUIRES_WATIR.include? self.bioguide_id
+        if REQUIRES_WATIR.include? self.bioguide_id
           success_hash = fill_out_form_with_watir f, &block
+        elsif REQUIRES_WEBKIT.include? self.bioguide_id
+          success_hash = fill_out_form_with_webkit f, &block
         else
           success_hash = fill_out_form_with_poltergeist f, &block
         end
