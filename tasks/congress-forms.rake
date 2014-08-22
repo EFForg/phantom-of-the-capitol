@@ -86,19 +86,28 @@ namespace :'congress-forms' do
       puts "Total captcha'd jobs: "+total_captchad_jobs.to_s
     end
     desc "for error_or_failure jobs that have no zip4, display the address, let the user enter the zip4, save and retry"
-    task :manual_zip4_retry do |t, args|
+    task :manual_zip4_retry, :regex do |t, args|
+      regex = args[:regex].blank? ? nil : Regexp.compile(args[:regex])
+
       jobs = Delayed::Job.where(queue: "error_or_failure")
+
+      cm_hash = build_cm_hash
+
       non_zip4_jobs = []
       jobs.each do |job|
-        handler = YAML.load job.handler
-        if handler.args[0]['$ADDRESS_ZIP4'].nil?
-          non_zip4_jobs.push job
+        cm_id, cm_args = congress_member_id_and_args_from_handler(job.handler)
+        cm = retrieve_congress_member_cached(cm_hash, cm_id)
+        if regex.nil? or regex.match(cm.bioguide_id)
+          if cm_args[0]['$ADDRESS_ZIP4'].nil?
+            non_zip4_jobs.push job
+          end
         end
       end
       puts "# of jobs without zip4: " + non_zip4_jobs.count.to_s
       non_zip4_jobs.each do |job|
         handler = YAML.load job.handler
         begin
+          puts red("Job #" + job.id.to_s + ", bioguide " + handler.object.bioguide_id)
           puts handler.args[0]['$ADDRESS_STREET'] + ", " + handler.args[0]['$ADDRESS_ZIP5']
           handler.args[0]['$ADDRESS_ZIP4'] = STDIN.gets.strip
           job.handler = YAML.dump(handler)
