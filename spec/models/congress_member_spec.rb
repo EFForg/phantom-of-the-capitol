@@ -37,6 +37,7 @@ describe CongressMember do
   describe "that already exists with actions" do
     before do
       @congress_member = create :congress_member_with_actions, :bioguide_id => "B010101"
+      @of_iterations = 10
     end
 
     it "should successfully fill form for a congress member via CongressMember.fill_out_form" do
@@ -51,13 +52,22 @@ describe CongressMember do
       expect(@congress_member.fill_out_form_with_webkit(MOCK_VALUES)[:success]).to be_true
     end
 
-    it "should not increase the number of open files after calls to CongressMember.fill_out_form_with_poltergeist" do
+    it "should not increase the number of open files drastically after calls to CongressMember.fill_out_form_with_poltergeist" do
       before_of = %x(lsof -p #{Process.pid} | wc -l).strip.to_i
-      10.times do
+      @of_iterations.times do
         @congress_member.fill_out_form_with_poltergeist(MOCK_VALUES)
       end
       after_of = %x(lsof -p #{Process.pid} | wc -l).strip.to_i
-      expect(before_of).to eq(after_of)
+      expect(after_of).to be < (before_of + @of_iterations)
+    end
+
+    it "should not increase the number of open files drastically after calls to CongressMember.fill_out_form_with_webkit" do
+      before_of = %x(lsof -p #{Process.pid} | wc -l).strip.to_i
+      @of_iterations.times do
+        @congress_member.fill_out_form_with_webkit(MOCK_VALUES)
+      end
+      after_of = %x(lsof -p #{Process.pid} | wc -l).strip.to_i
+      expect(after_of).to be < (before_of + @of_iterations)
     end
 
     it "should add a success record to the FillStatus table when successfully filling in a form via CongressMember.fill_out_form" do
