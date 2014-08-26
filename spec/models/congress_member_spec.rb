@@ -41,15 +41,15 @@ describe CongressMember do
     end
 
     it "should successfully fill form for a congress member via CongressMember.fill_out_form" do
-      expect(@congress_member.fill_out_form(MOCK_VALUES)).to be_true
+      expect(@congress_member.fill_out_form(MOCK_VALUES)).to be_truthy
     end
 
     it "should successfully fill form for a congress member via CongressMember.fill_out_form_with_poltergeist" do
-      expect(@congress_member.fill_out_form_with_poltergeist(MOCK_VALUES)[:success]).to be_true
+      expect(@congress_member.fill_out_form_with_poltergeist(MOCK_VALUES)[:success]).to be_truthy
     end
 
     it "should successfully fill form for a congress member via CongressMember.fill_out_form_with_webkit" do
-      expect(@congress_member.fill_out_form_with_webkit(MOCK_VALUES)[:success]).to be_true
+      expect(@congress_member.fill_out_form_with_webkit(MOCK_VALUES)[:success]).to be_truthy
     end
 
     it "should not increase the number of open files drastically after calls to CongressMember.fill_out_form_with_poltergeist" do
@@ -77,14 +77,14 @@ describe CongressMember do
 
     it "should successfully fill form for a congress member and create a new tag when one is provided via CongressMember.fill_out_form" do
       @campaign_tag = "some campaign"
-      expect(@congress_member.fill_out_form(MOCK_VALUES, @campaign_tag)).to be_true
+      expect(@congress_member.fill_out_form(MOCK_VALUES, @campaign_tag)).to be_truthy
       expect(CampaignTag.last.name).to eq(@campaign_tag)
     end
 
     it "should delay filling out a form for a congress member via CongressMember.delay.fill_out_form" do
       @congress_member.delay.fill_out_form(MOCK_VALUES)
       result = Delayed::Worker.new.run Delayed::Job.last
-      expect(result).to be_true
+      expect(result).to be_truthy
     end
 
     it "should not update the FillStatus table when delaying a form fill via CongressMember.delay.fill_out_form" do
@@ -134,7 +134,7 @@ describe CongressMember do
       @congress_member.delay.fill_out_form(MOCK_VALUES.merge({"$NAME_MIDDLE" => "Bart"}))
       last_job = Delayed::Job.last
       result = Delayed::Worker.new.run last_job
-      expect(result).to be_false
+      expect(result).to be_falsey
       expect { last_job.reload }.not_to raise_error
     end
 
@@ -168,7 +168,7 @@ describe CongressMember do
         @congress_member.fill_out_form(MOCK_VALUES) do |c|
           "placeholder"
         end
-      ).to be_true
+      ).to be_truthy
     end
   end
 
