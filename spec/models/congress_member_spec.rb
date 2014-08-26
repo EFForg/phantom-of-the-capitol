@@ -51,6 +51,15 @@ describe CongressMember do
       expect(@congress_member.fill_out_form_with_webkit(MOCK_VALUES)[:success]).to be_true
     end
 
+    it "should not increase the number of open files after calls to CongressMember.fill_out_form_with_poltergeist" do
+      before_of = %x(lsof -p #{Process.pid} | wc -l).strip.to_i
+      10.times do
+        @congress_member.fill_out_form_with_poltergeist(MOCK_VALUES)
+      end
+      after_of = %x(lsof -p #{Process.pid} | wc -l).strip.to_i
+      expect(before_of).to eq(after_of)
+    end
+
     it "should add a success record to the FillStatus table when successfully filling in a form via CongressMember.fill_out_form" do
       @congress_member.fill_out_form(MOCK_VALUES)
       expect(FillStatus.success.count).to eq(1)
