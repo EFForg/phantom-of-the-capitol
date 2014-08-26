@@ -268,7 +268,17 @@ class CongressMember < ActiveRecord::Base
         session.driver.quit
       when :webkit
         # ugly, but it works
-        session.driver.browser.instance_variable_get("@connection").send(:kill_process)
+        pid = session.driver.browser.instance_variable_get("@connection").instance_variable_get("@pid")
+        stdin = session.driver.browser.instance_variable_get("@connection").instance_variable_get("@pipe_stdin")
+        stdout = session.driver.browser.instance_variable_get("@connection").instance_variable_get("@pipe_stdout")
+        stderr = session.driver.browser.instance_variable_get("@connection").instance_variable_get("@pipe_stderr")
+        socket = session.driver.browser.instance_variable_get("@connection").instance_variable_get("@socket")
+
+        stdin.close
+        stdout.close
+        stderr.close
+        socket.close
+        Process.kill(3, pid)
       end
     end
   end
