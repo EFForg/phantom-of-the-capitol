@@ -43,6 +43,14 @@ describe CongressMember do
       expect(@congress_member.fill_out_form(MOCK_VALUES)).to be_true
     end
 
+    it "should successfully fill form for a congress member via CongressMember.fill_out_form_with_poltergeist" do
+      expect(@congress_member.fill_out_form_with_poltergeist(MOCK_VALUES)[:success]).to be_true
+    end
+
+    it "should successfully fill form for a congress member via CongressMember.fill_out_form_with_webkit" do
+      expect(@congress_member.fill_out_form_with_webkit(MOCK_VALUES)[:success]).to be_true
+    end
+
     it "should add a success record to the FillStatus table when successfully filling in a form via CongressMember.fill_out_form" do
       @congress_member.fill_out_form(MOCK_VALUES)
       expect(FillStatus.success.count).to eq(1)
