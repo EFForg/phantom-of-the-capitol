@@ -111,6 +111,7 @@ namespace :'congress-forms' do
           locations = SmartyStreets.standardize do |l|
             l.street = handler.args[0]['$ADDRESS_STREET'] + ", " + handler.args[0]['$ADDRESS_ZIP5']
           end
+          raise SmartyStreets::Request::NoValidCandidates if locations.empty?
           handler.args[0]['$ADDRESS_ZIP4'] = locations.first.components["plus4_code"]
         rescue SmartyStreets::Request::NoValidCandidates
           puts "Please enter the zip+4 for the following address:\n" + handler.args[0]['$ADDRESS_STREET'] + ", " + handler.args[0]['$ADDRESS_ZIP5']
