@@ -46,6 +46,7 @@ gem 'fog'
 gem 'headless'
 gem 'typhoeus'
 gem 'watir-webdriver'
+gem 'smarty_streets'
 
 
 # Or Padrino Edge
