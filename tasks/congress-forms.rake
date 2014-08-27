@@ -85,8 +85,8 @@ namespace :'congress-forms' do
       puts "\nTotal jobs: "+total_jobs.to_s
       puts "Total captcha'd jobs: "+total_captchad_jobs.to_s
     end
-    desc "for error_or_failure jobs that have no zip4, display the address, let the user enter the zip4, save and retry"
-    task :manual_zip4_retry, :regex do |t, args|
+    desc "for error_or_failure jobs that have no zip4, look up the zip4, save, and retry"
+    task :zip4_retry, :regex do |t, args|
       regex = args[:regex].blank? ? nil : Regexp.compile(args[:regex])
 
       jobs = Delayed::Job.where(queue: "error_or_failure")
@@ -106,12 +106,19 @@ namespace :'congress-forms' do
       puts "# of jobs without zip4: " + non_zip4_jobs.count.to_s
       non_zip4_jobs.each do |job|
         handler = YAML.load job.handler
+        puts red("Job #" + job.id.to_s + ", bioguide " + handler.object.bioguide_id)
         begin
-          puts red("Job #" + job.id.to_s + ", bioguide " + handler.object.bioguide_id)
-          puts handler.args[0]['$ADDRESS_STREET'] + ", " + handler.args[0]['$ADDRESS_ZIP5']
+          locations = SmartyStreets.standardize do |l|
+            l.street = handler.args[0]['$ADDRESS_STREET'] + ", " + handler.args[0]['$ADDRESS_ZIP5']
+          end
+          handler.args[0]['$ADDRESS_ZIP4'] = locations.first.components["plus4_code"]
+        rescue SmartyStreets::Request::NoValidCandidates
+          puts "Please enter the zip+4 for the following address:\n" + handler.args[0]['$ADDRESS_STREET'] + ", " + handler.args[0]['$ADDRESS_ZIP5']
           handler.args[0]['$ADDRESS_ZIP4'] = STDIN.gets.strip
-          job.handler = YAML.dump(handler)
-          job.save
+        end
+        job.handler = YAML.dump(handler)
+        job.save
+        begin
           result = handler.object.fill_out_form handler.args[0] do |img|
             puts img
             STDIN.gets.strip
