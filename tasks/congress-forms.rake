@@ -199,7 +199,8 @@ namespace :'congress-forms' do
     noncaptchad = []
     notfound = []
 
-    CongressMember.where("bioguide_id REGEXP '" + args[:regex].gsub("'","") + "'").each do |c|
+    cm = args[:regex].blank? ? CongressMember.all : CongressMember.where("bioguide_id REGEXP '" + args[:regex].gsub("'","") + "'")
+    cm.each do |c|
       if congress_defaults.include? c.bioguide_id
         if !c.has_captcha?
           noncaptchad.push(c) 
