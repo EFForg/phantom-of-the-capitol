@@ -153,6 +153,16 @@ namespace :'congress-forms' do
 
     update_db_with_git_object g, args[:contact_congress_directory]
   end
+  desc "Set updated at for congress members"
+  task :updated_at, :regex, :time do |t, args|
+    time = args[:time].blank? ? Time.now : eval(args[:time])
+
+    cm = args[:regex].blank? ? CongressMember.all : CongressMember.where("bioguide_id REGEXP '" + args[:regex].gsub("'","") + "'")
+    cm.each do |c|
+      c.updated_at = time
+      c.save
+    end
+  end
   desc "Analyze how common the expected values of fields are"
   task :common_fields do |t, args|
     values_hash = {}
