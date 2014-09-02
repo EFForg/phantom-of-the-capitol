@@ -1,6 +1,6 @@
 # CongressForms
 A RESTful API for retrieving the required fields for and filling out the contact forms of members of the US Congress.
-This project relies on [Contact Congress](https://github.com/unitedstates/contact-congress) as the data source for congress member forms.
+This project relies on [Contact Congress](https://github.com/NGPVAN/contact-congress) as the data source for congress member forms.
 
 [![Build Status](https://travis-ci.org/Hainish/congress-forms.png)](http://travis-ci.org/Hainish/congress-forms)
 
@@ -50,7 +50,7 @@ Create the database, then
 
 Clone a copy of the contact-congress and store it somewhere:
 
- - `git clone https://github.com/unitedstates/contact-congress`
+ - `git clone https://github.com/NGPVAN/contact-congress`
 
 Then cd back over to congress-forms and run
 

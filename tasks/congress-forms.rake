@@ -7,7 +7,7 @@ namespace :'congress-forms' do
     if not args[:repo].nil?
       repository = args[:repo]
     else
-      repository = "unitedstates/contact-congress"
+      repository = "NGPVAN/contact-congress"
     end
     URI = "https://github.com/#{repository}.git"
     NAME = "contact-congress"
@@ -83,7 +83,7 @@ namespace :'congress-forms' do
     response = Typhoeus.get("https://raw.githubusercontent.com/sinak/congress-zip-plus-four/master/legislators.json")
     congress_defaults = JSON.parse(response.body.gsub(/^define\(|\)$/, ''))
 
-    response = Typhoeus.get("https://raw.githubusercontent.com/unitedstates/contact-congress/master/support/variables.yaml")
+    response = Typhoeus.get("https://raw.githubusercontent.com/NGPVAN/contact-congress/master/support/variables.yaml")
     defaults = YAML.load(response.body)
 
     possible_validation = {
