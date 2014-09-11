@@ -137,3 +137,55 @@ Provide a `bio_id` as part of the GET request.  Responds with a detailed list of
 ### `/list-congress-members`
 
 Responds with a list of all congress members and their websites.  This endpoint is only accessable if a valid `debug_key` is provided as a parameter.
+
+## Re-running jobs that resulted in `error` or `failure`
+
+Any jobs that result in an `error` or `failure` are added to the [Delayed::Job](https://github.com/collectiveidea/delayed_job) job queue, unless the `SKIP_DELAY` environment variable is set.  This job queue shold be checked periodically and the jobs themselves debugged and re-run to ensure delivery.  A number of convenience rake tasks have been provided for this purpose.
+
+### `rake congress-forms:delayed_job:jobs_per_congressperson`
+
+Dispays the number of jobs per member of congress in descending order, indicating which members have captchas on their forms and giving a summation at the end.
+
+### `rake congress-forms:delayed_job:perform_fills[regex,overrides]`
+
+Perform the form fills in the queue, optionally providing:
+
+  - `regex` which will only perform the fills for members with matching bioguide identifiers
+  - `overrides`, a Ruby hash which will override the field values when the fill is performed
+
+Examples:
+
+    $ rake congress-forms:delayed_job:perform_fills
+    $ rake congress-forms:delayed_job:perform_fills[A000000]
+    $ rake congress-forms:delayed_job:perform_fills[A000000,'{"$PHONE" => "555-555-5555"}']
+
+### `rake congress-forms:delayed_job:zip4_retry[regex]`
+
+Pick out the jobs that have no `$ADDRESS_ZIP4` defined, figure out the zip+4 based on the address and 5-digit zip in the job (requires an account with [SmartyStreets](http://smartystreets.com/) with credentials in `config/congress-forms_config.rb`), and try the job again.  Optionally provide:
+
+  - `regex` which will only perform the fills for members with matching bioguide identifiers
+
+Examples:
+
+    $ rake congress-forms:delayed_job:zip4_retry
+    $ rake congress-forms:delayed_job:zip4_retry[A000000]
+
+### Padrino Console
+
+If you prefer to dive deep, you can fire up the padrino console with `padrino c` and debug jobs:
+
+    > Delayed::Job.where(queue: "error_or_failure").count # count of all jobs
+     => 78
+    > job = Delayed::Job.where(queue: "error_or_failure").first # get the first job
+     => #<Delayed::Backend::ActiveRecord::Job id: 318, priority: 0, attempts: 1, handler: "--- !ruby/object:Delayed::PerformableMethod\nobject:...", last_error: "Unable to find css \"p\" with text /Thank you!/\n[\"/ho...", run_at: "2014-07-03 12:14:10", locked_at: nil, failed_at: nil, locked_by: nil, queue: "error_or_failure", created_at: "2014-07-03 12:14:10", updated_at: "2014-08-26 18:50:27"> 
+    > handler = YAML.load job.handler # get the "handler" which contains the object to be acted upon and the arguments
+     => #<Delayed::PerformableMethod:0x0000000544ae30 @object=#<CongressMember id: 60, bioguide_id: "F000457", success_criteria: "---\nheaders:\n  status: 200\nbody:\n  contains: Your m...", created_at: "2014-04-30 19:08:05", updated_at: "2014-07-03 18:54:34">, @method_name=:fill_out_form, @args=[{"$NAME_FIRST"=>"John", "$NAME_LAST"=>"Doe", "$ADDRESS_STREET"=>"123 Fake Street", "$ADDRESS_CITY"=>"Hennepin", "$ADDRESS_ZIP5"=>"55369", "$EMAIL"=>"johndoe@example.com", "subscribe"=>"1", "$SUBJECT"=>"Example subject", "$MESSAGE"=>"Example Message", "$NAME_PREFIX"=>"Mr.", "$ADDRESS_STATE_POSTAL_ABBREV"=>"MN", "$TOPIC"=>"Example Topic", "$PHONE"=>"555-555-5555", "$ADDRESS_ZIP4"=>"1234"}, nil]>
+    handler.args[0]['$PHONE'] = '123-456-7890' # set the phone number
+
+Then, when you're ready to retry the fill:
+
+    handler.perform # try filling out the form
+    handler.object.fill_out_form(handler.args[0]) do |c|
+      puts c
+      STDIN.gets.strip
+    end # fills out a form with a captcha
