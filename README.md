@@ -138,6 +138,24 @@ Provide a `bio_id` as part of the GET request.  Responds with a detailed list of
 
 Responds with a list of all congress members and their websites.  This endpoint is only accessable if a valid `debug_key` is provided as a parameter.
 
+## Debugging Congress-Forms
+
+The [Congress Forms Debugger](https://github.com/efforg/congress-forms-test/) is a useful tool for debugging congress-forms.  To run it locally, first make sure to set `DEBUG_KEY` to a shared secret and `CORS_ALLOWED_DOMAINS` in `config/congress-forms_config.rb` to add `localhost:8000` if the debugger is going to be run on port `3000`.  Then:
+
+    $ git clone https://github.com/EFForg/congress-forms-test
+    $ cd congress-forms-test
+    $ vim js/config.js # edit this file so that `CONTACT_CONGRESS_SERVER` points to your own `congress-forms` API root.
+    $ python -m SimpleHTTPServer # or configure apache for this endpoint
+
+Now, you should be able to point your browser to `http://localhost:8000/congress-forms-test/?debug_key=DEBUG_KEY` (replacing, of course, `DEBUG_KEY`) and see a list of members of congress with a column for their `Recent Success Rate`.  From here, you can click on the bioguide identifier for a member of congress and be brought to a page where you can then:
+
+ 1. send a test form fill
+ 2. see details about their recent form fills, including (if it was an attemt resulting in `failure` or `error`):
+  - the `Delayed::Job` id #
+  - a debugging message
+  - a screenshot at the point of failure
+ 3. view the actions for this member of congress, as the database sees them (e.g. if you want to make sure the actions match the latest YAML from `contact-congress`)
+
 ## Re-running jobs that resulted in `error` or `failure`
 
 Any jobs that result in an `error` or `failure` are added to the [Delayed::Job](https://github.com/collectiveidea/delayed_job) job queue, unless the `SKIP_DELAY` environment variable is set.  This job queue shold be checked periodically and the jobs themselves debugged and re-run to ensure delivery.  A number of convenience rake tasks have been provided for this purpose.
