@@ -140,7 +140,7 @@ Responds with a list of all congress members and their websites.  This endpoint 
 
 ## Debugging Congress-Forms
 
-The [Congress Forms Debugger](https://github.com/efforg/congress-forms-test/) is a useful tool for debugging congress-forms.  To run it locally, first make sure to set `DEBUG_KEY` to a shared secret and `CORS_ALLOWED_DOMAINS` in `config/congress-forms_config.rb` to add `localhost:8000` if the debugger is going to be run on port `3000`.  Then:
+The [Congress Forms Debugger](https://github.com/efforg/congress-forms-test/) is a useful tool for debugging congress-forms.  To run it locally, in `config/congress-forms_config.rb` first make sure to set `DEBUG_KEY` to a shared secret and `CORS_ALLOWED_DOMAINS` to add `localhost:8000` if the debugger is going to be run on port `3000`.  Then:
 
     $ git clone https://github.com/EFForg/congress-forms-test
     $ cd congress-forms-test
