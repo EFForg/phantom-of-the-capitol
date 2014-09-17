@@ -140,6 +140,30 @@ There area also endpoints which require authorization to access.  The following 
 
 > Responds with a list of all congress members and their websites.
 
+### `GET /successful-fills-by-date/<bio_id>`
+
+> Responds with a count of the number of successful fills, grouped by date.  Optionally provide the `<bio_id>` route parameter to retrieve results only for that member.  You can also optionally provide a `campaign_tag` parameter to retrieve results filtered by `campaign_tag`.
+> 
+> Example with `bio_id`, without `campaign_tag`:
+> 
+>     $ curl 'http://localhost:9292/successful-fills-by-date/A000000?debug_key=some_key'
+>     {"2014-06-27 00:00:00 -0700":3,"2014-06-28 00:00:00 -0700":0,"2014-06-29 00:00:00 -0700":2,"2014-06-30 00:00:00 -0700":2,"2014-07-01 00:00:00 -0700":4}
+> 
+> Example with `bio_id` and `campaign_tag`:
+> 
+>     $ curl 'http://localhost:9292/successful-fills-by-date/A000000?campaign_tag=some_tag&debug_key=some_key'
+>     {"2014-06-27 00:00:00 -0700":1,"2014-06-28 00:00:00 -0700":0,"2014-06-29 00:00:00 -0700":1,"2014-06-30 00:00:00 -0700":2,"2014-07-01 00:00:00 -0700":0}
+> 
+> Example without `bio_id` or `campaign_tag`:
+>
+>     $ curl 'http://localhost:9292/successful-fills-by-date/?debug_key=some_key'
+>     {"2014-06-27 00:00:00 -0700":360,"2014-06-28 00:00:00 -0700":118,"2014-06-29 00:00:00 -0700":232,"2014-06-30 00:00:00 -0700":89,"2014-07-01 00:00:00 -0700":842}
+> 
+> Example without `bio_id`, with `campaign_tag`:
+>
+>     $ curl 'http://localhost:9292/successful-fills-by-date/?campaign_tag=some_tag&debug_key=some_key'
+>     {"2014-06-27 00:00:00 -0700":56,"2014-06-28 00:00:00 -0700":27,"2014-06-29 00:00:00 -0700":48,"2014-06-30 00:00:00 -0700":12,"2014-07-01 00:00:00 -0700":98}
+
 ## Debugging Congress-Forms
 
 The [Congress Forms Debugger](https://github.com/efforg/congress-forms-test/) is a useful tool for debugging congress-forms.  To run it locally, in `config/congress-forms_config.rb` first make sure to set `DEBUG_KEY` to a shared secret and `CORS_ALLOWED_DOMAINS` to add `localhost:8000` if the debugger is going to be run on port `8000`.  Then:
