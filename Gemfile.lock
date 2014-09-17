@@ -83,6 +83,8 @@ GEM
       fog-json
     formatador (0.2.5)
     git (1.2.8)
+    groupdate (2.3.0)
+      activesupport (>= 3)
     headless (1.0.2)
     http_router (0.11.1)
       rack (>= 1.0.0)
@@ -213,6 +215,7 @@ DEPENDENCIES
   factory_girl
   fog
   git
+  groupdate
   headless
   mini_magick
   mysql2
