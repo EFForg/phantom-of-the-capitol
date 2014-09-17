@@ -59,6 +59,7 @@ end
 # Add your after (RE)load hooks here
 #
 Padrino.after_load do
+  ActiveRecord::Base.default_timezone = :utc
 end
 
 Padrino.load!
