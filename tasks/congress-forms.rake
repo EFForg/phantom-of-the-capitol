@@ -137,6 +137,35 @@ namespace :'congress-forms' do
         job.destroy if handler.args[1] == "rake"
       end
     end
+    desc "fix duplicate values of any field: choose the first one"
+    task :fix_duplicates, :field, :regex do |t, args|
+      regex = args[:regex].blank? ? nil : Regexp.compile(args[:regex])
+
+      jobs = Delayed::Job.where(queue: "error_or_failure")
+
+      cm_hash = build_cm_hash
+
+      duplicate_jobs = []
+      jobs.each do |job|
+        cm_id, cm_args = congress_member_id_and_args_from_handler(job.handler)
+        cm = retrieve_congress_member_cached(cm_hash, cm_id)
+        if regex.nil? or regex.match(cm.bioguide_id)
+          field = cm_args[0][args[:field]]
+          if field.is_a? Array
+            duplicate_jobs.push job
+          end
+        end
+      end
+      puts "# of jobs with dubplicates: " + duplicate_jobs.count.to_s
+      duplicate_jobs.each do |job|
+        handler = YAML.load job.handler
+        puts red("Fixing job #" + job.id.to_s + ", bioguide " + handler.object.bioguide_id)
+        handler.args[0][args[:field]] = handler.args[0][args[:field]].first
+        job.handler = YAML.dump(handler)
+        job.save
+      end
+    end
+
   end
   desc "Git clone the contact congress repo and load records into the db"
   task :clone_git, :destination_directory do |t, args|
