@@ -32,7 +32,7 @@ namespace :'congress-forms' do
           cm_id, cm_args = congress_member_id_and_args_from_handler(job.handler)
           cm = retrieve_congress_member_cached(cm_hash, cm_id)
           puts red("Job #" + job.id.to_s + ", bioguide " + cm.bioguide_id)
-          result = cm.fill_out_form cm_args[0].merge(overrides) do |img|
+          result = cm.fill_out_form cm_args[0].merge(overrides), cm_args[1] do |img|
             puts img
             STDIN.gets.strip
           end
@@ -45,7 +45,7 @@ namespace :'congress-forms' do
           cm_id, cm_args = congress_member_id_and_args_from_handler(job.handler)
           cm = retrieve_congress_member_cached(cm_hash, cm_id)
           puts red("Job #" + job.id.to_s + ", bioguide " + cm.bioguide_id)
-          result = cm.fill_out_form cm_args[0].merge(overrides)
+          result = cm.fill_out_form cm_args[0].merge(overrides), cm_args[1]
         rescue
         end
         job.destroy
@@ -120,7 +120,7 @@ namespace :'congress-forms' do
         job.handler = YAML.dump(handler)
         job.save
         begin
-          result = handler.object.fill_out_form handler.args[0] do |img|
+          result = handler.object.fill_out_form handler.args[0], handler.args[1] do |img|
             puts img
             STDIN.gets.strip
           end
