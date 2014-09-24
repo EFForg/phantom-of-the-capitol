@@ -60,7 +60,7 @@ else
 	rvm gemset create congress-forms; rvm alias create congress-forms ruby-2.1.0@congress-forms; 
 	bundle install --path /home/$1/.rvm/gems/ruby-2.1.0@congress-forms/gems/; 
 	echo \"Loading schema...\"; bundle exec rake ar:create ar:schema:load > /dev/null;
-	echo \"Loading congress members...\"; bundle exec rake congress-forms:clone_git[/tmp, $2] > /dev/null;" "$1"
+	echo \"Loading congress members...\"; bundle exec rake congress-forms:clone_git[/tmp] > /dev/null;" "$1"
 fi
 
 echo "Setting up PhantomJS..."
