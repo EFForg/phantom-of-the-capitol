@@ -1,9 +1,174 @@
 require File.expand_path("../../config/boot.rb", __FILE__)
 require File.expand_path("../../app/helpers/states.rb", __FILE__)
+require File.expand_path("../../app/helpers/colorize.rb", __FILE__)
 
 namespace :'congress-forms' do
+  namespace :'delayed_job' do
+    desc "perform all fills on the Delayed::Job error_or_failure queue, captchad fills first, optionally provide bioguide regex"
+    task :perform_fills, :regex, :overrides do |t, args|
+      regex = args[:regex].blank? ? nil : Regexp.compile(args[:regex])
+      overrides = args[:overrides].blank? ? {} : eval(args[:overrides])
+
+      jobs = Delayed::Job.where(queue: "error_or_failure")
+      captcha_jobs = []
+      noncaptcha_jobs = []
+
+      cm_hash = build_cm_hash
+      captcha_hash = build_captcha_hash
+
+      jobs.each do |job|
+        cm_id, = congress_member_id_and_args_from_handler(job.handler)
+        cm = retrieve_congress_member_cached(cm_hash, cm_id)
+        if regex.nil? or regex.match(cm.bioguide_id)
+          if retrieve_captchad_cached(captcha_hash, cm.id)
+            captcha_jobs.push job
+          else
+            noncaptcha_jobs.push job
+          end
+        end
+      end
+      captcha_jobs.each do |job|
+        begin
+          cm_id, cm_args = congress_member_id_and_args_from_handler(job.handler)
+          cm = retrieve_congress_member_cached(cm_hash, cm_id)
+          puts red("Job #" + job.id.to_s + ", bioguide " + cm.bioguide_id)
+          result = cm.fill_out_form cm_args[0].merge(overrides), cm_args[1] do |img|
+            puts img
+            STDIN.gets.strip
+          end
+        rescue
+        end
+        job.destroy
+      end
+      noncaptcha_jobs.each do |job|
+        begin
+          cm_id, cm_args = congress_member_id_and_args_from_handler(job.handler)
+          cm = retrieve_congress_member_cached(cm_hash, cm_id)
+          puts red("Job #" + job.id.to_s + ", bioguide " + cm.bioguide_id)
+          result = cm.fill_out_form cm_args[0].merge(overrides), cm_args[1]
+        rescue
+        end
+        job.destroy
+      end
+    end
+    desc "calculate # of jobs per congressperson on the Delayed::Job error_or_failure queue"
+    task :jobs_per_congressperson do |t, args|
+      jobs = Delayed::Job.where(queue: "error_or_failure")
+
+      people = {}
+      cm_hash = build_cm_hash
+
+      jobs.each do |job|
+        cm_id, = congress_member_id_and_args_from_handler(job.handler)
+        cm = retrieve_congress_member_cached(cm_hash, cm_id)
+        if people.keys.include? cm.bioguide_id
+          people[cm.bioguide_id] += 1
+        else
+          people[cm.bioguide_id] = 1
+        end
+      end
+      captchad_hash = {}
+      total_captchad_jobs = 0
+      total_jobs = 0
+      people.each do |k, v|
+        if CongressMember.bioguide(k).has_captcha?
+          captchad_hash[k] = true
+          total_captchad_jobs += v
+        end
+        total_jobs += v
+      end
+      puts "The captcha'd congress members are displayed in red.\n\n"
+      people.sort_by { |k, v| v}.reverse.each do |k, v|
+        key_colored = captchad_hash[k] ? red(k) : k
+        puts key_colored + ": " + v.to_s
+      end
+      puts "\nTotal jobs: "+total_jobs.to_s
+      puts "Total captcha'd jobs: "+total_captchad_jobs.to_s
+    end
+    desc "for error_or_failure jobs that have no zip4, look up the zip4, save, and retry"
+    task :zip4_retry, :regex do |t, args|
+      regex = args[:regex].blank? ? nil : Regexp.compile(args[:regex])
+
+      jobs = Delayed::Job.where(queue: "error_or_failure")
+
+      cm_hash = build_cm_hash
+
+      non_zip4_jobs = []
+      jobs.each do |job|
+        cm_id, cm_args = congress_member_id_and_args_from_handler(job.handler)
+        cm = retrieve_congress_member_cached(cm_hash, cm_id)
+        if regex.nil? or regex.match(cm.bioguide_id)
+          if cm_args[0]['$ADDRESS_ZIP4'].nil?
+            non_zip4_jobs.push job
+          end
+        end
+      end
+      puts "# of jobs without zip4: " + non_zip4_jobs.count.to_s
+      non_zip4_jobs.each do |job|
+        handler = YAML.load job.handler
+        puts red("Job #" + job.id.to_s + ", bioguide " + handler.object.bioguide_id)
+        begin
+          locations = SmartyStreets.standardize do |l|
+            l.street = handler.args[0]['$ADDRESS_STREET'] + ", " + handler.args[0]['$ADDRESS_ZIP5']
+          end
+          raise SmartyStreets::Request::NoValidCandidates if locations.empty?
+          handler.args[0]['$ADDRESS_ZIP4'] = locations.first.components["plus4_code"]
+        rescue SmartyStreets::Request::NoValidCandidates
+          puts "Please enter the zip+4 for the following address:\n" + handler.args[0]['$ADDRESS_STREET'] + ", " + handler.args[0]['$ADDRESS_ZIP5']
+          handler.args[0]['$ADDRESS_ZIP4'] = STDIN.gets.strip
+        end
+        job.handler = YAML.dump(handler)
+        job.save
+        begin
+          result = handler.object.fill_out_form handler.args[0], handler.args[1] do |img|
+            puts img
+            STDIN.gets.strip
+          end
+        rescue
+        end
+        job.destroy
+      end
+    end
+    desc "delete jobs that were generated during the fill_out_all rake task"
+    task :delete_rake do |t, args|
+      jobs = Delayed::Job.where(queue: "error_or_failure")
+      jobs.each do |job|
+        handler = YAML.load job.handler
+        job.destroy if handler.args[1] == "rake"
+      end
+    end
+    desc "fix duplicate values of any field: choose the first one"
+    task :fix_duplicates, :field, :regex do |t, args|
+      regex = args[:regex].blank? ? nil : Regexp.compile(args[:regex])
+
+      jobs = Delayed::Job.where(queue: "error_or_failure")
+
+      cm_hash = build_cm_hash
+
+      duplicate_jobs = []
+      jobs.each do |job|
+        cm_id, cm_args = congress_member_id_and_args_from_handler(job.handler)
+        cm = retrieve_congress_member_cached(cm_hash, cm_id)
+        if regex.nil? or regex.match(cm.bioguide_id)
+          field = cm_args[0][args[:field]]
+          if field.is_a? Array
+            duplicate_jobs.push job
+          end
+        end
+      end
+      puts "# of jobs with dubplicates: " + duplicate_jobs.count.to_s
+      duplicate_jobs.each do |job|
+        handler = YAML.load job.handler
+        puts red("Fixing job #" + job.id.to_s + ", bioguide " + handler.object.bioguide_id)
+        handler.args[0][args[:field]] = handler.args[0][args[:field]].first
+        job.handler = YAML.dump(handler)
+        job.save
+      end
+    end
+
+  end
   desc "Git clone the contact congress repo and load records into the db"
-  task :clone_git, :repo do |t, args|
+  task :clone_git, :destination_directory, :repo do |t, args|
     if not args[:repo].nil?
       repository = args[:repo]
     else
@@ -11,9 +176,9 @@ namespace :'congress-forms' do
     end
     URI = "https://github.com/#{repository}.git"
     NAME = "contact-congress"
-    g = Git.clone(URI, NAME, :path => '/tmp/')
+    g = Git.clone(URI, NAME, :path => args[:destination_directory])
 
-    update_db_with_git_object g, "/tmp/contact-congress"
+    update_db_with_git_object g, args[:destination_directory] + "/contact-congress"
   end
   desc "Git pull and reload changed CongressMember records into db"
   task :update_git, :contact_congress_directory do |t, args|
@@ -22,22 +187,14 @@ namespace :'congress-forms' do
 
     update_db_with_git_object g, args[:contact_congress_directory]
   end
-  desc "Maps the forms from their native YAML format into the db"
-  task :map_forms, :contact_congress_directory do |t, args|
+  desc "Set updated at for congress members"
+  task :updated_at, :regex, :time do |t, args|
+    time = args[:time].blank? ? Time.now : eval(args[:time])
 
-    DatabaseCleaner.strategy = :truncation, {:only => %w[congress_member_actions]}
-    DatabaseCleaner.clean
-
-    Dir[args[:contact_congress_directory]+'/members/*.yaml'].each do |f|
-      create_congress_member_exception_wrapper(f) do
-        congress_member_details = YAML.load_file(f)
-        create_congress_member_from_hash congress_member_details
-      end
-    end
-    constants = YAML.load_file(args[:contact_congress_directory]+'/support/constants.yaml')
-    File.open(File.expand_path("../../config/constants.rb", __FILE__), 'w') do |f|
-      f.write "CONSTANTS = "
-      f.write constants
+    cm = args[:regex].blank? ? CongressMember.all : CongressMember.where("bioguide_id REGEXP '" + args[:regex].gsub("'","") + "'")
+    cm.each do |c|
+      c.updated_at = time
+      c.save
     end
   end
   desc "Analyze how common the expected values of fields are"
@@ -67,17 +224,6 @@ namespace :'congress-forms' do
       puts v[0] + " : " + appears_percent.to_s + "% (" + required_percent.to_s + "%)"
     end
   end
-  desc "Generate a markdown file for the recent fill status of all congress members in the database"
-  task :generate_status_markdown, :file do |t, args|
-    File.open args[:file], 'w' do |f|
-      f.write("| Bioguide ID | Website | Recent Success Rate |\n")
-      f.write("|-------------|---------|:------------:|\n")
-      CongressMember.order(:bioguide_id).each do |c|
-        uri = URI(c.actions.where(action: "visit").first.value)
-        f.write("| " + c.bioguide_id + " | [" + uri.host + "](" + uri.scheme + "://" + uri.host + ") | [![" + c.bioguide_id + " status](http://ec2-54-215-28-56.us-west-1.compute.amazonaws.com:3000/recent-fill-image/" + c.bioguide_id + ")](http://ec2-54-215-28-56.us-west-1.compute.amazonaws.com:3000/recent-fill-status/" + c.bioguide_id + ") |\n")
-      end
-    end
-  end
   desc "Run through filling out of all congress members"
   task :fill_out_all, :regex do |t, args|
     response = Typhoeus.get("https://raw.githubusercontent.com/sinak/congress-zip-plus-four/master/legislators.json")
@@ -97,7 +243,8 @@ namespace :'congress-forms' do
     noncaptchad = []
     notfound = []
 
-    CongressMember.where("bioguide_id REGEXP '" + args[:regex].gsub("'","") + "'").each do |c|
+    cm = args[:regex].blank? ? CongressMember.all : CongressMember.where("bioguide_id REGEXP '" + args[:regex].gsub("'","") + "'")
+    cm.each do |c|
       if congress_defaults.include? c.bioguide_id
         if !c.has_captcha?
           noncaptchad.push(c) 
@@ -141,7 +288,7 @@ namespace :'congress-forms' do
         end
       end
       begin
-        c.fill_out_form fields_hash do |c|
+        c.fill_out_form fields_hash, "rake" do |c|
           puts "Please type in the value for the captcha at " + c + "\n"
           STDIN.gets.strip
         end
@@ -233,4 +380,57 @@ def create_action_add_to_member action, step, member
   yield cmf
   cmf.congress_member = member
   cmf.save
+end
+
+def retrieve_congress_member_cached cm_hash, cm_id
+  return cm_hash[cm_id] if cm_hash.include? cm_id
+  cm_hash[cm_id] = CongressMember.find(cm_id)
+end
+
+def retrieve_captchad_cached captcha_hash, cm_id
+  return captcha_hash[cm_id] if captcha_hash.include? cm_id
+  return false
+  #captcha_hash[cm_id] = CongressMember.find(cm_id).has_captcha?
+end
+
+def congress_member_id_and_args_from_handler handler
+  parser = Psych::Parser.new Psych::TreeBuilder.new
+  parser.parse(handler)
+
+  def hash_from_mapping mapping
+    children = mapping.children
+
+    keys = children.values_at(* children.each_index.select{|i| i.even?}).map{|v| v.value}
+    values = children.values_at(* children.each_index.select{|i| i.odd?})
+
+    keys.zip(values).to_h
+  end
+
+  root_mapping = parser.handler.root.children[0].children[0]
+  root_hash = hash_from_mapping(root_mapping)
+
+  object_mapping = root_hash["object"] 
+  attributes_mapping = hash_from_mapping(object_mapping)["attributes"]
+  id_scalar = hash_from_mapping(attributes_mapping)["id"]
+  id = id_scalar.value
+
+  args = root_hash["args"].to_ruby
+
+  [id, args]
+end
+
+def build_cm_hash
+  cm_hash = {}
+  CongressMember.all.each do |cm|
+    cm_hash[cm.id.to_s] = cm
+  end
+  cm_hash
+end
+
+def build_captcha_hash
+  captcha_hash = {}
+  CongressMemberAction.where(value: "$CAPTCHA_SOLUTION").each do |cma|
+    captcha_hash[cma.congress_member_id] = true
+  end
+  captcha_hash
 end

@@ -37,10 +37,10 @@ class CongressMember < ActiveRecord::Base
     status_fields = {congress_member: self, status: "success", extra: {}}.merge(ct.nil? ? {} : {campaign_tag: ct})
     begin
       begin
-        if REQUIRES_WEBKIT.include? self.bioguide_id
-          success_hash = fill_out_form_with_webkit f, &block
-        elsif REQUIRES_WATIR.include? self.bioguide_id
+        if REQUIRES_WATIR.include? self.bioguide_id
           success_hash = fill_out_form_with_watir f, &block
+        elsif REQUIRES_WEBKIT.include? self.bioguide_id
+          success_hash = fill_out_form_with_webkit f, &block
         else
           success_hash = fill_out_form_with_poltergeist f, &block
         end
@@ -59,13 +59,15 @@ class CongressMember < ActiveRecord::Base
       end
     rescue Exception => e
       # we need to add the job manually, since DJ doesn't handle yield blocks
-      self.delay.fill_out_form f, ct
-      last_job = Delayed::Job.last
-      last_job.attempts = 1
-      last_job.run_at = Time.now
-      last_job.last_error = e.message + "\n" + e.backtrace.inspect
-      last_job.save
-      status_fields[:extra][:delayed_job_id] = last_job.id
+      unless ENV['SKIP_DELAY']
+        self.delay(queue: "error_or_failure").fill_out_form f, ct
+        last_job = Delayed::Job.last
+        last_job.attempts = 1
+        last_job.run_at = Time.now
+        last_job.last_error = e.message + "\n" + e.backtrace.inspect
+        last_job.save
+        status_fields[:extra][:delayed_job_id] = last_job.id
+      end
       raise e
     ensure
       FillStatus.new(status_fields).save if RECORD_FILL_STATUSES
@@ -100,22 +102,26 @@ class CongressMember < ActiveRecord::Base
             b.element(:css => a.selector).to_subtype.set(f[a.value]) unless f[a.value].nil?
           end
         when "select"
-          if f[a.value].nil?
-            unless PLACEHOLDER_VALUES.include? a.value
+          begin
+            if f[a.value].nil?
+              unless PLACEHOLDER_VALUES.include? a.value
+                elem = b.element(:css => a.selector).to_subtype
+                begin
+                  elem.select_value(a.value)
+                rescue Watir::Exception::NoValueFoundException
+                  elem.select(a.value)
+                end
+              end
+            else
               elem = b.element(:css => a.selector).to_subtype
               begin
-                elem.select_value(a.value)
+                elem.select_value(f[a.value])
               rescue Watir::Exception::NoValueFoundException
-                elem.select(a.value)
+                elem.select(f[a.value])
               end
             end
-          else
-            elem = b.element(:css => a.selector).to_subtype
-            begin
-              elem.select_value(f[a.value])
-            rescue Watir::Exception::NoValueFoundException
-              elem.select(f[a.value])
-            end
+          rescue Watir::Exception::NoValueFoundException => e
+            raise e, e.message unless a.options == "DEPENDENT"
           end
         when "click_on"
           b.element(:css => a.selector).to_subtype.click
@@ -186,36 +192,40 @@ class CongressMember < ActiveRecord::Base
             session.find(a.selector).set(f[a.value]) unless f[a.value].nil?
           end
         when "select"
-          session.within a.selector do
-            if f[a.value].nil?
-              unless PLACEHOLDER_VALUES.include? a.value
+          begin
+            session.within a.selector do
+              if f[a.value].nil?
+                unless PLACEHOLDER_VALUES.include? a.value
+                  begin
+                    elem = session.find('option[value="' + a.value.gsub('"', '\"') + '"]')
+                  rescue Capybara::Ambiguous
+                    elem = session.first('option[value="' + a.value.gsub('"', '\"') + '"]')
+                  rescue Capybara::ElementNotFound
+                    begin
+                      elem = session.find('option', text: Regexp.compile("^" + Regexp.escape(a.value) + "$"))
+                    rescue Capybara::Ambiguous
+                      elem = session.first('option', text: Regexp.compile("^" + Regexp.escape(a.value) + "$"))
+                    end
+                  end
+                  elem.select_option
+                end
+              else
                 begin
-                  elem = session.find('option[value="' + a.value.gsub('"', '\"') + '"]')
+                  elem = session.find('option[value="' + f[a.value].gsub('"', '\"') + '"]')
                 rescue Capybara::Ambiguous
-                  elem = session.first('option[value="' + a.value.gsub('"', '\"') + '"]')
+                  elem = session.first('option[value="' + f[a.value].gsub('"', '\"') + '"]')
                 rescue Capybara::ElementNotFound
                   begin
-                    elem = session.find('option', text: Regexp.compile("^" + Regexp.escape(a.value) + "$"))
+                    elem = session.find('option', text: Regexp.compile("^" + Regexp.escape(f[a.value]) + "$"))
                   rescue Capybara::Ambiguous
-                    elem = session.first('option', text: Regexp.compile("^" + Regexp.escape(a.value) + "$"))
+                    elem = session.first('option', text: Regexp.compile("^" + Regexp.escape(f[a.value]) + "$"))
                   end
                 end
                 elem.select_option
               end
-            else
-              begin
-                elem = session.find('option[value="' + f[a.value].gsub('"', '\"') + '"]')
-              rescue Capybara::Ambiguous
-                elem = session.first('option[value="' + f[a.value].gsub('"', '\"') + '"]')
-              rescue Capybara::ElementNotFound
-                begin
-                  elem = session.find('option', text: Regexp.compile("^" + Regexp.escape(f[a.value]) + "$"))
-                rescue Capybara::Ambiguous
-                  elem = session.first('option', text: Regexp.compile("^" + Regexp.escape(f[a.value]) + "$"))
-                end
-              end
-              elem.select_option
             end
+          rescue Capybara::ElementNotFound
+            raise e, e.message unless a.options == "DEPENDENT"
           end
         when "click_on"
           session.find(a.selector).click
@@ -258,7 +268,17 @@ class CongressMember < ActiveRecord::Base
         session.driver.quit
       when :webkit
         # ugly, but it works
-        session.driver.browser.instance_variable_get("@connection").send(:kill_process)
+        pid = session.driver.browser.instance_variable_get("@connection").instance_variable_get("@pid")
+        stdin = session.driver.browser.instance_variable_get("@connection").instance_variable_get("@pipe_stdin")
+        stdout = session.driver.browser.instance_variable_get("@connection").instance_variable_get("@pipe_stdout")
+        stderr = session.driver.browser.instance_variable_get("@connection").instance_variable_get("@pipe_stderr")
+        socket = session.driver.browser.instance_variable_get("@connection").instance_variable_get("@socket")
+
+        stdin.close
+        stdout.close
+        stderr.close
+        socket.close
+        Process.kill(3, pid)
       end
     end
   end

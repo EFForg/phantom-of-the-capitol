@@ -18,6 +18,13 @@ require 'capybara/poltergeist'
 Capybara.run_server = false
 Capybara.default_wait_time = 5
 
+
+SmartyStreets.configure do |c|
+  c.auth_id = SMARTY_STREETS_ID
+  c.auth_token = SMARTY_STREETS_TOKEN
+  c.number_of_candidates = 1
+end
+
 ##
 # ## Enable devel logging
 #
@@ -52,6 +59,7 @@ end
 # Add your after (RE)load hooks here
 #
 Padrino.after_load do
+  ActiveRecord::Base.default_timezone = :utc
 end
 
 Padrino.load!

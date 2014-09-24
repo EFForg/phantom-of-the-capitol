@@ -26,7 +26,7 @@ CongressForms::App.controller do
         begin
           extra = YAML.load(s.extra)
           dj = Delayed::Job.find(extra[:delayed_job_id])
-          status_hash = {status: s.status, error: dj.last_error, run_at: dj.run_at}
+          status_hash = {status: s.status, error: dj.last_error, run_at: dj.run_at, dj_id: extra[:delayed_job_id]}
           status_hash[:screenshot] = extra[:screenshot] if extra.include? :screenshot
         rescue
           status_hash = {status: s.status, run_at: s.updated_at}
@@ -52,6 +52,27 @@ CongressForms::App.controller do
 
   get :'list-congress-members' do
     CongressMember.all(order: :bioguide_id).to_json(only: :bioguide_id, methods: :form_domain_url)
+  end
+
+  get %r{/successful-fills-by-date/([\w]*)} do
+    bio_id = params[:captures].first
+
+    if params.include? "campaign_tag"
+      ct = CampaignTag.find_by_name(params["campaign_tag"])
+      ct_id = ct.nil? ? -1 : ct.id
+    else
+      ct_id = nil
+    end
+
+    if bio_id.blank?
+      fills = ct_id.nil? ? FillStatus : FillStatus.where(campaign_tag_id: ct_id)
+      fills.success.group_by_day(:created_at).count.to_json
+    else
+      statuses = CongressMember.bioguide(bio_id).fill_statuses
+      statuses = statuses.where(campaign_tag_id: ct_id) unless ct_id.nil?
+
+      statuses.success.group_by_day(:created_at).count.to_json
+    end
   end
 
 end

@@ -37,7 +37,7 @@ gem 'enumerize'
 gem 'mini_magick'
 gem 'delayed_job_active_record'
 gem 'capybara'
-gem 'poltergeist'
+gem 'poltergeist', :git => "git://github.com/Hainish/poltergeist.git"
 gem 'capybara-webkit'
 gem 'git'
 gem 'thin'
@@ -46,6 +46,8 @@ gem 'fog'
 gem 'headless'
 gem 'typhoeus'
 gem 'watir-webdriver'
+gem 'smarty_streets'
+gem 'groupdate'
 
 
 # Or Padrino Edge
