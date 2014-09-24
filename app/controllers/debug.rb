@@ -64,12 +64,26 @@ CongressForms::App.controller do
       ct_id = nil
     end
 
+    if ct_id.nil?
+      rake_ct = CampaignTag.find_by_name("rake")
+      rake_ct_id = rake_ct.nil? ? -1 : rake_ct.id
+    end
+
     if bio_id.blank?
-      fills = ct_id.nil? ? FillStatus : FillStatus.where(campaign_tag_id: ct_id)
+      if ct_id.nil?
+        fills = FillStatus.where('campaign_tag_id != ?', rake_ct_id.to_s)
+      else
+        fills = FillStatus.where(campaign_tag_id: ct_id)
+      end
+
       fills.success.group_by_day(:created_at).count.to_json
     else
       statuses = CongressMember.bioguide(bio_id).fill_statuses
-      statuses = statuses.where(campaign_tag_id: ct_id) unless ct_id.nil?
+      if ct_id.nil?
+        statuses = statuses.where('campaign_tag_id != ?', rake_ct_id.to_s)
+      else
+        statuses = statuses.where(campaign_tag_id: ct_id)
+      end
 
       statuses.success.group_by_day(:created_at).count.to_json
     end
