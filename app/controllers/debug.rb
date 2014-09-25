@@ -64,6 +64,9 @@ CongressForms::App.controller do
       ct_id = nil
     end
 
+    date_start = params.include?("date_start") ? Time.parse(params["date_start"]) : nil
+    date_end = params.include?("date_end") ? Time.parse(params["date_end"]) : nil
+
     if ct_id.nil?
       rake_ct = CampaignTag.find_by_name("rake")
       rake_ct_id = rake_ct.nil? ? -1 : rake_ct.id
@@ -74,6 +77,9 @@ CongressForms::App.controller do
     else
       statuses = CongressMember.bioguide(bio_id).fill_statuses
     end
+
+    statuses = statuses.where('created_at > ?', date_start) unless date_start.nil?
+    statuses = statuses.where('created_at < ?', date_end) unless date_end.nil?
 
     if ct_id.nil?
       statuses = statuses.where('campaign_tag_id != ?', rake_ct_id.to_s)
