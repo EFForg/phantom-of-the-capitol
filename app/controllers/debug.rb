@@ -82,7 +82,7 @@ CongressForms::App.controller do
     statuses = statuses.where('created_at < ?', date_end) unless date_end.nil?
 
     if ct_id.nil?
-      statuses = statuses.where('campaign_tag_id != ?', rake_ct_id.to_s)
+      statuses = statuses.where('campaign_tag_id != ? OR campaign_tag_id IS NULL', rake_ct_id.to_s)
     else
       statuses = statuses.where(campaign_tag_id: ct_id)
     end
