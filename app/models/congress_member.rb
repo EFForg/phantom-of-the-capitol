@@ -224,7 +224,7 @@ class CongressMember < ActiveRecord::Base
                 elem.select_option
               end
             end
-          rescue Capybara::ElementNotFound
+          rescue Capybara::ElementNotFound => e
             raise e, e.message unless a.options == "DEPENDENT"
           end
         when "click_on"
