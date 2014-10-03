@@ -11,6 +11,10 @@ CongressForms::App.controller do
     halt 401, {status: "error", message: "You must provide a valid debug key to access this endpoint."}.to_json unless params.include? "debug_key" and params["debug_key"] == DEBUG_KEY
   end
 
+  before :'successful-fills-by-date' do
+    set_campaign_tag_params params
+  end
+
   get :'recent-statuses-detailed/:bio_id' do
     return {status: "error", message: "You must provide a bio_id to request the most recent error."}.to_json unless params.include? :bio_id
     bio_id = params[:bio_id]
@@ -54,40 +58,47 @@ CongressForms::App.controller do
     CongressMember.all(order: :bioguide_id).to_json(only: :bioguide_id, methods: :form_domain_url)
   end
 
-  get %r{/successful-fills-by-date/([\w]*)} do
+  get :'successful-fills-by-date', map: %r{/successful-fills-by-date/([\w]*)} do
     bio_id = params[:captures].first
-
-    if params.include? "campaign_tag"
-      ct = CampaignTag.find_by_name(params["campaign_tag"])
-      ct_id = ct.nil? ? -1 : ct.id
-    else
-      ct_id = nil
-    end
 
     date_start = params.include?("date_start") ? Time.parse(params["date_start"]) : nil
     date_end = params.include?("date_end") ? Time.parse(params["date_end"]) : nil
 
-    if ct_id.nil?
-      rake_ct = CampaignTag.find_by_name("rake")
-      rake_ct_id = rake_ct.nil? ? -1 : rake_ct.id
-    end
-
     if bio_id.blank?
-      statuses = FillStatus
+      @statuses = FillStatus
     else
-      statuses = CongressMember.bioguide(bio_id).fill_statuses
+      @statuses = CongressMember.bioguide(bio_id).fill_statuses
     end
 
-    statuses = statuses.where('created_at > ?', date_start) unless date_start.nil?
-    statuses = statuses.where('created_at < ?', date_end) unless date_end.nil?
+    @statuses = @statuses.where('created_at > ?', date_start) unless date_start.nil?
+    @statuses = @statuses.where('created_at < ?', date_end) unless date_end.nil?
 
-    if ct_id.nil?
-      statuses = statuses.where('campaign_tag_id != ? OR campaign_tag_id IS NULL', rake_ct_id.to_s)
-    else
-      statuses = statuses.where(campaign_tag_id: ct_id)
-    end
+    filter_by_campaign_tag
 
-    statuses.success.group_by_day(:created_at).count.to_json
+    @statuses.success.group_by_day(:created_at).count.to_json
   end
 
+  private
+
+  define_method :set_campaign_tag_params do |params|
+    if params.include? "campaign_tag"
+      ct = CampaignTag.find_by_name(params["campaign_tag"])
+      @ct_id = ct.nil? ? -1 : ct.id
+    else
+      @ct_id = nil
+    end
+
+    if @ct_id.nil?
+      rake_ct = CampaignTag.find_by_name("rake")
+      @rake_ct_id = rake_ct.nil? ? -1 : rake_ct.id
+    end
+  end
+
+  define_method :filter_by_campaign_tag do
+    if @ct_id.nil?
+      @statuses = @statuses.where('campaign_tag_id != ? OR campaign_tag_id IS NULL', @rake_ct_id.to_s)
+    else
+      @statuses = @statuses.where(campaign_tag_id: @ct_id)
+    end
+  end
 end
