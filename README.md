@@ -171,6 +171,20 @@ There area also endpoints which require authorization to access.  The following 
 >     $ curl 'http://localhost:9292/successful-fills-by-date/?campaign_tag=some_tag&debug_key=some_key'
 >     {"2014-06-27 00:00:00 -0700":56,"2014-06-28 00:00:00 -0700":27,"2014-06-29 00:00:00 -0700":48,"2014-06-30 00:00:00 -0700":12,"2014-07-01 00:00:00 -0700":98}
 
+### `GET /successful-fills-by-member/`
+
+> Responds with a count of the number of successful fills, grouped by member of congress bioguide id.  You can also optionally provide a `campaign_tag` parameter to retrieve results filtered by `campaign_tag`.
+>
+> Example without `campaign_tag`:
+>
+>     $ curl 'http://localhost:9292/successful-fills-by-member/?debug_key=some_key'
+>     {"A000000":312,"B000000":187,"C000000":103,"D000000":782,"E000000":41}
+>
+> Example with `campaign_tag`:
+>
+>     $ curl 'http://localhost:9292/successful-fills-by-member/?campaign_tag=some_tag&debug_key=some_key'
+>     {"A000000":28,"B000000":20,"C000000":9,"D000000":70,"E000000":5}
+
 ## Debugging Congress-Forms
 
 The [Congress Forms Debugger](https://github.com/efforg/congress-forms-test/) is a useful tool for debugging congress-forms.  To run it locally, in `config/congress-forms_config.rb` first make sure to set `DEBUG_KEY` to a shared secret and `CORS_ALLOWED_DOMAINS` to add `localhost:8000` if the debugger is going to be run on port `8000`.  Then:
