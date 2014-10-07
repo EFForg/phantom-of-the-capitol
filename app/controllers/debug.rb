@@ -11,7 +11,7 @@ CongressForms::App.controller do
     halt 401, {status: "error", message: "You must provide a valid debug key to access this endpoint."}.to_json unless params.include? "debug_key" and params["debug_key"] == DEBUG_KEY
   end
 
-  before :'successful-fills-by-date' do
+  before :'successful-fills-by-date', :'successful-fills-by-member/' do
     set_campaign_tag_params params
   end
 
@@ -76,6 +76,25 @@ CongressForms::App.controller do
     filter_by_campaign_tag
 
     @statuses.success.group_by_day(:created_at).count.to_json
+  end
+
+  get :'successful-fills-by-member/' do
+    @statuses = FillStatus
+    filter_by_campaign_tag
+
+    member_id_mapping = {}
+    member_hash = {}
+    @statuses.success.each do |s|
+      unless member_id_mapping.include? s.congress_member_id
+        member_id_mapping[s.congress_member_id] = s.congress_member.bioguide_id
+      end
+      bioguide = member_id_mapping[s.congress_member_id]
+
+      member_hash[bioguide] = 0 unless member_hash.include? bioguide
+      member_hash[bioguide] += 1
+    end
+
+    member_hash.to_json
   end
 
   private
