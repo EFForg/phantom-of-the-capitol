@@ -221,7 +221,7 @@ namespace :'congress-forms' do
   end
   desc "Run through filling out of all congress members"
   task :fill_out_all, :regex do |t, args|
-    response = Typhoeus.get("https://raw.githubusercontent.com/sinak/congress-zip-plus-four/master/legislators.json")
+    response = Typhoeus.get("https://raw.githubusercontent.com/EFForg/congress-zip-plus-four/master/legislators.json")
     congress_defaults = JSON.parse(response.body.gsub(/^define\(|\)$/, ''))
 
     response = Typhoeus.get("https://raw.githubusercontent.com/unitedstates/contact-congress/master/support/variables.yaml")
