@@ -173,6 +173,7 @@ class CongressMember < ActiveRecord::Base
   def fill_out_form_with_capybara f={}, driver
     session = Capybara::Session.new(driver)
     session.driver.options[:js_errors] = false if driver == :poltergeist
+    session.driver.options[:phantomjs_options] = ['--ssl-protocol=TLSv1'] if driver == :poltergeist
     begin
       actions.order(:step).each do |a|
         case a.action
