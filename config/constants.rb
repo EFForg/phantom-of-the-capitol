@@ -15,8 +15,8 @@ CAPTCHA_LOCATIONS = {
     "height" => "57"
   },
   "P000608" => {
-    "left" => "109",
-    "top" => "1498",
+    "left" => "52",
+    "top" => "1431",
     "width" => "300",
     "height" => "57"
   }
