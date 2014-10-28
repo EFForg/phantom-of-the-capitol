@@ -69,6 +69,13 @@ curl -Lo phantomjs.tar.bz2 https://bitbucket.org/ariya/phantomjs/downloads/phant
 tar -jxvf phantomjs.tar.bz2 > /dev/null
 
 sudo ln -s /home/$1/phantomjs-1.9.7-linux-x86_64/bin/phantomjs /usr/bin/phantomjs
+
+echo "Installing rsyslog"
+cd /home/$1/
+curl -Lo remote-syslog.tar.gz https://github.com/papertrail/remote_syslog2/releases/download/v0.13/remote_syslog_linux_amd64.tar.gz
+tar -zxvf remote-syslog.tar.gz > /dev/null
+sudo ln -s /home/$1/remote_syslog/remote_syslog /usr/bin/remote_syslog
+
 sudo chmod go-w /vagrant
 
 echo -e "\n\nYou're all done!  Now type 'vagrant ssh', cd into /vagrant, and type 'bundle exec rackup' to run!"
