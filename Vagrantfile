@@ -19,7 +19,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       override.ssh.private_key_path = "~/.ssh/congressforms.pem"
     end
     ec2_config.vm.provision :shell, :path => "setup_dev.sh", :args => "ubuntu"
-    ec2_config.vm.provision :shell, :path => "./packer_deployment/service_setup.sh"
+    ec2_config.vm.provision :shell, :path => "./deployment/service_setup.sh"
   end
 
   config.vm.define :ec2janecasey do |ec2_config|
@@ -37,7 +37,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       override.ssh.private_key_path = "~/.ssh/congressforms.pem"
     end
     ec2_config.vm.provision :shell, :path => "setup_dev.sh", :args => "ubuntu ec2-54-210-225-31.compute-1.amazonaws.com"
-    ec2_config.vm.provision :shell, :path => "./packer_deployment/service_setup.sh"
+    ec2_config.vm.provision :shell, :path => "./deployment/service_setup.sh"
   end
 
   config.vm.define :local do |local_config|
