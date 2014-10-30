@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 echo "Adding destination to rsyslog_config"
-echo ":destination" >> /vagrant/deployment/log_files.yml
+echo "destination:" >> /vagrant/deployment/log_files.yml
 echo "  port: $RSYSLOG_PORT" >> /vagrant/deployment/log_files.yml
 echo "  host: $RSYSLOG_HOST" >> /vagrant/deployment/log_files.yml
 echo "  protocol: tls" >> /vagrant/deployment/log_files.yml
