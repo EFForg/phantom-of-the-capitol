@@ -77,5 +77,6 @@ tar -zxvf remote-syslog.tar.gz > /dev/null
 sudo ln -s /home/$1/remote_syslog/remote_syslog /usr/bin/remote_syslog
 
 sudo chmod go-w /vagrant
+sudo chown "$1:$1" /vagrant
 
 echo -e "\n\nYou're all done!  Now type 'vagrant ssh', cd into /vagrant, and type 'bundle exec rackup' to run!"
