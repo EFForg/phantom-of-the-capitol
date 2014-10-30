@@ -2,9 +2,9 @@
   "variables": {
     "aws_access_key": "{{env `aws_access_key`}}",
     "aws_secret_key": "{{env `aws_secret_key`}}",
-    "cf_db_host": "",
-    "rsyslog_port": "{{env `rsyslog_port`}}",
-    "rsyslog_host": "{{env `rsyslog_host`}}"
+    "RSYSLOG_PORT": "{{env `RSYSLOG_PORT`}}",
+    "RSYSLOG_HOST": "{{env `RSYSLOG_HOST`}}",
+    "CF_DB_HOST": "{{env `CF_DB_HOST`}}"
   },
   "builders": [{
     "type": "amazon-ebs",
@@ -29,7 +29,12 @@
   },
   {
     "type": "shell",
-	"execute_command":	"echo '' | {{ .Vars }} sudo -E -S sh {{ .Path }} ubuntu {{user `cf_db_host`}}",
+    "execute_command":	"echo '' | {{ .Vars }} sudo -E -S sh {{ .Path }} ubuntu",
+    "environment_vars": [
+      "RSYSLOG_PORT={{user `RSYSLOG_PORT`}}",
+      "RSYSLOG_HOST={{user `RSYSLOG_HOST`}}",
+      "CF_DB_HOST={{user `CF_DB_HOST`}}"
+    ],
     "scripts": [
       "../setup_dev.sh",
       "service_setup.sh"
