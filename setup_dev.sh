@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # $1 = user to run scripts as
-# $2 = (optional) host for congress-forms database
+# $CF_DB_HOST = (optional) host for congress-forms database
 
 # stop setup script if any command fails
 set -e
@@ -24,17 +24,17 @@ sudo debconf-set-selections <<EOF
 	mysql-server-5.5 mysql-server/root_password_again password $mysql_root
 EOF
 
-if [ ! -z $2 ]
+if [ ! -z $CF_DB_HOST ]
 then
 	cd
-	sed -i "s/localhost/$2/g" /vagrant/config/database.rb
+	sed -i "s/localhost/$CF_DB_HOST/g" /vagrant/config/database.rb
 fi
 
 su -c "sudo apt-get update; sudo apt-get -y install $DEPENDENCIES" "$1"
 
 cd /vagrant
 
-if [ ! -z $2 ]
+if [ ! -z $CF_DB_HOST ]
 then
 	echo "Do nothing"
 else
@@ -48,7 +48,7 @@ then
     su -c "curl -sSL https://get.rvm.io | bash -s stable; source /home/$1/.rvm/scripts/rvm; rvm install ruby-2.1.0" "$1"
 fi
 
-if [ ! -z $2 ]
+if [ ! -z $CF_DB_HOST ]
 then
 	su -c "source /home/$1/.rvm/scripts/rvm; rvm use ruby-2.1.0;
 	gem install bundler -v '= 1.5.1'; gem install json -v '1.8.1';
@@ -69,6 +69,13 @@ curl -Lo phantomjs.tar.bz2 https://bitbucket.org/ariya/phantomjs/downloads/phant
 tar -jxvf phantomjs.tar.bz2 > /dev/null
 
 sudo ln -s /home/$1/phantomjs-1.9.7-linux-x86_64/bin/phantomjs /usr/bin/phantomjs
+
+echo "Installing rsyslog"
+cd /home/$1/
+curl -Lo remote-syslog.tar.gz https://github.com/papertrail/remote_syslog2/releases/download/v0.13/remote_syslog_linux_amd64.tar.gz
+tar -zxvf remote-syslog.tar.gz > /dev/null
+sudo ln -s /home/$1/remote_syslog/remote_syslog /usr/bin/remote_syslog
+
 sudo chmod go-w /vagrant
 
 echo -e "\n\nYou're all done!  Now type 'vagrant ssh', cd into /vagrant, and type 'bundle exec rackup' to run!"
