@@ -13,3 +13,7 @@ sudo start upstart-congress-forms-logger
 echo "Creating Upstart Script for Congress-Forms"
 sudo cp /vagrant/deployment/upstart-congress-forms.conf /etc/init/upstart-congress-forms.conf
 sudo start upstart-congress-forms
+
+echo "Upstarting dispatcher"
+sudo cp /vagrant/deployment/congress-forms-dispatcher.conf /etc/init
+sudo start congress-forms-dispatcher

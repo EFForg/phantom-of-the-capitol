@@ -9,7 +9,8 @@ set -e
 DEPENDENCIES="mysql-server"
 if [ "ubuntu" != $1 ]
 then
-    DEPENDENCIES="$DEPENDENCIES curl imagemagick libmysql++-dev libpq-dev git libqt4-dev xvfb"
+    DEPENDENCIES="$DEPENDENCIES curl imagemagick libmysql++-dev libpq-dev git libqt4-dev xvfb nodejs"
+    curl -sL https://deb.nodesource.com/setup | sudo bash -
 else
     sleep 30
 fi
@@ -45,7 +46,7 @@ fi
 # Doing this to make sure vagrant doesn't install RVM and Ruby as root; there's probably a cleaner way
 if [ "ubuntu" != $1 ]
 then
-    su -c "curl -sSL https://get.rvm.io | bash -s stable; source /home/$1/.rvm/scripts/rvm; rvm install ruby-2.1.0" "$1"
+    su -c "gpg --keyserver hkp://keys.gnupg.net --recv-keys D39DC0E3 && curl -sSL https://get.rvm.io | bash -s stable; source /home/$1/.rvm/scripts/rvm; rvm install ruby-2.1.0" "$1"
 fi
 
 if [ ! -z $CF_DB_HOST ]
@@ -71,10 +72,13 @@ tar -jxvf phantomjs.tar.bz2 > /dev/null
 sudo ln -s /home/$1/phantomjs-1.9.7-linux-x86_64/bin/phantomjs /usr/bin/phantomjs
 
 echo "Installing rsyslog"
-cd /home/$1/
 curl -Lo remote-syslog.tar.gz https://github.com/papertrail/remote_syslog2/releases/download/v0.13/remote_syslog_linux_amd64.tar.gz
 tar -zxvf remote-syslog.tar.gz > /dev/null
 sudo ln -s /home/$1/remote_syslog/remote_syslog /usr/bin/remote_syslog
+
+echo "Installing dispatcher"
+cd congress-forms-dispatcher
+npm install
 
 sudo chmod go-w /vagrant
 sudo chown "$1:$1" /vagrant

@@ -1,0 +1,3 @@
+[submodule "congress-forms-dispatcher"]
+	path = congress-forms-dispatcher
+	url = git@github.com:NGPVAN/congress-forms-dispatcher.git
