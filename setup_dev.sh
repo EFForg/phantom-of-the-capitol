@@ -77,7 +77,7 @@ tar -zxvf remote-syslog.tar.gz > /dev/null
 sudo ln -s /home/$1/remote_syslog/remote_syslog /usr/bin/remote_syslog
 
 echo "Installing dispatcher"
-cd congress-forms-dispatcher
+cd /vagrant/congress-forms-dispatcher
 npm install
 
 sudo chmod go-w /vagrant
