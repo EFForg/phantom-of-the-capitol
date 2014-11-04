@@ -21,7 +21,6 @@ cd /vagrant
 if [ "ubuntu" != $1 ]
 then
     DEPENDENCIES="mysql-server curl imagemagick libmysql++-dev libpq-dev git libqt4-dev xvfb"
-    curl -sL https://deb.nodesource.com/setup | bash -
     su -c "sudo apt-get update; sudo apt-get -y install $DEPENDENCIES" "$1"
     echo Installing node.js
     curl -sL https://deb.nodesource.com/setup | bash -
