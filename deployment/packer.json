@@ -4,7 +4,8 @@
     "aws_secret_key": "{{env `aws_secret_key`}}",
     "RSYSLOG_PORT": "{{env `RSYSLOG_PORT`}}",
     "RSYSLOG_HOST": "{{env `RSYSLOG_HOST`}}",
-    "CF_DB_HOST": "{{env `CF_DB_HOST`}}"
+    "CF_DB_HOST": "{{env `CF_DB_HOST`}}",
+    "RABBIT_MQ_URL": "{{env `RABBIT_MQ_URL`}}"
   },
   "builders": [{
     "type": "amazon-ebs",
@@ -33,7 +34,8 @@
     "environment_vars": [
       "RSYSLOG_PORT={{user `RSYSLOG_PORT`}}",
       "RSYSLOG_HOST={{user `RSYSLOG_HOST`}}",
-      "CF_DB_HOST={{user `CF_DB_HOST`}}"
+      "CF_DB_HOST={{user `CF_DB_HOST`}}",
+      "RABBIT_MQ_URL={{user `RABBIT_MQ_URL`}}"
     ],
     "scripts": [
       "../setup_dev.sh",
