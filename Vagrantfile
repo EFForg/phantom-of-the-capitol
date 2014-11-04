@@ -18,6 +18,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       override.ssh.username = "ubuntu"
       override.ssh.private_key_path = "~/.ssh/congressforms.pem"
     end
+    ec2_config.vm.provision :shell, :path => "setup_db.sh", :args => "ubuntu"
     ec2_config.vm.provision :shell, :path => "setup_dev.sh", :args => "ubuntu"
     ec2_config.vm.provision :shell, :path => "./deployment/service_setup.sh"
   end
@@ -36,13 +37,15 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       override.ssh.username = "ubuntu"
       override.ssh.private_key_path = "~/.ssh/congressforms.pem"
     end
-    ec2_config.vm.provision :shell, :path => "setup_dev.sh", :args => "ubuntu ec2-54-210-225-31.compute-1.amazonaws.com"
+    ec2_config.vm.provision :shell, :path => "setup_dev.sh", :args => "ubuntu"
     ec2_config.vm.provision :shell, :path => "./deployment/service_setup.sh"
   end
 
   config.vm.define :local do |local_config|
     local_config.vm.box = "precise64"
     local_config.vm.box_url = "http://files.vagrantup.com/precise64.box"
+    local_config.vm.provision :shell, :path => "deployment/setup_deps.sh", :args => "vagrant"
+    local_config.vm.provision :shell, :path => "deployment/setup_db.sh", :args => "vagrant"
     local_config.vm.provision :shell, :path => "setup_dev.sh", :args => "vagrant"
     local_config.vm.network "forwarded_port", guest: 9292, host: 9292
   end
