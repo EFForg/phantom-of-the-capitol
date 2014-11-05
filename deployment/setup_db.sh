@@ -18,6 +18,8 @@ EOF
 apt-get update
 apt-get -y install mysql-server 
 
+cd /vagrant
+
 mysql -u root -p"$mysql_root" -e "create database if not exists congress_forms_development;  GRANT ALL PRIVILEGES ON congress_forms_development.* TO 'congress_forms'@'localhost';"
 mysql -u root -p"$mysql_root" -e "create database if not exists congress_forms_test;  GRANT ALL PRIVILEGES ON congress_forms_test.* TO 'congress_forms'@'localhost';"
 su -c "source /home/$1/.rvm/scripts/rvm; rvm use ruby-2.1.0;
