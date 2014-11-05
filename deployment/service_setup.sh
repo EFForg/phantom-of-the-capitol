@@ -15,5 +15,8 @@ sudo cp /vagrant/deployment/upstart-congress-forms.conf /etc/init/upstart-congre
 sudo start upstart-congress-forms
 
 echo "Upstarting dispatcher"
+echo "env RABBIT_MQ_URL=$RABBIT_MQ_URL" | cat - /vagrant/deployment/congress-forms-dispatcher.conf > tmpfile
+mv tmpfile /vagrant/deployment/congress-forms-dispatcher.conf
+
 sudo cp /vagrant/deployment/congress-forms-dispatcher.conf /etc/init
 sudo start congress-forms-dispatcher
