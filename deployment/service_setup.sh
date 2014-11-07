@@ -7,6 +7,10 @@ echo "  host: $RSYSLOG_HOST" >> /vagrant/deployment/log_files.yml
 echo "  protocol: tls" >> /vagrant/deployment/log_files.yml
 
 echo "Upstarting logger"
+echo "env AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
+env AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY" | cat - /vagrant/deployment/upstart-congress-forms.conf > tmpfile
+mv tmpfile /vagrant/deployment/upstart-congress-forms.conf
+
 sudo cp /vagrant/deployment/upstart-congress-forms-logger.conf /etc/init/upstart-congress-forms-logger.conf
 sudo start upstart-congress-forms-logger
 

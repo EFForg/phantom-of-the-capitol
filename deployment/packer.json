@@ -32,6 +32,8 @@
     "type": "shell",
     "execute_command":	"echo '' | {{ .Vars }} sudo -E -S sh {{ .Path }} ubuntu",
     "environment_vars": [
+      "AWS_ACCESS_KEY_ID={{user `aws_access_key`}}",
+      "AWS_SECRET_ACCESS_KEY={{user `aws_secret_key`}}",
       "RSYSLOG_PORT={{user `RSYSLOG_PORT`}}",
       "RSYSLOG_HOST={{user `RSYSLOG_HOST`}}",
       "CF_DB_HOST={{user `CF_DB_HOST`}}",
