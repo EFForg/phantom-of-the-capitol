@@ -1,16 +1,17 @@
 {
   "variables": {
-    "aws_access_key": "{{env `aws_access_key`}}",
-    "aws_secret_key": "{{env `aws_secret_key`}}",
+    "AWS_ACCESS_KEY": "{{env `AWS_ACCESS_KEY`}}",
+    "AWS_SECRET_KEY": "{{env `AWS_SECRET_KEY`}}",
     "RSYSLOG_PORT": "{{env `RSYSLOG_PORT`}}",
     "RSYSLOG_HOST": "{{env `RSYSLOG_HOST`}}",
     "CF_DB_HOST": "{{env `CF_DB_HOST`}}",
+    "FOG_DIRECTORY": "{{env `FOG_DIRECTORY`}}",
     "RABBIT_MQ_URL": "{{env `RABBIT_MQ_URL`}}"
   },
   "builders": [{
     "type": "amazon-ebs",
-    "access_key": "{{user `aws_access_key`}}",
-    "secret_key": "{{user `aws_secret_key`}}",
+    "access_key": "{{user `AWS_ACCESS_KEY`}}",
+    "secret_key": "{{user `AWS_SECRET_KEY`}}",
     "region": "us-east-1",
     "source_ami": "ami-feb63996",
     "instance_type": "m1.small",
@@ -32,9 +33,12 @@
     "type": "shell",
     "execute_command":	"echo '' | {{ .Vars }} sudo -E -S sh {{ .Path }} ubuntu",
     "environment_vars": [
+      "AWS_ACCESS_KEY_ID={{user `AWS_ACCESS_KEY`}}",
+      "AWS_SECRET_ACCESS_KEY={{user `AWS_SECRET_KEY`}}",
       "RSYSLOG_PORT={{user `RSYSLOG_PORT`}}",
       "RSYSLOG_HOST={{user `RSYSLOG_HOST`}}",
       "CF_DB_HOST={{user `CF_DB_HOST`}}",
+      "FOG_DIRECTORY={{user `FOG_DIRECTORY`}}",
       "RABBIT_MQ_URL={{user `RABBIT_MQ_URL`}}"
     ],
     "scripts": [
