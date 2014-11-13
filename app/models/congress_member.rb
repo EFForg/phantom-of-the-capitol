@@ -299,11 +299,15 @@ class CongressMember < ActiveRecord::Base
     s = ScreenshotUploader.new
     begin
       s.store!(File.open(location))
+      logger.info "screenshot saved to #{s.url}"
       s.url
     rescue Exception => e
-      logger = Thread.current[:padrino_logger] || Padrino::Logger.setup!
       logger.warn "Unable to save screenshot" + e.to_s
     end
+  end
+
+  def logger
+    Thread.current[:padrino_logger] || Padrino::Logger.setup!
   end
 
   def self.save_screenshot_and_store_watir driver
