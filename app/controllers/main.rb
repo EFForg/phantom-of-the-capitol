@@ -35,6 +35,8 @@ CongressForms::App.controller do
     bio_id = params["bio_id"]
     fields = params["fields"]
 
+    logger.info "received bio_id: #{bio_id} with fields: #{fields}"
+
     c = CongressMember.bioguide(bio_id)
     return {status: "error", message: "Congress member with provided bio id not found"}.to_json if c.nil?
 
