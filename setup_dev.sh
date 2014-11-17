@@ -25,10 +25,10 @@ fi
 
 echo "Setting up PhantomJS..."
 cd /home/$1/
-curl -Lo phantomjs.tar.bz2 https://bitbucket.org/ariya/phantomjs/downloads/phantomjs-1.9.7-linux-x86_64.tar.bz2
+curl -Lo phantomjs.tar.bz2 https://bitbucket.org/ariya/phantomjs/downloads/phantomjs-1.9.8-linux-x86_64.tar.bz2
 tar -jxvf phantomjs.tar.bz2 > /dev/null
 
-sudo ln -s /home/$1/phantomjs-1.9.7-linux-x86_64/bin/phantomjs /usr/bin/phantomjs
+sudo ln -s /home/$1/phantomjs-1.9.8-linux-x86_64/bin/phantomjs /usr/bin/phantomjs
 
 echo "Installing rsyslog"
 curl -Lo remote-syslog.tar.gz https://github.com/papertrail/remote_syslog2/releases/download/v0.13/remote_syslog_linux_amd64.tar.gz
