@@ -322,6 +322,8 @@ def update_db_with_git_object g, contact_congress_directory
             create_congress_member_from_hash congress_member_details
           rescue Errno::ENOENT
             puts "File " + f + " is missing, skipping..."
+          rescue NoMethodError
+            puts "File " + f + " does not have a bioguide defined, skipping..."
           end
         end
       end
