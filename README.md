@@ -56,7 +56,7 @@ Clone a copy of the contact-congress and store it somewhere:
 
 Then cd back over to congress-forms and run
 
- - `bundle exec rake congress-forms:map_forms[contact_congress_directory]`
+ - `bundle exec rake congress-forms:update_git[contact_congress_directory]`
 
 replacing `contact_congress_directory` with the path where you cloned the `contact-congress` project.
 
