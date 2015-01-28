@@ -1,4 +1,4 @@
-REQUIRES_WEBKIT = %w[D000563 B000490 P000608 P000601 S001157 L000263 W000815 B001260 P000523 T000468]
+REQUIRES_WEBKIT = %w[D000563 B000490]
 REQUIRES_WATIR = %w[]
 
 CAPTCHA_LOCATIONS = {
@@ -15,8 +15,8 @@ CAPTCHA_LOCATIONS = {
     "height" => "57"
   },
   "P000608" => {
-    "left" => "52",
-    "top" => "1431",
+    "left" => "65",
+    "top" => "1450",
     "width" => "300",
     "height" => "57"
   }
