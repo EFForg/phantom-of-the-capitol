@@ -2,24 +2,6 @@ REQUIRES_WEBKIT = %w[D000563 B000490]
 REQUIRES_WATIR = %w[]
 
 CAPTCHA_LOCATIONS = {
-  "C000880" => {
-    "left" => "267",
-    "top" => "1882",
-    "width" => "280",
-    "height" => "50"
-  },
-  "C000560" => {
-    "left" => "211",
-    "top" => "1409",
-    "width" => "300",
-    "height" => "57"
-  },
-  "P000608" => {
-    "left" => "65",
-    "top" => "1450",
-    "width" => "300",
-    "height" => "57"
-  }
 }
 
 PLACEHOLDER_VALUES = [
