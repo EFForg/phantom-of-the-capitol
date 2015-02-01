@@ -6,6 +6,8 @@ namespace :'congress-forms' do
   namespace :'delayed_job' do
     desc "perform all fills on the Delayed::Job error_or_failure queue, captchad fills first, optionally provide bioguide regex"
     task :perform_fills, :regex, :overrides do |t, args|
+      require 'pp'
+
       regex = args[:regex].blank? ? nil : Regexp.compile(args[:regex])
       overrides = args[:overrides].blank? ? {} : eval(args[:overrides])
 
@@ -32,6 +34,7 @@ namespace :'congress-forms' do
           cm_id, cm_args = congress_member_id_and_args_from_handler(job.handler)
           cm = retrieve_congress_member_cached(cm_hash, cm_id)
           puts red("Job #" + job.id.to_s + ", bioguide " + cm.bioguide_id)
+          pp cm_args
           result = cm.fill_out_form cm_args[0].merge(overrides), cm_args[1] do |img|
             puts img
             STDIN.gets.strip
@@ -45,6 +48,7 @@ namespace :'congress-forms' do
           cm_id, cm_args = congress_member_id_and_args_from_handler(job.handler)
           cm = retrieve_congress_member_cached(cm_hash, cm_id)
           puts red("Job #" + job.id.to_s + ", bioguide " + cm.bioguide_id)
+          pp cm_args
           result = cm.fill_out_form cm_args[0].merge(overrides), cm_args[1]
         rescue
         end
