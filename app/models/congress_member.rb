@@ -99,7 +99,7 @@ class CongressMember < ActiveRecord::Base
             captcha_value = yield url
             b.element(:css => a.selector).to_subtype.set(captcha_value)
           else
-            b.element(:css => a.selector).to_subtype.set(f[a.value]) unless f[a.value].nil?
+            b.element(:css => a.selector).to_subtype.set(f[a.value].gsub("\t","    ")) unless f[a.value].nil?
           end
         when "select"
           begin
@@ -190,7 +190,7 @@ class CongressMember < ActiveRecord::Base
             captcha_value = yield url
             session.find(a.selector).set(captcha_value)
           else
-            session.find(a.selector).set(f[a.value]) unless f[a.value].nil?
+            session.find(a.selector).set(f[a.value].gsub("\t","    ")) unless f[a.value].nil?
           end
         when "select"
           begin
