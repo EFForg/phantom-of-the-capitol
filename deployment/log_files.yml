@@ -1,0 +1,3 @@
+files: 
+  - /vagrant/log/production.log
+  - /var/log/upstart/congress-forms-dispatcher.log

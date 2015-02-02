@@ -11,7 +11,7 @@ CongressForms::App.controller do
       response.headers['Access-Control-Allow-Origin'] = request.env['HTTP_ORIGIN']
       response.headers['Access-Control-Allow-Credentials'] = "true"
     end
-    response.headers['X-Backend-Hostname'] = Socket.gethostname
+    response.headers['X-Backend-Hostname'] = Socket.gethostname.strip
   end
 
   post :'retrieve-form-elements' do
@@ -34,6 +34,8 @@ CongressForms::App.controller do
 
     bio_id = params["bio_id"]
     fields = params["fields"]
+
+    logger.info "received bio_id: #{bio_id} with fields: #{fields}"
 
     c = CongressMember.bioguide(bio_id)
     return {status: "error", message: "Congress member with provided bio id not found"}.to_json if c.nil?

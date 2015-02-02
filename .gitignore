@@ -12,3 +12,6 @@ config/database.rb
 config/congress-forms_config.rb
 .bundle
 .vagrant
+.idea
+vendor
+public/uploads/tmp

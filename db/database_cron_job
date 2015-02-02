@@ -1,0 +1,11 @@
+#!/bin/bash
+# Put this file in the folder /etc/cron.hourly
+# Do not add a file extension to this file
+# chmod this to 755
+
+cd /congress-forms
+source /home/ubuntu/.rvm/environments/ruby-2.1.0@congress-forms
+
+bundle exec rake congress-forms:clone_git[/tmp]
+
+rm -rf /tmp/contact-congress

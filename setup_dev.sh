@@ -1,55 +1,45 @@
 #!/usr/bin/env bash
 
+# $1 = user to run scripts as
+# $CF_DB_HOST = (optional) host for congress-forms database
+
 # stop setup script if any command fails
 set -e
 
-DEPENDENCIES="mysql-server curl imagemagick libmysql++-dev libpq-dev git libqt4-dev xvfb"
-
-random() {
-    head -c $1 /dev/urandom | base64
-}
-
-mysql_root=$(random 20)
-mysql_congress_forms=$(random 20)
-sudo debconf-set-selections <<EOF
-mysql-server-5.5 mysql-server/root_password password $mysql_root
-mysql-server-5.5 mysql-server/root_password_again password $mysql_root
-EOF
-
-apt-get update
-apt-get -y install $DEPENDENCIES
-
-mysql -u root -p"$mysql_root" -e "create database if not exists congress_forms_development;  GRANT ALL PRIVILEGES ON congress_forms_development.* TO 'congress_forms'@'localhost' IDENTIFIED BY '$mysql_congress_forms';"
-mysql -u root -p"$mysql_root" -e "create database if not exists congress_forms_test;  GRANT ALL PRIVILEGES ON congress_forms_test.* TO 'congress_forms'@'localhost';"
+if [ "ubuntu" != $1 ]
+then
+  # because ec2 needs to jigger its homunculi
+  sleep 30
+fi
 
 cd /vagrant
 
-cp -a config/database-example.rb config/database.rb
-cp -a config/congress-forms_config.rb.example config/congress-forms_config.rb
-
-sed -i "s@^  :password.*@  :password => '$mysql_congress_forms',@" config/database.rb
-
-HOME=/home/vagrant sudo -u vagrant /bin/bash <<EOF
-echo "Setting up RVM and Ruby..."
-curl -sSL https://get.rvm.io | bash -s stable
-source /home/vagrant/.rvm/scripts/rvm
-rvm install ruby-2.1.0
-
-cd .
-gem install json -v '1.8.1'
-bundle install
-
-echo "Loading schema..."
-bundle exec rake ar:create ar:schema:load > /dev/null
-echo "Loading congress members..."
-bundle exec rake congress-forms:clone_git > /dev/null
+if [ ! -z $CF_DB_HOST ]
+then
+	sed -i "s/localhost/$CF_DB_HOST/g" /vagrant/config/database.rb
+	su -c "source /home/$1/.rvm/scripts/rvm; rvm use ruby-2.1.0;
+	gem install bundler -v '= 1.5.1'; gem install json -v '1.8.1';
+	rvm gemset create congress-forms; rvm alias create congress-forms ruby-2.1.0@congress-forms; 
+	bundle install --path /home/$1/.rvm/gems/ruby-2.1.0@congress-forms/gems/;" "$1"
+fi
 
 echo "Setting up PhantomJS..."
-cd /home/vagrant
-curl -Lo phantomjs.tar.bz2 https://bitbucket.org/ariya/phantomjs/downloads/phantomjs-1.9.7-linux-x86_64.tar.bz2
+cd /home/$1/
+curl -Lo phantomjs.tar.bz2 https://bitbucket.org/ariya/phantomjs/downloads/phantomjs-1.9.8-linux-x86_64.tar.bz2
 tar -jxvf phantomjs.tar.bz2 > /dev/null
-EOF
 
-ln -s /home/vagrant/phantomjs-1.9.7-linux-x86_64/bin/phantomjs /usr/bin/phantomjs
+sudo ln -s /home/$1/phantomjs-1.9.8-linux-x86_64/bin/phantomjs /usr/bin/phantomjs
 
-echo -e "\n\nYou're all done!  Now type 'vagrant ssh', cd into /vagrant, and type 'rackup' to run!"
+echo "Installing rsyslog"
+curl -Lo remote-syslog.tar.gz https://github.com/papertrail/remote_syslog2/releases/download/v0.13/remote_syslog_linux_amd64.tar.gz
+tar -zxvf remote-syslog.tar.gz > /dev/null
+sudo ln -s /home/$1/remote_syslog/remote_syslog /usr/bin/remote_syslog
+
+echo "Installing dispatcher"
+cd /vagrant/congress-forms-dispatcher
+npm install
+
+sudo chmod go-w /vagrant
+sudo chown "$1:$1" /vagrant
+
+echo -e "\n\nYou're all done!  Now type 'vagrant ssh', cd into /vagrant, and type 'bundle exec rackup' to run!"
