@@ -21,8 +21,6 @@ This project relies on [Contact Congress](https://github.com/unitedstates/contac
 
  - `vagrant ssh`
  - `cd /vagrant`
- - `gem install json -v '1.8.1'`
- - `bundle install`
  - `rackup`
 
 ### The hard way (or when running in production)
