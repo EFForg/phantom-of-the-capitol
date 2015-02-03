@@ -23,7 +23,7 @@ This project relies on [Contact Congress](https://github.com/unitedstates/contac
  - `cd /vagrant`
  - `gem install json -v '1.8.1'`
  - `bundle install`
- - `rackup`
+ - `rackup --host 0.0.0.0`
 
 ### The hard way (or when running in production)
 
