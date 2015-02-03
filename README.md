@@ -10,6 +10,8 @@ This project relies on [Contact Congress](https://github.com/unitedstates/contac
 
 #### Requirements
 
+[VirtualBox](https://www.virtualbox.org/wiki/Downloads) (with Extension Pack) and [Vagrant](https://www.vagrantup.com/downloads.html). Using Debian or Ubuntu? Here's a one liner to save you time.
+
  - `apt-get install vagrant virtualbox`
 
 #### Installation
@@ -21,8 +23,6 @@ This project relies on [Contact Congress](https://github.com/unitedstates/contac
 
  - `vagrant ssh`
  - `cd /vagrant`
- - `gem install json -v '1.8.1'`
- - `bundle install`
  - `rackup`
 
 ### The hard way (or when running in production)
