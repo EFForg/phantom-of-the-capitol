@@ -211,18 +211,35 @@ Any jobs that result in an `error` or `failure` are added to the [Delayed::Job](
 
 Dispays the number of jobs per member of congress in descending order, indicating which members have captchas on their forms and giving a summation at the end.
 
-### `rake congress-forms:delayed_job:perform_fills[regex,overrides]`
+### `rake congress-forms:delayed_job:perform_fills[regex,job_id,overrides]`
 
 Perform the form fills in the queue, optionally providing:
 
   - `regex` which will only perform the fills for members with matching bioguide identifiers
+  - `job_id` which will only perform the fill for a given Delayed::Job id
   - `overrides`, a Ruby hash which will override the field values when the fill is performed
 
 Examples:
 
     $ rake congress-forms:delayed_job:perform_fills
     $ rake congress-forms:delayed_job:perform_fills[A000000]
-    $ rake congress-forms:delayed_job:perform_fills[A000000,'{"$PHONE" => "555-555-5555"}']
+    $ rake congress-forms:delayed_job:perform_fills[A000000,,'{"$PHONE" => "555-555-5555"}']
+    $ rake congress-forms:delayed_job:perform_fills[,12345,'{"$EMAIL" => "john.doe@example.com"}']
+
+### `rake congress-forms:override_field[regex,job_id,overrides]`
+
+Override values for jobs in the queue, optionally providing:
+
+  - `regex` which will only override the values for members with matching bioguide identifiers
+  - `job_id` which will only override the value for a given Delayed::Job id
+  - `overrides`, a Ruby hash which will override the field values for the criteria specified
+
+Examples:
+
+    $ rake congress-forms:delayed_job:override_field
+    $ rake congress-forms:delayed_job:override_field[A000000]
+    $ rake congress-forms:delayed_job:override_field[A000000,,'{"$PHONE" => "555-555-5555"}']
+    $ rake congress-forms:delayed_job:override_field[,12345,'{"$EMAIL" => "john.doe@example.com"}']
 
 ### `rake congress-forms:delayed_job:zip4_retry[regex]`
 
