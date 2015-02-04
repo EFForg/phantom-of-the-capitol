@@ -61,6 +61,33 @@ namespace :'congress-forms' do
         job.destroy
       end
     end
+    desc "override a field on the Delayed::Job error_or_failure queue, optionally provide bioguide regex or job id"
+    task :override_field, :regex, :job_id, :overrides do |t, args|
+      regex = args[:regex].blank? ? nil : Regexp.compile(args[:regex])
+      overrides = args[:overrides].blank? ? {} : eval(args[:overrides])
+      job_id = args[:job_id].blank? ? nil : args[:job_id].to_i
+
+      if job_id.nil?
+        jobs = Delayed::Job.where(queue: "error_or_failure")
+      else
+        jobs = [Delayed::Job.find(job_id)]
+      end
+
+      cm_hash = build_cm_hash
+      captcha_hash = build_captcha_hash
+
+      jobs.each do |job|
+        cm_id, = congress_member_id_and_args_from_handler(job.handler)
+        cm = retrieve_congress_member_cached(cm_hash, cm_id)
+
+        if regex.nil? or regex.match(cm.bioguide_id)
+          handler = YAML.load job.handler
+          handler.args[0] = handler.args[0].merge(overrides)
+          job.handler = YAML.dump handler
+          job.save
+        end
+      end
+    end
     desc "destroy all fills on the Delayed::Job error_or_failure queue provided a specific bioguide"
     task :destroy_fills, :bioguide do |t, args|
       cm = CongressMember.bioguide(args[:bioguide])
