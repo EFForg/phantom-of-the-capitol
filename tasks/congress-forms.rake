@@ -4,14 +4,20 @@ require File.expand_path("../../app/helpers/colorize.rb", __FILE__)
 
 namespace :'congress-forms' do
   namespace :'delayed_job' do
-    desc "perform all fills on the Delayed::Job error_or_failure queue, captchad fills first, optionally provide bioguide regex"
-    task :perform_fills, :regex, :overrides do |t, args|
+    desc "perform all fills on the Delayed::Job error_or_failure queue, captchad fills first, optionally provide bioguide regex or job id"
+    task :perform_fills, :regex, :job_id, :overrides do |t, args|
       require 'pp'
 
       regex = args[:regex].blank? ? nil : Regexp.compile(args[:regex])
       overrides = args[:overrides].blank? ? {} : eval(args[:overrides])
+      job_id = args[:job_id].blank? ? nil : args[:job_id].to_i
 
-      jobs = Delayed::Job.where(queue: "error_or_failure")
+      if job_id.nil?
+        jobs = Delayed::Job.where(queue: "error_or_failure")
+      else
+        jobs = [Delayed::Job.find(job_id)]
+      end
+
       captcha_jobs = []
       noncaptcha_jobs = []
 
