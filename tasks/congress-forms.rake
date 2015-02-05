@@ -101,8 +101,8 @@ namespace :'congress-forms' do
         end
       end
     end
-    desc "calculate # of jobs per congressperson on the Delayed::Job error_or_failure queue"
-    task :jobs_per_congressperson do |t, args|
+    desc "calculate # of jobs per member on the Delayed::Job error_or_failure queue"
+    task :jobs_per_member do |t, args|
       jobs = Delayed::Job.where(queue: "error_or_failure")
 
       people = {}

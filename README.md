@@ -207,7 +207,7 @@ Now, you should be able to point your browser to `http://localhost:8000/congress
 
 Any jobs that result in an `error` or `failure` are added to the [Delayed::Job](https://github.com/collectiveidea/delayed_job) job queue, unless the `SKIP_DELAY` environment variable is set.  This job queue shold be checked periodically and the jobs themselves debugged and re-run to ensure delivery.  A number of convenience rake tasks have been provided for this purpose.
 
-### `rake congress-forms:delayed_job:jobs_per_congressperson`
+### `rake congress-forms:delayed_job:jobs_per_member`
 
 Dispays the number of jobs per member of congress in descending order, indicating which members have captchas on their forms and giving a summation at the end.
 
