@@ -87,19 +87,23 @@ class CongressMember < ActiveRecord::Base
         when "wait"
           sleep a.value.to_i
         when "fill_in"
-          if a.value == "$CAPTCHA_SOLUTION"
-            location = b.element(:css => a.captcha_selector).wd.location
+          if a.value.starts_with?("$")
+            if a.value == "$CAPTCHA_SOLUTION"
+              location = b.element(:css => a.captcha_selector).wd.location
 
-            captcha_elem = b.element(:css => a.captcha_selector)
-            width = captcha_elem.style("width").delete("px")
-            height = captcha_elem.style("height").delete("px")
+              captcha_elem = b.element(:css => a.captcha_selector)
+              width = captcha_elem.style("width").delete("px")
+              height = captcha_elem.style("height").delete("px")
 
-            url = self.class::save_captcha_and_store_watir b.driver, location.x, location.y, width, height
+              url = self.class::save_captcha_and_store_watir b.driver, location.x, location.y, width, height
 
-            captcha_value = yield url
-            b.element(:css => a.selector).to_subtype.set(captcha_value)
+              captcha_value = yield url
+              b.element(:css => a.selector).to_subtype.set(captcha_value)
+            else
+              b.element(:css => a.selector).to_subtype.set(f[a.value].gsub("\t","    ")) unless f[a.value].nil?
+            end
           else
-            b.element(:css => a.selector).to_subtype.set(f[a.value].gsub("\t","    ")) unless f[a.value].nil?
+            b.element(:css => a.selector).to_subtype.set(a.value) unless a.value.nil?
           end
         when "select"
           begin
@@ -182,15 +186,19 @@ class CongressMember < ActiveRecord::Base
         when "wait"
           sleep a.value.to_i
         when "fill_in"
-          if a.value == "$CAPTCHA_SOLUTION"
-            location = CAPTCHA_LOCATIONS.keys.include?(bioguide_id) ? CAPTCHA_LOCATIONS[bioguide_id] : session.driver.evaluate_script('document.querySelector("' + a.captcha_selector.gsub('"', '\"') + '").getBoundingClientRect();')
-            
-            url = self.class::save_captcha_and_store_poltergeist session, location["left"], location["top"], location["width"], location["height"]
+          if a.value.starts_with?("$")
+            if a.value == "$CAPTCHA_SOLUTION"
+              location = CAPTCHA_LOCATIONS.keys.include?(bioguide_id) ? CAPTCHA_LOCATIONS[bioguide_id] : session.driver.evaluate_script('document.querySelector("' + a.captcha_selector.gsub('"', '\"') + '").getBoundingClientRect();')
 
-            captcha_value = yield url
-            session.find(a.selector).set(captcha_value)
+              url = self.class::save_captcha_and_store_poltergeist session, location["left"], location["top"], location["width"], location["height"]
+
+              captcha_value = yield url
+              session.find(a.selector).set(captcha_value)
+            else
+              session.find(a.selector).set(f[a.value].gsub("\t","    ")) unless f[a.value].nil?
+            end
           else
-            session.find(a.selector).set(f[a.value].gsub("\t","    ")) unless f[a.value].nil?
+            session.find(a.selector).set(a.value) unless a.value.nil?
           end
         when "select"
           begin
