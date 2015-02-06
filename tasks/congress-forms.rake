@@ -92,7 +92,7 @@ namespace :'congress-forms' do
 
       jobs.each do |job|
         cm_id, = congress_member_id_and_args_from_handler(job.handler)
-        if cm_id.to_i == cm.id or not args[:job_id].nil?
+        if not args[:job_id].nil? or cm_id.to_i == cm.id
           puts red("Destroying job #" + job.id.to_s)
           job.destroy
         end
