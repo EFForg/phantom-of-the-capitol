@@ -20,13 +20,15 @@ namespace :'congress-forms' do
       captcha_hash = build_captcha_hash
 
       jobs.each do |job|
-        cm_id, = congress_member_id_and_args_from_handler(job.handler)
-        cm = retrieve_congress_member_cached(cm_hash, cm_id)
-        if regex.nil? or regex.match(cm.bioguide_id)
-          if retrieve_captchad_cached(captcha_hash, cm.id)
-            captcha_jobs.push job
-          else
-            noncaptcha_jobs.push job
+        cm_id, cm_args = congress_member_id_and_args_from_handler(job.handler)
+        unless cm_args[1] == "rake" and args[:job_id].nil?
+          cm = retrieve_congress_member_cached(cm_hash, cm_id)
+          if regex.nil? or regex.match(cm.bioguide_id)
+            if retrieve_captchad_cached(captcha_hash, cm.id)
+              captcha_jobs.push job
+            else
+              noncaptcha_jobs.push job
+            end
           end
         end
       end
@@ -103,12 +105,14 @@ namespace :'congress-forms' do
       cm_hash = build_cm_hash
 
       jobs.each do |job|
-        cm_id, = congress_member_id_and_args_from_handler(job.handler)
-        cm = retrieve_congress_member_cached(cm_hash, cm_id)
-        if people.keys.include? cm.bioguide_id
-          people[cm.bioguide_id] += 1
-        else
-          people[cm.bioguide_id] = 1
+        cm_id, cm_args = congress_member_id_and_args_from_handler(job.handler)
+        unless cm_args[1] == "rake"
+          cm = retrieve_congress_member_cached(cm_hash, cm_id)
+          if people.keys.include? cm.bioguide_id
+            people[cm.bioguide_id] += 1
+          else
+            people[cm.bioguide_id] = 1
+          end
         end
       end
       captchad_hash = {}
