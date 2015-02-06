@@ -131,6 +131,8 @@ namespace :'congress-forms' do
       end
       puts "\nTotal jobs: "+total_jobs.to_s
       puts "Total captcha'd jobs: "+total_captchad_jobs.to_s
+      puts "\nTotal members: "+people.length.to_s
+      puts "Total captcha'd members: "+captchad_hash.length.to_s
     end
     desc "for error_or_failure jobs that have no zip4, look up the zip4, save, and retry"
     task :zip4_retry, :regex do |t, args|
