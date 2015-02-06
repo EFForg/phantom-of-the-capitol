@@ -57,9 +57,10 @@ namespace :'congress-forms' do
       end
     end
     desc "override a field on the Delayed::Job error_or_failure queue, optionally provide bioguide regex or job id"
-    task :override_field, :regex, :job_id, :overrides do |t, args|
+    task :override_field, :regex, :job_id, :overrides, :conditions do |t, args|
       regex = args[:regex].blank? ? nil : Regexp.compile(args[:regex])
       overrides = args[:overrides].blank? ? {} : eval(args[:overrides])
+      conditions = args[:conditions].blank? ? {} : eval(args[:conditions])
 
       jobs = retrieve_jobs args
 
@@ -72,9 +73,11 @@ namespace :'congress-forms' do
 
         if regex.nil? or regex.match(cm.bioguide_id)
           handler = YAML.load job.handler
-          handler.args[0] = handler.args[0].merge(overrides)
-          job.handler = YAML.dump handler
-          job.save
+          if conditions.all?{ |k, v| handler.args[0][k] == v }
+            handler.args[0] = handler.args[0].merge(overrides)
+            job.handler = YAML.dump handler
+            job.save
+          end
         end
       end
     end
