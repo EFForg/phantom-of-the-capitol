@@ -10,13 +10,8 @@ namespace :'congress-forms' do
 
       regex = args[:regex].blank? ? nil : Regexp.compile(args[:regex])
       overrides = args[:overrides].blank? ? {} : eval(args[:overrides])
-      job_id = args[:job_id].blank? ? nil : args[:job_id].to_i
 
-      if job_id.nil?
-        jobs = Delayed::Job.where(queue: "error_or_failure")
-      else
-        jobs = [Delayed::Job.find(job_id)]
-      end
+      jobs = retrieve_jobs args
 
       captcha_jobs = []
       noncaptcha_jobs = []
@@ -65,7 +60,8 @@ namespace :'congress-forms' do
     task :override_field, :regex, :job_id, :overrides do |t, args|
       regex = args[:regex].blank? ? nil : Regexp.compile(args[:regex])
       overrides = args[:overrides].blank? ? {} : eval(args[:overrides])
-      job_id = args[:job_id].blank? ? nil : args[:job_id].to_i
+
+      jobs = retrieve_jobs args
 
       if job_id.nil?
         jobs = Delayed::Job.where(queue: "error_or_failure")
@@ -480,4 +476,14 @@ def build_captcha_hash
     captcha_hash[cma.congress_member_id] = true
   end
   captcha_hash
+end
+
+def retrieve_jobs args
+  job_id = args[:job_id].blank? ? nil : args[:job_id].to_i
+
+  if job_id.nil?
+    Delayed::Job.where(queue: "error_or_failure")
+  else
+    [Delayed::Job.find(job_id)]
+  end
 end
