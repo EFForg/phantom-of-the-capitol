@@ -63,12 +63,6 @@ namespace :'congress-forms' do
 
       jobs = retrieve_jobs args
 
-      if job_id.nil?
-        jobs = Delayed::Job.where(queue: "error_or_failure")
-      else
-        jobs = [Delayed::Job.find(job_id)]
-      end
-
       cm_hash = build_cm_hash
       captcha_hash = build_captcha_hash
 
