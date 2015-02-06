@@ -84,14 +84,15 @@ namespace :'congress-forms' do
         end
       end
     end
-    desc "destroy all fills on the Delayed::Job error_or_failure queue provided a specific bioguide"
-    task :destroy_fills, :bioguide do |t, args|
+    desc "destroy all fills on the Delayed::Job error_or_failure queue provided a specific bioguide or job_id"
+    task :destroy_fills, :bioguide, :job_id do |t, args|
       cm = CongressMember.bioguide(args[:bioguide])
-      jobs = Delayed::Job.where(queue: "error_or_failure")
+
+      jobs = retrieve_jobs args
 
       jobs.each do |job|
         cm_id, = congress_member_id_and_args_from_handler(job.handler)
-        if cm_id.to_i == cm.id
+        if cm_id.to_i == cm.id or not args[:job_id].nil?
           puts red("Destroying job #" + job.id.to_s)
           job.destroy
         end
