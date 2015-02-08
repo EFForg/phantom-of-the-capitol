@@ -31,7 +31,9 @@ sed -i "s@^  :password.*@  :password => '$mysql_congress_forms',@" config/databa
 
 HOME=/home/vagrant sudo -u vagrant /bin/bash <<EOF
 echo "Setting up RVM and Ruby..."
-curl -sSL https://get.rvm.io | bash -s stable
+gpg --keyserver hkp://keys.gnupg.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3
+curl -sSL https://rvm.io/mpapis.asc | gpg --import -
+curl -sSL https://get.rvm.io | bash -s stable --ruby
 source /home/vagrant/.rvm/scripts/rvm
 rvm install ruby-2.1.0
 
