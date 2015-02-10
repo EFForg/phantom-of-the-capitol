@@ -22,7 +22,7 @@ Capybara.default_wait_time = 5
 SmartyStreets.configure do |c|
   c.auth_id = SMARTY_STREETS_ID
   c.auth_token = SMARTY_STREETS_TOKEN
-  c.number_of_candidates = 1
+  c.candidates = 1
 end
 
 ##

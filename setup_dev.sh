@@ -3,7 +3,7 @@
 # stop setup script if any command fails
 set -e
 
-DEPENDENCIES="mysql-server curl imagemagick libmysql++-dev libpq-dev git libqt4-dev xvfb"
+DEPENDENCIES="mysql-server curl imagemagick libmysql++-dev libpq-dev git libqt4-dev xvfb gnupg2"
 
 random() {
     head -c $1 /dev/urandom | base64
@@ -31,18 +31,24 @@ sed -i "s@^  :password.*@  :password => '$mysql_congress_forms',@" config/databa
 
 HOME=/home/vagrant sudo -u vagrant /bin/bash <<EOF
 echo "Setting up RVM and Ruby..."
-curl -sSL https://get.rvm.io | bash -s stable
+cd /tmp
+curl -O https://sks-keyservers.net/sks-keyservers.netCA.pem
+gpg2 --keyserver hkps://hkps.pool.sks-keyservers.net --keyserver-options ca-cert-file=sks-keyservers.netCA.pem --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3
+curl -O https://raw.githubusercontent.com/wayneeseguin/rvm/master/binscripts/rvm-installer
+curl -O https://raw.githubusercontent.com/wayneeseguin/rvm/master/binscripts/rvm-installer.asc
+gpg2 --verify rvm-installer.asc &&
+bash rvm-installer stable
 source /home/vagrant/.rvm/scripts/rvm
 rvm install ruby-2.1.0
 
-cd .
+cd /vagrant
 gem install json -v '1.8.1'
 bundle install
 
 echo "Loading schema..."
 bundle exec rake ar:create ar:schema:load > /dev/null
 echo "Loading congress members..."
-bundle exec rake congress-forms:clone_git > /dev/null
+bundle exec rake congress-forms:clone_git[/home/vagrant] > /dev/null
 
 echo "Setting up PhantomJS..."
 cd /home/vagrant

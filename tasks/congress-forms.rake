@@ -4,14 +4,15 @@ require File.expand_path("../../app/helpers/colorize.rb", __FILE__)
 
 namespace :'congress-forms' do
   namespace :'delayed_job' do
-    desc "perform all fills on the Delayed::Job error_or_failure queue, captchad fills first, optionally provide bioguide regex"
-    task :perform_fills, :regex, :overrides do |t, args|
+    desc "perform all fills on the Delayed::Job error_or_failure queue, captchad fills first, optionally provide bioguide regex or job id"
+    task :perform_fills, :regex, :job_id, :overrides do |t, args|
       require 'pp'
 
       regex = args[:regex].blank? ? nil : Regexp.compile(args[:regex])
       overrides = args[:overrides].blank? ? {} : eval(args[:overrides])
 
-      jobs = Delayed::Job.where(queue: "error_or_failure")
+      jobs = retrieve_jobs args
+
       captcha_jobs = []
       noncaptcha_jobs = []
 
@@ -19,13 +20,15 @@ namespace :'congress-forms' do
       captcha_hash = build_captcha_hash
 
       jobs.each do |job|
-        cm_id, = congress_member_id_and_args_from_handler(job.handler)
-        cm = retrieve_congress_member_cached(cm_hash, cm_id)
-        if regex.nil? or regex.match(cm.bioguide_id)
-          if retrieve_captchad_cached(captcha_hash, cm.id)
-            captcha_jobs.push job
-          else
-            noncaptcha_jobs.push job
+        cm_id, cm_args = congress_member_id_and_args_from_handler(job.handler)
+        unless cm_args[1] == "rake" and args[:job_id].nil?
+          cm = retrieve_congress_member_cached(cm_hash, cm_id)
+          if regex.nil? or regex.match(cm.bioguide_id)
+            if retrieve_captchad_cached(captcha_hash, cm.id)
+              captcha_jobs.push job
+            else
+              noncaptcha_jobs.push job
+            end
           end
         end
       end
@@ -55,33 +58,61 @@ namespace :'congress-forms' do
         job.destroy
       end
     end
-    desc "destroy all fills on the Delayed::Job error_or_failure queue provided a specific bioguide"
-    task :destroy_fills, :bioguide do |t, args|
-      cm = CongressMember.bioguide(args[:bioguide])
-      jobs = Delayed::Job.where(queue: "error_or_failure")
+    desc "override a field on the Delayed::Job error_or_failure queue, optionally provide bioguide regex or job id"
+    task :override_field, :regex, :job_id, :overrides, :conditions do |t, args|
+      regex = args[:regex].blank? ? nil : Regexp.compile(args[:regex])
+      overrides = args[:overrides].blank? ? {} : eval(args[:overrides])
+      conditions = args[:conditions].blank? ? {} : eval(args[:conditions])
+
+      jobs = retrieve_jobs args
+
+      cm_hash = build_cm_hash
+      captcha_hash = build_captcha_hash
 
       jobs.each do |job|
         cm_id, = congress_member_id_and_args_from_handler(job.handler)
-        if cm_id.to_i == cm.id
+        cm = retrieve_congress_member_cached(cm_hash, cm_id)
+
+        if regex.nil? or regex.match(cm.bioguide_id)
+          handler = YAML.load job.handler
+          if conditions.all?{ |k, v| handler.args[0][k] == v }
+            handler.args[0] = handler.args[0].merge(overrides)
+            job.handler = YAML.dump handler
+            job.save
+          end
+        end
+      end
+    end
+    desc "destroy all fills on the Delayed::Job error_or_failure queue provided a specific bioguide or job_id"
+    task :destroy_fills, :bioguide, :job_id do |t, args|
+      cm = CongressMember.bioguide(args[:bioguide])
+
+      jobs = retrieve_jobs args
+
+      jobs.each do |job|
+        cm_id, = congress_member_id_and_args_from_handler(job.handler)
+        if not args[:job_id].nil? or cm_id.to_i == cm.id
           puts red("Destroying job #" + job.id.to_s)
           job.destroy
         end
       end
     end
-    desc "calculate # of jobs per congressperson on the Delayed::Job error_or_failure queue"
-    task :jobs_per_congressperson do |t, args|
+    desc "calculate # of jobs per member on the Delayed::Job error_or_failure queue"
+    task :jobs_per_member do |t, args|
       jobs = Delayed::Job.where(queue: "error_or_failure")
 
       people = {}
       cm_hash = build_cm_hash
 
       jobs.each do |job|
-        cm_id, = congress_member_id_and_args_from_handler(job.handler)
-        cm = retrieve_congress_member_cached(cm_hash, cm_id)
-        if people.keys.include? cm.bioguide_id
-          people[cm.bioguide_id] += 1
-        else
-          people[cm.bioguide_id] = 1
+        cm_id, cm_args = congress_member_id_and_args_from_handler(job.handler)
+        unless cm_args[1] == "rake"
+          cm = retrieve_congress_member_cached(cm_hash, cm_id)
+          if people.keys.include? cm.bioguide_id
+            people[cm.bioguide_id] += 1
+          else
+            people[cm.bioguide_id] = 1
+          end
         end
       end
       captchad_hash = {}
@@ -101,6 +132,8 @@ namespace :'congress-forms' do
       end
       puts "\nTotal jobs: "+total_jobs.to_s
       puts "Total captcha'd jobs: "+total_captchad_jobs.to_s
+      puts "\nTotal members: "+people.length.to_s
+      puts "Total captcha'd members: "+captchad_hash.length.to_s
     end
     desc "for error_or_failure jobs that have no zip4, look up the zip4, save, and retry"
     task :zip4_retry, :regex do |t, args|
@@ -447,4 +480,14 @@ def build_captcha_hash
     captcha_hash[cma.congress_member_id] = true
   end
   captcha_hash
+end
+
+def retrieve_jobs args
+  job_id = args[:job_id].blank? ? nil : args[:job_id].to_i
+
+  if job_id.nil?
+    Delayed::Job.where(queue: "error_or_failure")
+  else
+    [Delayed::Job.find(job_id)]
+  end
 end
