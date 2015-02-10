@@ -23,7 +23,7 @@ This project relies on [Contact Congress](https://github.com/unitedstates/contac
 
  - `vagrant ssh`
  - `cd /vagrant`
- - `rackup`
+ - `rackup --host 0.0.0.0`
 
 ### The hard way (or when running in production)
 
