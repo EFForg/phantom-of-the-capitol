@@ -41,14 +41,14 @@ bash rvm-installer stable
 source /home/vagrant/.rvm/scripts/rvm
 rvm install ruby-2.1.0
 
-cd
+cd /vagrant
 gem install json -v '1.8.1'
 bundle install
 
 echo "Loading schema..."
 bundle exec rake ar:create ar:schema:load > /dev/null
 echo "Loading congress members..."
-bundle exec rake congress-forms:clone_git > /dev/null
+bundle exec rake congress-forms:clone_git[/home/vagrant] > /dev/null
 
 echo "Setting up PhantomJS..."
 cd /home/vagrant
