@@ -25,7 +25,7 @@ group :test do
 end
 
 # Padrino Stable Gem
-gem 'padrino', '0.11.4'
+gem 'padrino'
 
 gem 'database_cleaner'
 gem 'redcarpet'
