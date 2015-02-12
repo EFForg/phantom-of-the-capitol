@@ -1,8 +1,8 @@
 class FillStatus < ActiveRecord::Base
-  scope :success, conditions: "status = 'success'"
-  scope :error, conditions: "status = 'error'"
-  scope :failure, conditions: "status = 'failure'"
-  scope :error_or_failure, conditions: "status = 'error' OR status = 'failure'"
+  scope :success, -> { where "status = 'success'" }
+  scope :error, -> { where "status = 'error'" }
+  scope :failure, -> { where "status = 'failure'" }
+  scope :error_or_failure, -> { where "status = 'error' or status = 'failure'" }
 
   belongs_to :congress_member
   belongs_to :campaign_tag

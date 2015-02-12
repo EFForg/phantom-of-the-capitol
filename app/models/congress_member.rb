@@ -2,9 +2,9 @@ class CongressMember < ActiveRecord::Base
   validates_presence_of :bioguide_id
 
   has_many :actions, :class_name => 'CongressMemberAction', :dependent => :destroy
-  has_many :required_actions, :class_name => 'CongressMemberAction', :conditions => "required = true AND SUBSTRING(value, 1, 1) = '$'"
+  has_many :required_actions, -> (object) { where "required = true AND SUBSTRING(value, 1, 1) = '$'" }, :class_name => 'CongressMemberAction'
   has_many :fill_statuses, :class_name => 'FillStatus', :dependent => :destroy
-  has_many :recent_fill_statuses, :class_name => 'FillStatus', :conditions => proc{"created_at > '#{self.updated_at}'"}
+  has_many :recent_fill_statuses, -> (object) { where("created_at > ?", object.updated_at) }, :class_name => 'FillStatus'
   #has_one :captcha_action, :class_name => 'CongressMemberAction', :condition => "value = '$CAPTCHA_SOLUTION'"
 
   class FillFailure < Error
