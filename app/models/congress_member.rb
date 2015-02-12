@@ -7,7 +7,7 @@ class CongressMember < ActiveRecord::Base
   has_many :recent_fill_statuses, -> (object) { where("created_at > ?", object.updated_at) }, :class_name => 'FillStatus'
   #has_one :captcha_action, :class_name => 'CongressMemberAction', :condition => "value = '$CAPTCHA_SOLUTION'"
 
-  class FillFailure < Error
+  class FillFailure < StandardError
   end
 
   def self.bioguide bioguide_id
