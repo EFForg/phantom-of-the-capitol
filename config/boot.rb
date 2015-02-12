@@ -1,12 +1,12 @@
 # Defines our constants
-PADRINO_ENV  = ENV['PADRINO_ENV'] ||= ENV['RACK_ENV'] ||= 'development'  unless defined?(PADRINO_ENV)
+RACK_ENV = ENV['RACK_ENV'] ||= 'development'  unless defined?(RACK_ENV)
 PADRINO_ROOT = File.expand_path('../..', __FILE__) unless defined?(PADRINO_ROOT)
 
 # Load our dependencies
 require 'rubygems' unless defined?(Gem)
 require 'bundler/setup'
-Bundler.require(:default, PADRINO_ENV)
-Padrino.require("#{Padrino.root}/config/congress-forms_config.rb")
+Bundler.require(:default, RACK_ENV)
+require "#{Padrino.root}/config/congress-forms_config.rb"
 if File.exists?(file = "#{Padrino.root}/config/constants.rb")
   require file
 end
