@@ -23,7 +23,7 @@ class CongressMember < ActiveRecord::Base
   end
 
   def self.with_new_or_existing_bioguide bioguide_id
-    yield self.find_or_create_by_bioguide_id bioguide_id
+    yield self.find_or_create_by bioguide_id: bioguide_id
   end
 
   def as_required_json o={}
