@@ -53,10 +53,10 @@ bundle exec rake congress-forms:clone_git[/home/vagrant] > /dev/null
 
 echo "Setting up PhantomJS..."
 cd /home/vagrant
-curl -Lo phantomjs.tar.bz2 https://bitbucket.org/ariya/phantomjs/downloads/phantomjs-1.9.7-linux-x86_64.tar.bz2
+curl -Lo phantomjs.tar.bz2 https://bitbucket.org/ariya/phantomjs/downloads/phantomjs-1.9.8-linux-x86_64.tar.bz2
 tar -jxvf phantomjs.tar.bz2 > /dev/null
 EOF
 
-ln -s /home/vagrant/phantomjs-1.9.7-linux-x86_64/bin/phantomjs /usr/bin/phantomjs
+ln -s /home/vagrant/phantomjs-1.9.8-linux-x86_64/bin/phantomjs /usr/bin/phantomjs
 
 echo -e "\n\nYou're all done!  Now type 'vagrant ssh', cd into /vagrant, and type 'rackup' to run!"
