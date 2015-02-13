@@ -42,7 +42,8 @@ source /home/vagrant/.rvm/scripts/rvm
 rvm install ruby-2.1.0
 
 cd /vagrant
-gem install json -v '1.8.1'
+gem install json -v '1.8.2'
+gem install nokogiri -v '1.6.6.2'
 bundle install
 
 echo "Loading schema..."

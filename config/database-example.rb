@@ -6,7 +6,7 @@ ActiveRecord::Base.configurations[:development] = {
   :pool      => 100,
   :username  => 'congress_forms',
   :password  => '',
-  :host      => 'localhost'
+  :host      => '127.0.0.1'
 }
 
 ActiveRecord::Base.configurations[:production] = {
@@ -17,7 +17,7 @@ ActiveRecord::Base.configurations[:production] = {
   :pool      => 100,
   :username  => 'congress_forms',
   :password  => '',
-  :host      => 'localhost'
+  :host      => '127.0.0.1'
 }
 
 ActiveRecord::Base.configurations[:test] = {
@@ -28,7 +28,7 @@ ActiveRecord::Base.configurations[:test] = {
   :pool      => 100,
   :username  => 'congress_forms',
   :password  => '',
-  :host      => 'localhost'
+  :host      => '127.0.0.1'
 }
 
 # Setup our logger
