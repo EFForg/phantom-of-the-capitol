@@ -7,6 +7,8 @@ class FillStatus < ActiveRecord::Base
   belongs_to :congress_member
   belongs_to :campaign_tag
 
+  serialize :extra, LegacySerializer
+
   def initialize attrs = {}
     ct = CampaignTag.find_or_create_by(name: attrs.delete(:campaign_tag)) if attrs.include? :campaign_tag
     super attrs
