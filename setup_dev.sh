@@ -48,6 +48,7 @@ bundle install
 
 echo "Loading schema..."
 bundle exec rake ar:create ar:schema:load > /dev/null
+RACK_ENV=test bundle exec rake ar:create ar:schema:load > /dev/null
 echo "Loading congress members..."
 bundle exec rake congress-forms:clone_git[/home/vagrant] > /dev/null
 
