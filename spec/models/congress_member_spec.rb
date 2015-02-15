@@ -115,7 +115,7 @@ describe CongressMember do
         @congress_member.fill_out_form(MOCK_VALUES)
       rescue
       ensure
-        expect(eval(FillStatus.last.extra).include? :screenshot).to eq(true)
+        expect(YAML.load(FillStatus.last.extra).include? :screenshot).to eq(true)
       end
     end
   end
@@ -143,7 +143,7 @@ describe CongressMember do
         @congress_member.fill_out_form(MOCK_VALUES.merge({"$NAME_MIDDLE" => "Bart"}))
       rescue
         expect(FillStatus.error.count).to eq(1)
-        expect(eval(FillStatus.error.last.extra)[:delayed_job_id]).to eq(1)
+        expect(YAML.load(FillStatus.error.last.extra)[:delayed_job_id]).to eq(1)
       end
     end
 
@@ -152,7 +152,7 @@ describe CongressMember do
         @congress_member.fill_out_form(MOCK_VALUES.merge({"$NAME_MIDDLE" => "Bart"}))
       rescue
       ensure
-        expect(eval(FillStatus.last.extra).include? :screenshot).to eq(true)
+        expect(YAML.load(FillStatus.last.extra).include? :screenshot).to eq(true)
       end
     end
   end
