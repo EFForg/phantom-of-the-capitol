@@ -1,7 +1,7 @@
 FactoryGirl.define do
   factory :congress_member do
     bioguide_id "A000000"
-    success_criteria YAML.dump({"headers"=>{"status"=>200}, "body"=>{"contains"=>"Thank you for your feedback!"}})
+    success_criteria({"headers"=>{"status"=>200}, "body"=>{"contains"=>"Thank you for your feedback!"}})
 
     factory :congress_member_with_actions_parent do
       after(:create) do |c|

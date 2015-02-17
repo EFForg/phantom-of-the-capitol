@@ -32,6 +32,10 @@ describe CongressMember do
       @congress_member.reload
       expect(@congress_member.bioguide_id).to eq("C010101")
     end
+
+    it "should deserialize the `success_criteria` field successfully using YAML" do
+      expect { YAML.load(@congress_member.success_criteria) }.not_to raise_error
+    end
   end
 
   describe "that already exists with actions" do
