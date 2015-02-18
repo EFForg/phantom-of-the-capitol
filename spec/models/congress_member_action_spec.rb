@@ -18,4 +18,9 @@ describe CongressMemberAction do
     expect(ca.as_json["id"]).not_to be_nil
     expect(ca.as_required_json["id"]).to be_nil
   end
+
+  it "should deserialize the `options` field successfully using YAML" do
+    ca = create :congress_member_action, action: "select", name: "topic", options: {'agriculture' => "AG", 'economy' => "EC"}
+    expect { YAML.load(ca.options) }.not_to raise_error
+  end
 end
