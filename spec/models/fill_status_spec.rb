@@ -13,4 +13,9 @@ describe FillStatus do
     FillStatus.new campaign_tag: "test"
     expect(CampaignTag.count).to eq(1)
   end
+
+  it "should deserialize the `extra` field successfully using YAML" do
+    fs = create :fill_status, extra: {'some_info' => true}
+    expect { YAML.load(fs.extra) }.not_to raise_error
+  end
 end
