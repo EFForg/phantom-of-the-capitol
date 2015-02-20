@@ -294,4 +294,33 @@ describe "Main controller" do
       end
     end
   end
+
+  describe "route /recent-fill-status" do
+    describe "for member with one success and one error" do
+      before do
+        c = create :congress_member_with_actions, bioguide_id: "A010101", updated_at: Time.now - 1.hour
+        create :fill_status, congress_member: c, status: "success" 
+        create :fill_status, congress_member: c, status: "error" 
+      end
+
+      it "should return a json object with the correct " do
+        get '/recent-fill-status/A010101'
+        last_response_json = JSON.load(last_response.body)
+        expect(last_response.status).to eq(200)
+        expect(last_response_json["successes"]).to eq(1)
+        expect(last_response_json["errors"]).to eq(1)
+        expect(last_response_json["failures"]).to eq(0)
+      end
+    end
+
+    describe "for nonexistant member" do
+      it "should return an error" do
+        get '/recent-fill-status/A010101'
+        last_response_json = JSON.load(last_response.body)
+        expect(last_response.status).to eq(200)
+        expect(last_response_json["status"]).to eq("error")
+        expect(last_response_json["message"]).to eq("Congress member with provided bio id not found")
+      end
+    end
+  end
 end
