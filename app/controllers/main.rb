@@ -61,10 +61,12 @@ CongressForms::App.controller do
 
   get :'recent-fill-status/:bio_id' do
     content_type :json
-    return {status: "error", message: "You must provide a bio_id to request the recent fill status."}.to_json unless params.include? :bio_id
+    return {status: "error", message: "You must provide a bio_id to request the recent fill status."}.to_json unless params.include? "bio_id"
 
-    bio_id = params[:bio_id]
+    bio_id = params["bio_id"]
     c = CongressMember.bioguide(bio_id)
+
+    return {status: "error", message: "Congress member with provided bio id not found"}.to_json if c.nil?
 
     c.recent_fill_status.to_json
   end
