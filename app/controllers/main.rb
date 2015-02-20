@@ -72,16 +72,16 @@ CongressForms::App.controller do
   get :'recent-fill-image/:bio_id' do
     content_type :json
     response.headers['Cache-Control'] = "no-cache"
-    return {status: "error", message: "You must provide a bio_id to request the recent fill image."}.to_json unless params.include? :bio_id
+    return {status: "error", message: "You must provide a bio_id to request the recent fill image."}.to_json unless params.include? "bio_id"
 
-    bio_id = params[:bio_id]
+    bio_id = params["bio_id"]
     c = CongressMember.bioguide(bio_id)
-    redirect to('https://img.shields.io/badge/YAML-not%20found-red.svg') if c.nil?
+    redirect to(CongressMember::RECENT_FILL_IMAGE_BASE + 'YAML-not%20found-red' + CongressMember::RECENT_FILL_IMAGE_EXT) if c.nil?
 
     fill_status = c.recent_fill_status
 
     if [fill_status[:successes], fill_status[:errors], fill_status[:failures]].max == 0
-      redirect to('https://img.shields.io/badge/not-tried-lightgray.svg'), 302
+      redirect to(CongressMember::RECENT_FILL_IMAGE_BASE + 'not-tried-lightgray' + CongressMember::RECENT_FILL_IMAGE_EXT), 302
     else
       success_rate = fill_status[:successes].to_f / (fill_status[:successes] + fill_status[:errors] + fill_status[:failures])
 
@@ -92,7 +92,7 @@ CongressForms::App.controller do
       blue = 0
 
       color_hex = sprintf("%02X%02X%02X", red, green, blue)
-      redirect to('https://img.shields.io/badge/success-' + (success_rate * 100).to_i.to_s + '%-' + color_hex + '.svg'), 302
+      redirect to(CongressMember::RECENT_FILL_IMAGE_BASE + 'success-' + (success_rate * 100).to_i.to_s + '%-' + color_hex + CongressMember::RECENT_FILL_IMAGE_EXT), 302
     end
   end
 
