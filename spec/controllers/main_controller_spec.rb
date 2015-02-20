@@ -258,4 +258,40 @@ describe "Main controller" do
       end
     end 
   end
+
+  describe "route /recent-fill-image" do
+    describe "for member with 50% success rate" do
+      before do
+        c = create :congress_member_with_actions, bioguide_id: "A010101", updated_at: Time.now - 1.hour
+        create :fill_status, congress_member: c, status: "success" 
+        create :fill_status, congress_member: c, status: "error" 
+      end
+
+      it "should issue a 302 redirect to a shield image with a 50% success rate" do
+        get '/recent-fill-image/A010101'
+        expect(last_response.status).to eq(302)
+        expect(last_response.headers['Location']).to eq(CongressMember::RECENT_FILL_IMAGE_BASE + 'success-50%-CCCC00' + CongressMember::RECENT_FILL_IMAGE_EXT)
+      end
+    end
+
+    describe "for nonexistant member" do
+      it "should issue a 302 redirect to a red shield displaying 'YAML-not found'" do
+        get '/recent-fill-image/A010101'
+        expect(last_response.status).to eq(302)
+        expect(last_response.headers['Location']).to eq(CongressMember::RECENT_FILL_IMAGE_BASE + 'YAML-not%20found-red' + CongressMember::RECENT_FILL_IMAGE_EXT)
+      end
+    end
+
+    describe "for member without fills" do
+      before do
+        create :congress_member_with_actions, bioguide_id: "A010101"
+      end
+
+      it "should issue a 302 redirect to a gray shield displaying 'not tried'" do
+        get '/recent-fill-image/A010101'
+        expect(last_response.status).to eq(302)
+        expect(last_response.headers['Location']).to eq(CongressMember::RECENT_FILL_IMAGE_BASE + 'not-tried-lightgray' + CongressMember::RECENT_FILL_IMAGE_EXT)
+      end
+    end
+  end
 end

@@ -9,6 +9,9 @@ class CongressMember < ActiveRecord::Base
 
   serialize :success_criteria, LegacySerializer
 
+  RECENT_FILL_IMAGE_BASE = 'https://img.shields.io/badge/'
+  RECENT_FILL_IMAGE_EXT = '.svg'
+
   class FillFailure < StandardError
   end
 
