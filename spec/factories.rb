@@ -45,6 +45,11 @@ FactoryGirl.define do
     congress_member
     campaign_tag
     status "success"
+
+    factory :fill_status_failure do
+      status "failure"
+      extra({ delayed_job_id: 100, screenshot: "https://www.example.com/blah.png" })
+    end
   end
   
   factory :campaign_tag do

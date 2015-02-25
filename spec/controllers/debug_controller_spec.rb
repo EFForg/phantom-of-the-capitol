@@ -1,6 +1,52 @@
 require 'spec_helper'
 
 describe "Debug controller" do
+  describe "route /recent-statuses-detailed" do
+    it "should not be accessable without a correct debug_key" do
+      get '/recent-statuses-detailed/TEST', { debug_key: DEBUG_KEY + "cruft" }
+      expect(last_response.status).to eq(401)
+      last_response_json = JSON.load(last_response.body)
+      expect(last_response_json["status"]).to eq("error")
+    end
+
+    it "should return an error response when a bioguide is not found" do
+      get '/recent-statuses-detailed/Z010101', { debug_key: DEBUG_KEY }
+      last_response_json = JSON.load(last_response.body)
+      expect(last_response_json["status"]).to eq("error")
+    end
+
+    describe "for a member with 2 fill statuses, one failure one success" do
+      before do
+        @c = create :congress_member_with_actions, success_criteria: YAML.dump({"headers"=>{"status"=>200}, "body"=>{"contains"=>"Won't get me!"}}), updated_at: Time.now - 1.hour
+        create :fill_status, congress_member: @c, status: "success"
+        @failure_fill_status = create :fill_status_failure, congress_member: @c
+        @c.delay(queue: "error_or_failure").fill_out_form MOCK_VALUES
+        @last_job = Delayed::Job.last
+        @last_job.attempts = 1
+        @last_job.run_at = Time.now
+        @last_job.last_error = "Some failure"
+        @last_job.save
+        Delayed::Job = double(Delayed::Job)
+        allow(Delayed::Job).to receive(:find).and_return(@last_job)
+      end
+
+      it "should return recent statuses in order of time, descending" do
+        get '/recent-statuses-detailed/' + @c.bioguide_id, { debug_key: DEBUG_KEY }
+        last_response_json = JSON.load(last_response.body)
+        expect(last_response_json.first["status"]).to eq("failure")
+        expect(last_response_json.second["status"]).to eq("success")
+      end
+
+      it "should give detailed recent statuses" do
+        get '/recent-statuses-detailed/' + @c.bioguide_id, { debug_key: DEBUG_KEY }
+        last_response_json = JSON.load(last_response.body)
+        expect(last_response_json.first["error"]).to eq(@last_job.last_error)
+        expect(last_response_json.first["dj_id"]).to eq(YAML.load(@failure_fill_status.extra)[:delayed_job_id])
+        expect(last_response_json.first["screenshot"]).to eq(YAML.load(@failure_fill_status.extra)[:screenshot])
+      end
+    end
+  end
+
   describe "route /list-actions" do
     it "should not be accessable without a correct debug_key" do
       get '/list-actions/TEST', { debug_key: DEBUG_KEY + "cruft" }
