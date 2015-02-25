@@ -21,6 +21,7 @@ apt-get -y install $DEPENDENCIES
 
 mysql -u root -p"$mysql_root" -e "create database if not exists congress_forms_development;  GRANT ALL PRIVILEGES ON congress_forms_development.* TO 'congress_forms'@'localhost' IDENTIFIED BY '$mysql_congress_forms';"
 mysql -u root -p"$mysql_root" -e "create database if not exists congress_forms_test;  GRANT ALL PRIVILEGES ON congress_forms_test.* TO 'congress_forms'@'localhost';"
+mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql -u root mysql -p"$mysql_root"
 
 cd /vagrant
 
