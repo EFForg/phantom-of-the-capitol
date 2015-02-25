@@ -7,7 +7,6 @@ CongressForms::App.controller do
       response.headers['Access-Control-Allow-Origin'] = request.env['HTTP_ORIGIN']
     end
     response.headers['X-Backend-Hostname'] = Socket.gethostname
-
     halt 401, {status: "error", message: "You must provide a valid debug key to access this endpoint."}.to_json unless params.include? "debug_key" and params["debug_key"] == DEBUG_KEY
   end
 
@@ -55,7 +54,7 @@ CongressForms::App.controller do
   end
 
   get :'list-congress-members' do
-    CongressMember.all(order: :bioguide_id).to_json(only: :bioguide_id, methods: :form_domain_url)
+    CongressMember.all.order(:bioguide_id).to_json(only: :bioguide_id, methods: :form_domain_url)
   end
 
   get :'successful-fills-by-date', map: %r{/successful-fills-by-date/([\w]*)} do
