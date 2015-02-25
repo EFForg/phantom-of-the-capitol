@@ -15,8 +15,8 @@ CongressForms::App.controller do
   end
 
   get :'recent-statuses-detailed/:bio_id' do
-    return {status: "error", message: "You must provide a bio_id to request the most recent error."}.to_json unless params.include? :bio_id
-    bio_id = params[:bio_id]
+    return {status: "error", message: "You must provide a bio_id to request the most recent status."}.to_json unless params.include? "bio_id"
+    bio_id = params["bio_id"]
 
     c = CongressMember.bioguide(bio_id)
     return {status: "error", message: "Congress member with provided bio id not found."}.to_json if c.nil?
