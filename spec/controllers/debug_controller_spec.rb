@@ -17,7 +17,7 @@ describe "Debug controller" do
 
     describe "for a member with 2 fill statuses, one failure one success" do
       before do
-        @c = create :congress_member_with_actions, success_criteria: YAML.dump({"headers"=>{"status"=>200}, "body"=>{"contains"=>"Won't get me!"}}), updated_at: Time.now - 1.hour
+        @c = create :congress_member, success_criteria: YAML.dump({"headers"=>{"status"=>200}, "body"=>{"contains"=>"Won't get me!"}}), updated_at: Time.now - 1.hour
         create :fill_status, congress_member: @c, status: "success"
         @failure_fill_status = create :fill_status_failure, congress_member: @c
         @c.delay(queue: "error_or_failure").fill_out_form MOCK_VALUES
@@ -88,8 +88,8 @@ describe "Debug controller" do
 
     describe "with two members of congress" do
       before do
-        create :congress_member_with_actions, bioguide_id: "A010101"
-        create :congress_member_with_actions, bioguide_id: "B010101"
+        create :congress_member, bioguide_id: "A010101"
+        create :congress_member, bioguide_id: "B010101"
       end
 
       it "should return 200 status" do
