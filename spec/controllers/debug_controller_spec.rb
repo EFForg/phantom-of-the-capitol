@@ -26,8 +26,6 @@ describe "Debug controller" do
         @last_job.run_at = Time.now
         @last_job.last_error = "Some failure"
         @last_job.save
-        Delayed::Job = double(Delayed::Job)
-        allow(Delayed::Job).to receive(:find).and_return(@last_job)
       end
 
       it "should return recent statuses in order of time, descending" do
@@ -38,6 +36,7 @@ describe "Debug controller" do
       end
 
       it "should give detailed recent statuses" do
+        allow(Delayed::Job).to receive(:find).and_return(@last_job)
         get '/recent-statuses-detailed/' + @c.bioguide_id, { debug_key: DEBUG_KEY }
         last_response_json = JSON.load(last_response.body)
         expect(last_response_json.first["error"]).to eq(@last_job.last_error)
