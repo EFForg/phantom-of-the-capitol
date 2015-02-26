@@ -111,4 +111,97 @@ describe "Debug controller" do
       end
     end
   end
+
+  describe "route /successful-fills-by-date" do
+    it "should not be accessable without a correct debug_key" do
+      get '/successful-fills-by-date/TEST', { debug_key: DEBUG_KEY + "cruft" }
+      expect(last_response.status).to eq(401)
+      last_response_json = JSON.load(last_response.body)
+      expect(last_response_json["status"]).to eq("error")
+    end
+
+    describe "for multiple members with fill statuses" do
+      before do
+        c = create :congress_member, bioguide_id: "A010101"
+        c2 = create :congress_member, bioguide_id: "B010101"
+        2.times do
+          create :fill_status, congress_member: c, status: "success", created_at: Time.zone.parse('2015-01-01')
+        end
+        3.times do
+          create :fill_status, congress_member: c, status: "success", created_at: Time.zone.parse('2015-01-02')
+        end
+        create :fill_status, congress_member: c, status: "success", created_at: Time.zone.parse('2015-01-03')
+        create :fill_status, congress_member: c, status: "success", created_at: Time.zone.parse('2015-01-02'), campaign_tag: create(:campaign_tag, name: "test2")
+        create :fill_status_failure, congress_member: c, status: "failure", created_at: Time.zone.parse('2015-01-02')
+        create :fill_status_failure, congress_member: c2, status: "success", created_at: Time.zone.parse('2015-01-02')
+      end
+
+      it "should accurately select the number of successes for a given member" do
+        get '/successful-fills-by-date/A010101', { debug_key: DEBUG_KEY, date_start: "2015-01-01", date_end: "2015-01-03" }
+        last_response_json = JSON.load(last_response.body)
+
+        expect(last_response_json.values.count).to eq(2)
+        expect(last_response_json[Time.zone.parse('2015-01-01').to_s]).to eq(2)
+        expect(last_response_json[Time.zone.parse('2015-01-02').to_s]).to eq(4)
+      end
+
+      it "should accurately select the number of successes for every member" do
+        get '/successful-fills-by-date/', { debug_key: DEBUG_KEY, date_start: "2015-01-01", date_end: "2015-01-03" }
+        last_response_json = JSON.load(last_response.body)
+
+        expect(last_response_json.values.count).to eq(2)
+        expect(last_response_json[Time.zone.parse('2015-01-01').to_s]).to eq(2)
+        expect(last_response_json[Time.zone.parse('2015-01-02').to_s]).to eq(5)
+      end
+
+      it "should accurately select the number of successes for every member" do
+        get '/successful-fills-by-date/', { debug_key: DEBUG_KEY, date_start: "2015-01-01", date_end: "2015-01-03", campaign_tag: "test2" }
+        last_response_json = JSON.load(last_response.body)
+
+        expect(last_response_json.values.count).to eq(1)
+        expect(last_response_json[Time.zone.parse('2015-01-02').to_s]).to eq(1)
+      end
+    end
+  end
+
+  describe "route /successful-fills-by-member" do
+    it "should not be accessable without a correct debug_key" do
+      get '/successful-fills-by-member/', { debug_key: DEBUG_KEY + "cruft" }
+      expect(last_response.status).to eq(401)
+      last_response_json = JSON.load(last_response.body)
+      expect(last_response_json["status"]).to eq("error")
+    end
+
+    describe "for multiple members with fill statuses" do
+      before do
+        c = create :congress_member, bioguide_id: "A010101"
+        c2 = create :congress_member, bioguide_id: "B010101"
+        3.times do
+          create :fill_status, congress_member: c, status: "success"
+        end
+        create :fill_status, congress_member: c, status: "success", campaign_tag: create(:campaign_tag, name: "test2")
+        create :fill_status_failure, congress_member: c, status: "failure"
+        create :fill_status_failure, congress_member: c2, status: "success"
+      end
+
+      it "should accurately select the number of sucesses by member" do
+        get '/successful-fills-by-member/', { debug_key: DEBUG_KEY }
+        last_response_json = JSON.load(last_response.body)
+
+        expect(last_response_json.values.count).to eq(2)
+        expect(last_response_json['A010101']).to eq(4)
+        expect(last_response_json['B010101']).to eq(1)
+      end
+
+      it "should accurately select the number of sucesses by member" do
+        get '/successful-fills-by-member/', { debug_key: DEBUG_KEY, campaign_tag: "test2" }
+        last_response_json = JSON.load(last_response.body)
+
+        expect(last_response_json.values.count).to eq(1)
+        expect(last_response_json['A010101']).to eq(1)
+      end
+
+    end
+  end
+
 end
