@@ -3,7 +3,7 @@ rvm:
   - 2.1.0
 before_script:
   - mysql -e 'create database congress_forms_test;'
-  - mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql -u root mysql -p""
+  - mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql -u root mysql
   - cp config/database-example.rb config/database.rb
   - sed -i "s@^  :username.*@  :username => 'root',@" config/database.rb
   - cp config/congress-forms_config.rb.example config/congress-forms_config.rb
