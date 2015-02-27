@@ -1,8 +1,9 @@
-# CongressForms
-A RESTful API for retrieving the required fields for and filling out the contact forms of members of the US Congress.
+# Phantom of the Capitol
+## Phantom DC for short
+A RESTful API for retrieving the required fields for and filling out the contact forms of members of the US Congress, powered by PhantomJS.
 This project relies on [Contact Congress](https://github.com/unitedstates/contact-congress) as the data source for congress member forms.
 
-[![Build Status](https://travis-ci.org/EFForg/congress-forms.png)](http://travis-ci.org/EFForg/congress-forms)
+[![Build Status](https://travis-ci.org/EFForg/phantom-of-the-capitol.png)](http://travis-ci.org/EFForg/phantom-of-the-capitol)
 
 ## Installation and Setup
 
@@ -17,7 +18,7 @@ This project relies on [Contact Congress](https://github.com/unitedstates/contac
 #### Installation
 
  - `vagrant up`
- - `vim config/congress-forms_config.rb # edit settings here`
+ - `vim config/phantom-dc_config.rb # edit settings here`
 
 #### Running
 
@@ -45,7 +46,7 @@ Create the database, then
 
  - `cp config/database-example.rb config/database.rb`
  - `vim config/database.rb # fill in db info`
- - `cp config/congress-forms_config.rb.example config/congress-forms_config.rb`
+ - `cp config/phantom-dc_config.rb.example config/phantom-dc_config.rb`
  - `bundle exec rake ar:create ar:schema:load`
 
 #### Populating the database
@@ -54,9 +55,9 @@ Clone a copy of the contact-congress and store it somewhere:
 
  - `git clone https://github.com/unitedstates/contact-congress`
 
-Then cd back over to congress-forms and run
+Then cd back over to phantom-of-the-capitol and run
 
- - `bundle exec rake congress-forms:update_git[contact_congress_directory]`
+ - `bundle exec rake phantom-dc:update_git[contact_congress_directory]`
 
 replacing `contact_congress_directory` with the path where you cloned the `contact-congress` project.
 
@@ -185,13 +186,13 @@ There area also endpoints which require authorization to access.  The following 
 >     $ curl 'http://localhost:9292/successful-fills-by-member/?campaign_tag=some_tag&debug_key=some_key'
 >     {"A000000":28,"B000000":20,"C000000":9,"D000000":70,"E000000":5}
 
-## Debugging Congress-Forms
+## Debugging Phantom of the Capitol
 
-The [Congress Forms Debugger](https://github.com/efforg/congress-forms-test/) is a useful tool for debugging congress-forms.  To run it locally, in `config/congress-forms_config.rb` first make sure to set `DEBUG_KEY` to a shared secret and `CORS_ALLOWED_DOMAINS` to add `localhost:8000` if the debugger is going to be run on port `8000`.  Then:
+The [Congress Forms Debugger](https://github.com/efforg/congress-forms-test/) is a useful tool for debugging Phantom DC.  To run it locally, in `config/phantom-dc_config.rb` first make sure to set `DEBUG_KEY` to a shared secret and `CORS_ALLOWED_DOMAINS` to add `localhost:8000` if the debugger is going to be run on port `8000`.  Then:
 
-    $ git clone https://github.com/EFForg/congress-forms-test
+    $ git clone https://github.com/EFForg/phantom-of-the-capitol
     $ cd congress-forms-test
-    $ vim js/config.js # edit this file so that `CONTACT_CONGRESS_SERVER` points to your own `congress-forms` API root.
+    $ vim js/config.js # edit this file so that `CONTACT_CONGRESS_SERVER` points to your own `phantom-of-the-capitol` API root.
     $ python -m SimpleHTTPServer # or configure apache for this endpoint
 
 Now, you should be able to point your browser to `http://localhost:8000/congress-forms-test/?debug_key=DEBUG_KEY` (replacing, of course, `DEBUG_KEY`) and see a list of members of congress with a column for their `Recent Success Rate`.  From here, you can click on the bioguide identifier for a member of congress and be brought to a page where you can then:
@@ -207,11 +208,11 @@ Now, you should be able to point your browser to `http://localhost:8000/congress
 
 Any jobs that result in an `error` or `failure` are added to the [Delayed::Job](https://github.com/collectiveidea/delayed_job) job queue, unless the `SKIP_DELAY` environment variable is set.  This job queue shold be checked periodically and the jobs themselves debugged and re-run to ensure delivery.  A number of convenience rake tasks have been provided for this purpose.
 
-### `rake congress-forms:delayed_job:jobs_per_member`
+### `rake phantom-dc:delayed_job:jobs_per_member`
 
 Dispays the number of jobs per member of congress in descending order, indicating which members have captchas on their forms and giving a summation at the end.
 
-### `rake congress-forms:delayed_job:perform_fills[regex,job_id,overrides]`
+### `rake phantom-dc:delayed_job:perform_fills[regex,job_id,overrides]`
 
 Perform the form fills in the queue, optionally providing:
 
@@ -221,12 +222,12 @@ Perform the form fills in the queue, optionally providing:
 
 Examples:
 
-    $ rake congress-forms:delayed_job:perform_fills
-    $ rake congress-forms:delayed_job:perform_fills[A000000]
-    $ rake congress-forms:delayed_job:perform_fills[A000000,,'{"$PHONE" => "555-555-5555"}']
-    $ rake congress-forms:delayed_job:perform_fills[,12345,'{"$EMAIL" => "john.doe@example.com"}']
+    $ rake phantom-dc:delayed_job:perform_fills
+    $ rake phantom-dc:delayed_job:perform_fills[A000000]
+    $ rake phantom-dc:delayed_job:perform_fills[A000000,,'{"$PHONE" => "555-555-5555"}']
+    $ rake phantom-dc:delayed_job:perform_fills[,12345,'{"$EMAIL" => "john.doe@example.com"}']
 
-### `rake congress-forms:override_field[regex,job_id,overrides]`
+### `rake phantom-dc:override_field[regex,job_id,overrides]`
 
 Override values for jobs in the queue, optionally providing:
 
@@ -236,21 +237,21 @@ Override values for jobs in the queue, optionally providing:
 
 Examples:
 
-    $ rake congress-forms:delayed_job:override_field
-    $ rake congress-forms:delayed_job:override_field[A000000]
-    $ rake congress-forms:delayed_job:override_field[A000000,,'{"$PHONE" => "555-555-5555"}']
-    $ rake congress-forms:delayed_job:override_field[,12345,'{"$EMAIL" => "john.doe@example.com"}']
+    $ rake phantom-dc:delayed_job:override_field
+    $ rake phantom-dc:delayed_job:override_field[A000000]
+    $ rake phantom-dc:delayed_job:override_field[A000000,,'{"$PHONE" => "555-555-5555"}']
+    $ rake phantom-dc:delayed_job:override_field[,12345,'{"$EMAIL" => "john.doe@example.com"}']
 
-### `rake congress-forms:delayed_job:zip4_retry[regex]`
+### `rake phantom-dc:delayed_job:zip4_retry[regex]`
 
-Pick out the jobs that have no `$ADDRESS_ZIP4` defined, figure out the zip+4 based on the address and 5-digit zip in the job (requires an account with [SmartyStreets](http://smartystreets.com/) with credentials in `config/congress-forms_config.rb`), and try the job again.  Optionally provide:
+Pick out the jobs that have no `$ADDRESS_ZIP4` defined, figure out the zip+4 based on the address and 5-digit zip in the job (requires an account with [SmartyStreets](http://smartystreets.com/) with credentials in `config/phantom-dc_config.rb`), and try the job again.  Optionally provide:
 
   - `regex` which will only perform the fills for members with matching bioguide identifiers
 
 Examples:
 
-    $ rake congress-forms:delayed_job:zip4_retry
-    $ rake congress-forms:delayed_job:zip4_retry[A000000]
+    $ rake phantom-dc:delayed_job:zip4_retry
+    $ rake phantom-dc:delayed_job:zip4_retry[A000000]
 
 ### Padrino Console
 

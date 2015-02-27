@@ -15,7 +15,7 @@ CarrierWave.configure do |config|
     aws_secret_access_key: '',
     region:                'us-west-1'
   }
-  config.fog_directory = 'congress-forms'
+  config.fog_directory = 'phantom-dc'
 end
 
 Time.zone = "America/Los_Angeles"

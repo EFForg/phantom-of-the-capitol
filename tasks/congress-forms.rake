@@ -2,7 +2,7 @@ require File.expand_path("../../config/boot.rb", __FILE__)
 require File.expand_path("../../app/helpers/states.rb", __FILE__)
 require File.expand_path("../../app/helpers/colorize.rb", __FILE__)
 
-namespace :'congress-forms' do
+namespace :'phantom-dc' do
   namespace :'delayed_job' do
     desc "perform all fills on the Delayed::Job error_or_failure queue, captchad fills first, optionally provide bioguide regex or job id"
     task :perform_fills, :regex, :job_id, :overrides do |t, args|

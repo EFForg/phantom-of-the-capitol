@@ -2,9 +2,9 @@ ActiveRecord::Base.configurations[:development] = {
   :adapter => 'mysql2',
   :encoding  => 'utf8',
   :reconnect => true,
-  :database  => 'congress_forms_development',
+  :database  => 'phantom_dc_development',
   :pool      => 100,
-  :username  => 'congress_forms',
+  :username  => 'phantom_dc',
   :password  => '',
   :host      => '127.0.0.1'
 }
@@ -13,9 +13,9 @@ ActiveRecord::Base.configurations[:production] = {
   :adapter => 'mysql2',
   :encoding  => 'utf8',
   :reconnect => true,
-  :database  => 'congress_forms_production',
+  :database  => 'phantom_dc_production',
   :pool      => 100,
-  :username  => 'congress_forms',
+  :username  => 'phantom_dc',
   :password  => '',
   :host      => '127.0.0.1'
 }
@@ -24,9 +24,9 @@ ActiveRecord::Base.configurations[:test] = {
   :adapter => 'mysql2',
   :encoding  => 'utf8',
   :reconnect => true,
-  :database  => 'congress_forms_test',
+  :database  => 'phantom_dc_test',
   :pool      => 100,
-  :username  => 'congress_forms',
+  :username  => 'phantom_dc',
   :password  => '',
   :host      => '127.0.0.1'
 }

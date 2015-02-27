@@ -10,7 +10,7 @@ random() {
 }
 
 mysql_root=$(random 20)
-mysql_congress_forms=$(random 20)
+mysql_phantom_dc=$(random 20)
 sudo debconf-set-selections <<EOF
 mysql-server-5.5 mysql-server/root_password password $mysql_root
 mysql-server-5.5 mysql-server/root_password_again password $mysql_root
@@ -19,16 +19,16 @@ EOF
 apt-get update
 apt-get -y install $DEPENDENCIES
 
-mysql -u root -p"$mysql_root" -e "create database if not exists congress_forms_development;  GRANT ALL PRIVILEGES ON congress_forms_development.* TO 'congress_forms'@'localhost' IDENTIFIED BY '$mysql_congress_forms';"
-mysql -u root -p"$mysql_root" -e "create database if not exists congress_forms_test;  GRANT ALL PRIVILEGES ON congress_forms_test.* TO 'congress_forms'@'localhost';"
+mysql -u root -p"$mysql_root" -e "create database if not exists phantom_dc_development;  GRANT ALL PRIVILEGES ON phantom_dc_development.* TO 'phantom_dc'@'localhost' IDENTIFIED BY '$mysql_phantom_dc';"
+mysql -u root -p"$mysql_root" -e "create database if not exists phantom_dc_test;  GRANT ALL PRIVILEGES ON phantom_dc_test.* TO 'phantom_dc'@'localhost';"
 mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql -u root mysql -p"$mysql_root"
 
 cd /vagrant
 
 cp -a config/database-example.rb config/database.rb
-cp -a config/congress-forms_config.rb.example config/congress-forms_config.rb
+cp -a config/phantom-dc_config.rb.example config/phantom-dc_config.rb
 
-sed -i "s@^  :password.*@  :password => '$mysql_congress_forms',@" config/database.rb
+sed -i "s@^  :password.*@  :password => '$mysql_phantom_dc',@" config/database.rb
 
 HOME=/home/vagrant sudo -u vagrant /bin/bash <<EOF
 echo "Setting up RVM and Ruby..."
@@ -51,7 +51,7 @@ echo "Loading schema..."
 bundle exec rake ar:create ar:schema:load > /dev/null
 RACK_ENV=test bundle exec rake ar:create ar:schema:load > /dev/null
 echo "Loading congress members..."
-bundle exec rake congress-forms:clone_git[/home/vagrant] > /dev/null
+bundle exec rake phantom-dc:clone_git[/home/vagrant] > /dev/null
 
 echo "Setting up PhantomJS..."
 cd /home/vagrant
