@@ -81,7 +81,7 @@ describe "Main controller" do
 
   describe "route /retrieve-from-elements" do
     before do
-      @route = :'retrieve-form-elements'
+      @route = '/retrieve-form-elements'
     end
 
     it "should not raise an exception for nonexistent congress members" do
@@ -124,7 +124,7 @@ describe "Main controller" do
 
   describe "route /fill-out-form" do
     before do
-      @route = :'fill-out-form'
+      @route = '/fill-out-form'
       @campaign_tag = "know your rights"
     end
 
@@ -201,7 +201,7 @@ describe "Main controller" do
       end
 
       it "should result in 'success' with the right answer given" do
-        post_json :'fill-out-captcha', {
+        post_json '/fill-out-captcha', {
           "uid" => @uid,
           "answer" => "placeholder"
         }.to_json
@@ -210,7 +210,7 @@ describe "Main controller" do
       end
 
       it "should result in 'error' with the wrong answer given" do
-        post_json :'fill-out-captcha', {
+        post_json '/fill-out-captcha', {
           "uid" => @uid,
           "answer" => "wrong"
         }.to_json
@@ -219,11 +219,11 @@ describe "Main controller" do
       end
 
       it "should destroy the thread after giving a answer" do
-        post_json :'fill-out-captcha', {
+        post_json '/fill-out-captcha', {
           "uid" => @uid,
           "answer" => "placeholder"
         }.to_json
-        post_json :'fill-out-captcha', {
+        post_json '/fill-out-captcha', {
           "uid" => @uid,
           "answer" => "placeholder"
         }.to_json
@@ -234,7 +234,7 @@ describe "Main controller" do
 
       it "should destroy the thread after a time interval" do
         sleep(5)
-        post_json :'fill-out-captcha', {
+        post_json '/fill-out-captcha', {
           "uid" => @uid,
           "answer" => "placeholder"
         }.to_json
