@@ -1,5 +1,5 @@
 source 'https://rubygems.org'
-ruby "2.1.0"
+ruby "2.2.0"
 
 # Distribute your app as a gem
 # gemspec
@@ -25,7 +25,7 @@ group :test do
 end
 
 # Padrino Stable Gem
-gem 'padrino'
+gem 'padrino', '>= 0.12.4'
 
 gem 'database_cleaner'
 gem 'redcarpet'
