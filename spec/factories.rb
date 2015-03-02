@@ -21,14 +21,14 @@ FactoryGirl.define do
 
       factory :congress_member_with_actions do
         after(:create) do |c|
-          create :congress_member_action, action: "visit", value: "http://localhost:3001/", step: 1, congress_member: c
+          create :congress_member_action, action: "visit", value: "http://localhost:3002/", step: 1, congress_member: c
           create :congress_member_action, action: "click_on", selector: 'input[type=submit]', value: "send", step: 14, congress_member: c
         end
       end
 
       factory :congress_member_with_actions_and_captcha do
         after(:create) do |c|
-          create :congress_member_action, action: "visit", value: "http://localhost:3001/with-captcha", step: 1, congress_member: c
+          create :congress_member_action, action: "visit", value: "http://localhost:3002/with-captcha", step: 1, congress_member: c
           create :congress_member_action, action: "fill_in", selector: "#captcha", captcha_selector: "#captcha-image", value: "$CAPTCHA_SOLUTION", step: 14, congress_member: c
           create :congress_member_action, action: "click_on", selector: 'input[type=submit]', value: "send", step: 15, congress_member: c
         end

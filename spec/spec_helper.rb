@@ -13,7 +13,7 @@ RSpec.configure do |conf|
   end
 
   conf.before(:suite) do
-    LocalhostServer.new(TESTSERVER.new, 3001)
+    LocalhostServer.new(TESTSERVER.new, 3002)
   end
 
 end
