@@ -12,3 +12,4 @@ config/database.rb
 config/phantom-dc_config.rb
 .bundle
 .vagrant
+docker-compose.yml
