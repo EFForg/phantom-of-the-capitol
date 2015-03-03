@@ -35,9 +35,7 @@ This project relies on [Contact Congress](https://github.com/unitedstates/contac
 
 #### Installation
 
- - `apt-get install ruby`
-
-or [install ruby with rvm](http://rvm.io).
+[Install ruby with rvm](http://rvm.io), then
 
  - `gem install bundler`
  - `bundle install`
