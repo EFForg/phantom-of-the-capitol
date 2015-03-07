@@ -9,4 +9,32 @@ class DelayedJobHelper
     end
     members_jobs
   end
+
+  def self.congress_member_id_and_args_from_handler handler
+    parser = Psych::Parser.new Psych::TreeBuilder.new
+    parser.parse(handler)
+
+    root_mapping = parser.handler.root.children[0].children[0]
+    root_hash = self.hash_from_mapping(root_mapping)
+
+    object_mapping = root_hash["object"]
+    attributes_mapping =  self.hash_from_mapping(object_mapping)["attributes"]
+    id_scalar = self.hash_from_mapping(attributes_mapping)["id"]
+    id = id_scalar.value
+
+    args = root_hash["args"].to_ruby
+
+    [id, args]
+  end
+
+private
+  def self.hash_from_mapping mapping
+    children = mapping.children
+
+    keys = children.values_at(* children.each_index.select{|i| i.even?}).map{|v| v.value}
+    values = children.values_at(* children.each_index.select{|i| i.odd?})
+
+    keys.zip(values).to_h
+  end
+
 end

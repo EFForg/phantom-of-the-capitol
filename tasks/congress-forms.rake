@@ -1,6 +1,7 @@
 require File.expand_path("../../config/boot.rb", __FILE__)
 require File.expand_path("../../app/helpers/states.rb", __FILE__)
 require File.expand_path("../../app/helpers/colorize.rb", __FILE__)
+require File.expand_path("../../app/helpers/delayed_job_helper.rb", __FILE__)
 
 namespace :'phantom-dc' do
   namespace :'delayed_job' do
@@ -20,7 +21,7 @@ namespace :'phantom-dc' do
       captcha_hash = build_captcha_hash
 
       jobs.each do |job|
-        cm_id, cm_args = congress_member_id_and_args_from_handler(job.handler)
+        cm_id, cm_args = DelayedJobHelper::congress_member_id_and_args_from_handler(job.handler)
         unless cm_args[1] == "rake" and args[:job_id].nil?
           cm = retrieve_congress_member_cached(cm_hash, cm_id)
           if regex.nil? or regex.match(cm.bioguide_id)
@@ -34,7 +35,7 @@ namespace :'phantom-dc' do
       end
       captcha_jobs.each do |job|
         begin
-          cm_id, cm_args = congress_member_id_and_args_from_handler(job.handler)
+          cm_id, cm_args = DelayedJobHelper::congress_member_id_and_args_from_handler(job.handler)
           cm = retrieve_congress_member_cached(cm_hash, cm_id)
           puts red("Job #" + job.id.to_s + ", bioguide " + cm.bioguide_id)
           pp cm_args
@@ -48,7 +49,7 @@ namespace :'phantom-dc' do
       end
       noncaptcha_jobs.each do |job|
         begin
-          cm_id, cm_args = congress_member_id_and_args_from_handler(job.handler)
+          cm_id, cm_args = DelayedJobHelper::congress_member_id_and_args_from_handler(job.handler)
           cm = retrieve_congress_member_cached(cm_hash, cm_id)
           puts red("Job #" + job.id.to_s + ", bioguide " + cm.bioguide_id)
           pp cm_args
@@ -70,7 +71,7 @@ namespace :'phantom-dc' do
       captcha_hash = build_captcha_hash
 
       jobs.each do |job|
-        cm_id, = congress_member_id_and_args_from_handler(job.handler)
+        cm_id, = DelayedJobHelper::congress_member_id_and_args_from_handler(job.handler)
         cm = retrieve_congress_member_cached(cm_hash, cm_id)
 
         if regex.nil? or regex.match(cm.bioguide_id)
@@ -90,7 +91,7 @@ namespace :'phantom-dc' do
       jobs = retrieve_jobs args
 
       jobs.each do |job|
-        cm_id, = congress_member_id_and_args_from_handler(job.handler)
+        cm_id, = DelayedJobHelper::congress_member_id_and_args_from_handler(job.handler)
         if not args[:job_id].nil? or cm_id.to_i == cm.id
           puts red("Destroying job #" + job.id.to_s)
           job.destroy
@@ -105,7 +106,7 @@ namespace :'phantom-dc' do
       cm_hash = build_cm_hash
 
       jobs.each do |job|
-        cm_id, cm_args = congress_member_id_and_args_from_handler(job.handler)
+        cm_id, cm_args = DelayedJobHelper::congress_member_id_and_args_from_handler(job.handler)
         unless cm_args[1] == "rake"
           cm = retrieve_congress_member_cached(cm_hash, cm_id)
           if people.keys.include? cm.bioguide_id
@@ -145,7 +146,7 @@ namespace :'phantom-dc' do
 
       non_zip4_jobs = []
       jobs.each do |job|
-        cm_id, cm_args = congress_member_id_and_args_from_handler(job.handler)
+        cm_id, cm_args = DelayedJobHelper::congress_member_id_and_args_from_handler(job.handler)
         cm = retrieve_congress_member_cached(cm_hash, cm_id)
         if regex.nil? or regex.match(cm.bioguide_id)
           if cm_args[0]['$ADDRESS_ZIP4'].nil?
@@ -197,7 +198,7 @@ namespace :'phantom-dc' do
 
       duplicate_jobs = []
       jobs.each do |job|
-        cm_id, cm_args = congress_member_id_and_args_from_handler(job.handler)
+        cm_id, cm_args = DelayedJobHelper::congress_member_id_and_args_from_handler(job.handler)
         cm = retrieve_congress_member_cached(cm_hash, cm_id)
         if regex.nil? or regex.match(cm.bioguide_id)
           field = cm_args[0][args[:field]]
@@ -438,32 +439,6 @@ def retrieve_captchad_cached captcha_hash, cm_id
   return captcha_hash[cm_id] if captcha_hash.include? cm_id
   return false
   #captcha_hash[cm_id] = CongressMember.find(cm_id).has_captcha?
-end
-
-def congress_member_id_and_args_from_handler handler
-  parser = Psych::Parser.new Psych::TreeBuilder.new
-  parser.parse(handler)
-
-  def hash_from_mapping mapping
-    children = mapping.children
-
-    keys = children.values_at(* children.each_index.select{|i| i.even?}).map{|v| v.value}
-    values = children.values_at(* children.each_index.select{|i| i.odd?})
-
-    keys.zip(values).to_h
-  end
-
-  root_mapping = parser.handler.root.children[0].children[0]
-  root_hash = hash_from_mapping(root_mapping)
-
-  object_mapping = root_hash["object"] 
-  attributes_mapping = hash_from_mapping(object_mapping)["attributes"]
-  id_scalar = hash_from_mapping(attributes_mapping)["id"]
-  id = id_scalar.value
-
-  args = root_hash["args"].to_ruby
-
-  [id, args]
 end
 
 def build_cm_hash
