@@ -401,4 +401,12 @@ class CongressMember < ActiveRecord::Base
     url = URI.parse(visit_action.value)
     url.scheme + "://" + url.host
   end
+
+  def self.all_hash 
+    cm_hash = {}
+    self.all.each do |cm|
+      cm_hash[cm.id.to_s] = cm
+    end
+    cm_hash
+  end
 end

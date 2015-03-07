@@ -17,7 +17,7 @@ namespace :'phantom-dc' do
       captcha_jobs = []
       noncaptcha_jobs = []
 
-      cm_hash = build_cm_hash
+      cm_hash = CongressMember::all_hash
       captcha_hash = build_captcha_hash
 
       jobs.each do |job|
@@ -67,7 +67,7 @@ namespace :'phantom-dc' do
 
       jobs = retrieve_jobs args
 
-      cm_hash = build_cm_hash
+      cm_hash = CongressMember::all_hash
       captcha_hash = build_captcha_hash
 
       jobs.each do |job|
@@ -103,7 +103,7 @@ namespace :'phantom-dc' do
       jobs = Delayed::Job.where(queue: "error_or_failure")
 
       people = {}
-      cm_hash = build_cm_hash
+      cm_hash = CongressMember::all_hash
 
       jobs.each do |job|
         cm_id, cm_args = DelayedJobHelper::congress_member_id_and_args_from_handler(job.handler)
@@ -142,7 +142,7 @@ namespace :'phantom-dc' do
 
       jobs = Delayed::Job.where(queue: "error_or_failure")
 
-      cm_hash = build_cm_hash
+      cm_hash = CongressMember::all_hash
 
       non_zip4_jobs = []
       jobs.each do |job|
@@ -194,7 +194,7 @@ namespace :'phantom-dc' do
 
       jobs = Delayed::Job.where(queue: "error_or_failure")
 
-      cm_hash = build_cm_hash
+      cm_hash = CongressMember::all_hash
 
       duplicate_jobs = []
       jobs.each do |job|
@@ -439,14 +439,6 @@ def retrieve_captchad_cached captcha_hash, cm_id
   return captcha_hash[cm_id] if captcha_hash.include? cm_id
   return false
   #captcha_hash[cm_id] = CongressMember.find(cm_id).has_captcha?
-end
-
-def build_cm_hash
-  cm_hash = {}
-  CongressMember.all.each do |cm|
-    cm_hash[cm.id.to_s] = cm
-  end
-  cm_hash
 end
 
 def build_captcha_hash
