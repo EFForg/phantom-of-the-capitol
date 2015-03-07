@@ -1,5 +1,5 @@
 # Phantom of the Capitol
-## Phantom DC for short
+### Phantom DC for short
 A RESTful API for retrieving the required fields for and filling out the contact forms of members of the US Congress, powered by PhantomJS.
 This project relies on [Contact Congress](https://github.com/unitedstates/contact-congress) as the data source for congress member forms.
 
