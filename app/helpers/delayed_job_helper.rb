@@ -18,7 +18,8 @@ class DelayedJobHelper
     root_hash = self.hash_from_mapping(root_mapping)
 
     object_mapping = root_hash["object"]
-    attributes_mapping =  self.hash_from_mapping(object_mapping)["attributes"]
+    object_hash = self.hash_from_mapping(object_mapping)
+    attributes_mapping = object_hash.include?("raw_attributes") ? object_hash["raw_attributes"] : object_hash["attributes"]
     id_scalar = self.hash_from_mapping(attributes_mapping)["id"]
     id = id_scalar.value
 
