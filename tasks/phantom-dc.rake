@@ -17,7 +17,7 @@ namespace :'phantom-dc' do
       captcha_jobs = []
       noncaptcha_jobs = []
 
-      cm_hash = CongressMember::all_hash
+      cm_hash = CongressMember::to_hash CongressMember.all
       captcha_hash = build_captcha_hash
 
       jobs.each do |job|
@@ -67,7 +67,7 @@ namespace :'phantom-dc' do
 
       jobs = retrieve_jobs args
 
-      cm_hash = CongressMember::all_hash
+      cm_hash = CongressMember::to_hash CongressMember.all
       captcha_hash = build_captcha_hash
 
       jobs.each do |job|
@@ -101,7 +101,7 @@ namespace :'phantom-dc' do
     desc "calculate # of jobs per member on the Delayed::Job error_or_failure queue"
     task :jobs_per_member do |t, args|
       jobs = Delayed::Job.where(queue: "error_or_failure")
-      cm_hash = CongressMember::all_hash
+      cm_hash = CongressMember::to_hash CongressMember.all
       people = DelayedJobHelper::tabulate_jobs_by_member jobs, cm_hash
 
       captchad_hash = {}
@@ -130,7 +130,7 @@ namespace :'phantom-dc' do
 
       jobs = Delayed::Job.where(queue: "error_or_failure")
 
-      cm_hash = CongressMember::all_hash
+      cm_hash = CongressMember::to_hash CongressMember.all
 
       non_zip4_jobs = []
       jobs.each do |job|
@@ -182,7 +182,7 @@ namespace :'phantom-dc' do
 
       jobs = Delayed::Job.where(queue: "error_or_failure")
 
-      cm_hash = CongressMember::all_hash
+      cm_hash = CongressMember::to_hash CongressMember.all
 
       duplicate_jobs = []
       jobs.each do |job|

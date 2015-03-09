@@ -402,9 +402,9 @@ class CongressMember < ActiveRecord::Base
     url.scheme + "://" + url.host
   end
 
-  def self.all_hash 
+  def self.to_hash cm_array
     cm_hash = {}
-    self.all.each do |cm|
+    cm_array.each do |cm|
       cm_hash[cm.id.to_s] = cm
     end
     cm_hash
