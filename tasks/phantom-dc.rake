@@ -101,21 +101,9 @@ namespace :'phantom-dc' do
     desc "calculate # of jobs per member on the Delayed::Job error_or_failure queue"
     task :jobs_per_member do |t, args|
       jobs = Delayed::Job.where(queue: "error_or_failure")
-
-      people = {}
       cm_hash = CongressMember::all_hash
+      people = DelayedJobHelper::tabulate_jobs_by_member jobs, cm_hash
 
-      jobs.each do |job|
-        cm_id, cm_args = DelayedJobHelper::congress_member_id_and_args_from_handler(job.handler)
-        unless cm_args[1] == "rake"
-          cm = CongressMember::retrieve_cached(cm_hash, cm_id)
-          if people.keys.include? cm.bioguide_id
-            people[cm.bioguide_id] += 1
-          else
-            people[cm.bioguide_id] = 1
-          end
-        end
-      end
       captchad_hash = {}
       total_captchad_jobs = 0
       total_jobs = 0

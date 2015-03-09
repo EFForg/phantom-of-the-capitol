@@ -28,6 +28,22 @@ class DelayedJobHelper
     [id, args]
   end
 
+  def self.tabulate_jobs_by_member jobs, cm_hash
+    people = {}
+    jobs.each do |job|
+      cm_id, cm_args = self.congress_member_id_and_args_from_handler(job.handler)
+      unless cm_args[1] == "rake"
+        cm = CongressMember::retrieve_cached(cm_hash, cm_id)
+        if people.keys.include? cm.bioguide_id
+          people[cm.bioguide_id] += 1
+        else
+          people[cm.bioguide_id] = 1
+        end
+      end
+    end
+    people
+  end
+
 private
   def self.hash_from_mapping mapping
     children = mapping.children
