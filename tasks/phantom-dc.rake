@@ -23,7 +23,7 @@ namespace :'phantom-dc' do
       jobs.each do |job|
         cm_id, cm_args = DelayedJobHelper::congress_member_id_and_args_from_handler(job.handler)
         unless cm_args[1] == "rake" and args[:job_id].nil?
-          cm = retrieve_congress_member_cached(cm_hash, cm_id)
+          cm = CongressMember::retrieve_cached(cm_hash, cm_id)
           if regex.nil? or regex.match(cm.bioguide_id)
             if retrieve_captchad_cached(captcha_hash, cm.id)
               captcha_jobs.push job
@@ -36,7 +36,7 @@ namespace :'phantom-dc' do
       captcha_jobs.each do |job|
         begin
           cm_id, cm_args = DelayedJobHelper::congress_member_id_and_args_from_handler(job.handler)
-          cm = retrieve_congress_member_cached(cm_hash, cm_id)
+          cm = CongressMember::retrieve_cached(cm_hash, cm_id)
           puts red("Job #" + job.id.to_s + ", bioguide " + cm.bioguide_id)
           pp cm_args
           result = cm.fill_out_form cm_args[0].merge(overrides), cm_args[1] do |img|
@@ -50,7 +50,7 @@ namespace :'phantom-dc' do
       noncaptcha_jobs.each do |job|
         begin
           cm_id, cm_args = DelayedJobHelper::congress_member_id_and_args_from_handler(job.handler)
-          cm = retrieve_congress_member_cached(cm_hash, cm_id)
+          cm = CongressMember::retrieve_cached(cm_hash, cm_id)
           puts red("Job #" + job.id.to_s + ", bioguide " + cm.bioguide_id)
           pp cm_args
           result = cm.fill_out_form cm_args[0].merge(overrides), cm_args[1]
@@ -72,7 +72,7 @@ namespace :'phantom-dc' do
 
       jobs.each do |job|
         cm_id, = DelayedJobHelper::congress_member_id_and_args_from_handler(job.handler)
-        cm = retrieve_congress_member_cached(cm_hash, cm_id)
+        cm = CongressMember::retrieve_cached(cm_hash, cm_id)
 
         if regex.nil? or regex.match(cm.bioguide_id)
           handler = YAML.load job.handler
@@ -108,7 +108,7 @@ namespace :'phantom-dc' do
       jobs.each do |job|
         cm_id, cm_args = DelayedJobHelper::congress_member_id_and_args_from_handler(job.handler)
         unless cm_args[1] == "rake"
-          cm = retrieve_congress_member_cached(cm_hash, cm_id)
+          cm = CongressMember::retrieve_cached(cm_hash, cm_id)
           if people.keys.include? cm.bioguide_id
             people[cm.bioguide_id] += 1
           else
@@ -147,7 +147,7 @@ namespace :'phantom-dc' do
       non_zip4_jobs = []
       jobs.each do |job|
         cm_id, cm_args = DelayedJobHelper::congress_member_id_and_args_from_handler(job.handler)
-        cm = retrieve_congress_member_cached(cm_hash, cm_id)
+        cm = CongressMember::retrieve_cached(cm_hash, cm_id)
         if regex.nil? or regex.match(cm.bioguide_id)
           if cm_args[0]['$ADDRESS_ZIP4'].nil?
             non_zip4_jobs.push job
@@ -199,7 +199,7 @@ namespace :'phantom-dc' do
       duplicate_jobs = []
       jobs.each do |job|
         cm_id, cm_args = DelayedJobHelper::congress_member_id_and_args_from_handler(job.handler)
-        cm = retrieve_congress_member_cached(cm_hash, cm_id)
+        cm = CongressMember::retrieve_cached(cm_hash, cm_id)
         if regex.nil? or regex.match(cm.bioguide_id)
           field = cm_args[0][args[:field]]
           if field.is_a? Array
@@ -428,11 +428,6 @@ def create_action_add_to_member action, step, member
   yield cmf
   cmf.congress_member = member
   cmf.save
-end
-
-def retrieve_congress_member_cached cm_hash, cm_id
-  return cm_hash[cm_id] if cm_hash.include? cm_id
-  cm_hash[cm_id] = CongressMember.find(cm_id)
 end
 
 def retrieve_captchad_cached captcha_hash, cm_id

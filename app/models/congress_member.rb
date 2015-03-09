@@ -409,4 +409,10 @@ class CongressMember < ActiveRecord::Base
     end
     cm_hash
   end
+
+  def self.retrieve_cached cm_hash, cm_id
+    return cm_hash[cm_id] if cm_hash.include? cm_id
+    cm_hash[cm_id] = self.find(cm_id)
+  end
+
 end
