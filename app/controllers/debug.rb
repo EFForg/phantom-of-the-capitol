@@ -54,7 +54,7 @@ CongressForms::App.controller do
   end
 
   get :'list-congress-members' do
-    CongressMember.all.order(:bioguide_id).to_json(only: :bioguide_id, methods: :form_domain_url)
+    CongressMember::list_with_job_count CongressMember.all
   end
 
   get :'successful-fills-by-date', map: %r{/successful-fills-by-date/([\w]*)} do

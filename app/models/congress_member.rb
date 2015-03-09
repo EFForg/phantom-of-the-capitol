@@ -415,4 +415,21 @@ class CongressMember < ActiveRecord::Base
     cm_hash[cm_id] = self.find(cm_id)
   end
 
+  def self.list_with_job_count cm_array
+    members_ordered = cm_array.order(:bioguide_id)
+    cms = members_ordered.as_json(only: :bioguide_id, methods: :form_domain_url)
+
+    jobs = Delayed::Job.where(queue: "error_or_failure")
+
+    cm_hash = self.to_hash members_ordered
+    people = DelayedJobHelper::tabulate_jobs_by_member jobs, cm_hash
+
+    people.each do |bioguide, jobs_count|
+      cms.select{ |cm| cm["bioguide_id"] == bioguide }.each do |cm|
+        cm["jobs"] = jobs_count
+      end
+    end
+    cms.to_json
+  end
+
 end
