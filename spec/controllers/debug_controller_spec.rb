@@ -89,7 +89,7 @@ describe "Debug controller" do
     describe "with two members of congress" do
       before do
         create :congress_member, bioguide_id: "A010101"
-        create :congress_member, bioguide_id: "B010101"
+        @c = create :congress_member, bioguide_id: "B010101"
       end
 
       it "should return 200 status" do
@@ -108,6 +108,20 @@ describe "Debug controller" do
         last_response_json = JSON.load(last_response.body)
         expect(last_response_json.first["bioguide_id"]).to eq("A010101")
         expect(last_response_json.second["bioguide_id"]).to eq("B010101")
+      end
+
+      describe "with delayed jobs for one member" do
+        before do
+          5.times do
+            create :fill_status_failure_with_delayed_job, congress_member: @c
+          end
+        end
+
+        it "should give the number of delayed jobs per congress member" do
+          get '/list-congress-members', { debug_key: DEBUG_KEY }
+          last_response_json = JSON.load(last_response.body)
+          expect(last_response_json.second["jobs"]).to eq(5)
+        end
       end
     end
   end

@@ -49,6 +49,19 @@ FactoryGirl.define do
     factory :fill_status_failure do
       status "failure"
       extra({ delayed_job_id: 100, screenshot: "https://www.example.com/blah.png" })
+
+      factory :fill_status_failure_with_delayed_job do
+        after(:create) do |fs|
+          fs.congress_member.delay(queue: "error_or_failure").fill_out_form MOCK_VALUES
+          job = Delayed::Job.last
+          job.attempts = 1
+          job.run_at = Time.now
+          job.last_error = "Some failure"
+          job.save
+          fs.extra = { delayed_job_id: job.id, screenshot: "https://www.example.com/blah.png" }
+          fs.save
+        end
+      end
     end
   end
   
