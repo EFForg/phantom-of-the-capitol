@@ -109,7 +109,6 @@ CongressForms::App.controller do
 
     handler = YAML.load(job.handler)
 
-    puts handler.inspect
     { arguments: handler.args, bioguide: handler.object.bioguide_id }.to_json
   end
 
