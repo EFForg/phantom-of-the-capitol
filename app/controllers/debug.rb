@@ -96,6 +96,23 @@ CongressForms::App.controller do
     member_hash.to_json
   end
 
+  get :'job-details/:job_id' do
+    return {status: "error", message: "You must provide a delayed job id to retrieve job details."}.to_json unless params.include? "job_id"
+
+    job_id = params["job_id"]
+
+    begin
+      job = Delayed::Job.find job_id
+    rescue ActiveRecord::RecordNotFound
+      return {status: "error", message: "Job with provided id not found."}.to_json if job.nil?
+    end
+
+    handler = YAML.load(job.handler)
+
+    puts handler.inspect
+    { arguments: handler.args, bioguide: handler.object.bioguide_id }.to_json
+  end
+
   private
 
   define_method :set_campaign_tag_params do |params|
