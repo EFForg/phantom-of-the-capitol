@@ -218,4 +218,42 @@ describe "Debug controller" do
     end
   end
 
+  describe "route /job-details" do
+    it "should not be accessable without a correct debug_key" do
+      get '/job-details/TEST', { debug_key: DEBUG_KEY + "cruft" }
+      expect(last_response.status).to eq(401)
+      last_response_json = JSON.load(last_response.body)
+      expect(last_response_json["status"]).to eq("error")
+    end
+
+    it "should return an error response when a job id is not found" do
+      get '/job-details/77', { debug_key: DEBUG_KEY }
+      last_response_json = JSON.load(last_response.body)
+      expect(last_response_json["status"]).to eq("error")
+    end
+
+    describe "for multiple members with fill statuses" do
+      before do
+        @status = create :fill_status_failure_with_delayed_job
+      end
+
+      it "should provide the mock values" do
+        get '/job-details/' + YAML.load(@status.extra)[:delayed_job_id].to_s, { debug_key: DEBUG_KEY }
+        last_response_json = JSON.load(last_response.body)
+
+        MOCK_VALUES.keys.each do |k|
+          expect(last_response_json['arguments'][0][k]).to eq(MOCK_VALUES[k])
+        end
+      end
+
+      it "should provide the bioguide id" do
+        get '/job-details/' + YAML.load(@status.extra)[:delayed_job_id].to_s, { debug_key: DEBUG_KEY }
+        last_response_json = JSON.load(last_response.body)
+
+          expect(last_response_json['bioguide']).to eq(@status.congress_member.bioguide_id)
+      end
+
+    end
+  end
+
 end
