@@ -15,13 +15,9 @@ CongressForms::App.controller do
   end
 
   get :'recent-statuses-detailed/:bio_id' do
-    return {status: "error", message: "You must provide a bio_id to request the most recent status."}.to_json unless params.include? "bio_id"
-    bio_id = params["bio_id"]
+    requires_bio_id params, "most recent status"
 
-    c = CongressMember.bioguide(bio_id)
-    return {status: "error", message: "Congress member with provided bio id not found."}.to_json if c.nil?
-
-    statuses = c.recent_fill_statuses.order(:updated_at).reverse
+    statuses = @c.recent_fill_statuses.order(:updated_at).reverse
 
     statuses_arr = []
     statuses.each do |s|
@@ -43,14 +39,8 @@ CongressForms::App.controller do
   end
 
   get :'list-actions/:bio_id' do
-    return {status: "error", message: "You must provide a bio_id to retrieve the list of actions."}.to_json unless params.include? "bio_id"
-
-    bio_id = params["bio_id"]
-
-    c = CongressMember.bioguide(bio_id)
-    return {status: "error", message: "Congress member with provided bio id not found"}.to_json if c.nil?
-
-    {last_updated: c.updated_at, actions: c.actions}.to_json
+    requires_bio_id params, "list of actions"
+    {last_updated: @c.updated_at, actions: @c.actions}.to_json
   end
 
   get :'list-congress-members' do
@@ -135,4 +125,5 @@ CongressForms::App.controller do
       @statuses = @statuses.where(campaign_tag_id: @ct_id)
     end
   end
+
 end
