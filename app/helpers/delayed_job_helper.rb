@@ -44,6 +44,13 @@ class DelayedJobHelper
     people
   end
 
+  def self.filter_jobs_by_member jobs, cm
+    jobs.select do |job|
+      cm_id, cm_args = self.congress_member_id_and_args_from_handler(job.handler)
+      cm_id.to_i == cm.id
+    end
+  end
+
 private
   def self.hash_from_mapping mapping
     children = mapping.children
