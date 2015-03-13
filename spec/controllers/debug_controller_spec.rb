@@ -256,4 +256,40 @@ describe "Debug controller" do
     end
   end
 
+  describe "route /list-jobs" do
+    it "should not be accessable without a correct debug_key" do
+      get '/list-jobs/TEST', { debug_key: DEBUG_KEY + "cruft" }
+      expect(last_response.status).to eq(401)
+      last_response_json = JSON.load(last_response.body)
+      expect(last_response_json["status"]).to eq("error")
+    end
+
+    it "should return an error response when a bioguide is not found" do
+      get '/list-jobs/Z010101', { debug_key: DEBUG_KEY }
+      last_response_json = JSON.load(last_response.body)
+      expect(last_response_json["status"]).to eq("error")
+    end
+
+    describe "with a few jobs for a member" do
+      before do
+        @c = create :congress_member, bioguide_id: "B010101"
+        5.times do
+          create :fill_status_failure_with_delayed_job, congress_member: @c
+        end
+
+        @c2 = create :congress_member, bioguide_id: "A010101"
+        2.times do
+          create :fill_status_failure_with_delayed_job, congress_member: @c2
+        end
+      end
+
+      it "should provide a list of job ids" do
+        get '/list-jobs/' + @c.bioguide_id, { debug_key: DEBUG_KEY }
+        last_response_json = JSON.load(last_response.body)
+
+        expect(last_response_json.count).to eq(5)
+      end
+    end
+  end
+
 end
