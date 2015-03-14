@@ -105,7 +105,9 @@ CongressForms::App.controller do
   get :'list-jobs/:bio_id' do
     requires_bio_id params, "list of jobs"
 
-    DelayedJobHelper::filter_jobs_by_member(Delayed::Job.all, @c).map{ |job| job.id }.to_json
+    DelayedJobHelper::filter_jobs_by_member(Delayed::Job.all.order(created_at: :desc), @c).map do |job|
+      job.as_json only: [:id, :created_at, :updated_at]
+    end.to_json
   end
 
   private
