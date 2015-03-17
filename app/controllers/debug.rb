@@ -25,6 +25,7 @@ CongressForms::App.controller do
         begin
           extra = YAML.load(s.extra)
           status_hash = {status: s.status, run_at: s.updated_at, dj_id: extra[:delayed_job_id]}
+          status_hash[:screenshot] = extra[:screenshot] if extra.include? :screenshot
         rescue
           status_hash = {status: s.status, run_at: s.updated_at}
         end

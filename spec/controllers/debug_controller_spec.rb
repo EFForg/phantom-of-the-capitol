@@ -33,6 +33,7 @@ describe "Debug controller" do
         get '/recent-statuses-detailed/' + @c.bioguide_id, { debug_key: DEBUG_KEY }
         last_response_json = JSON.load(last_response.body)
         expect(last_response_json.first["dj_id"]).to eq(YAML.load(@failure_fill_status.extra)[:delayed_job_id])
+        expect(last_response_json.first["screenshot"]).to eq(YAML.load(@failure_fill_status.extra)[:screenshot])
       end
     end
   end
