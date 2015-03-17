@@ -24,9 +24,7 @@ CongressForms::App.controller do
       if s.status == 'error' or s.status == 'failure'
         begin
           extra = YAML.load(s.extra)
-          dj = Delayed::Job.find(extra[:delayed_job_id])
-          status_hash = {status: s.status, error: dj.last_error, run_at: dj.run_at, dj_id: extra[:delayed_job_id]}
-          status_hash[:screenshot] = extra[:screenshot] if extra.include? :screenshot
+          status_hash = {status: s.status, run_at: s.updated_at, dj_id: extra[:delayed_job_id]}
         rescue
           status_hash = {status: s.status, run_at: s.updated_at}
         end
