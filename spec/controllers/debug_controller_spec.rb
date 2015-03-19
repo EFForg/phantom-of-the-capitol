@@ -284,4 +284,32 @@ describe "Debug controller" do
     end
   end
 
+  describe "get /job-details" do
+    it "should not be accessable without a correct debug_key" do
+      get '/job-details/TEST', { debug_key: DEBUG_KEY + "cruft" }
+      expect(last_response.status).to eq(401)
+      last_response_json = JSON.load(last_response.body)
+      expect(last_response_json["status"]).to eq("error")
+    end
+
+    it "should return an error response when a job id is not found" do
+      get '/job-details/77', { debug_key: DEBUG_KEY }
+      last_response_json = JSON.load(last_response.body)
+      expect(last_response_json["status"]).to eq("error")
+    end
+
+    describe "with a job" do
+      before do
+        @job = create :fill_status_failure_with_delayed_job
+      end
+
+      it "should accurately provide job details" do
+        get '/job-details/' + @job.id.to_s, { debug_key: DEBUG_KEY }
+        last_response_json = JSON.load(last_response.body)
+
+        expect(last_response_json['arguments'][0]).to eq(MOCK_VALUES)
+        expect(last_response_json['bioguide']).to eq(@job.congress_member.bioguide_id)
+      end
+    end
+  end
 end
