@@ -19,4 +19,8 @@ CongressForms::App.helpers do
       halt 200, {status: "error", message: "Job with provided id not found."}.to_json if @job.nil?
     end
   end
+
+  def requires_arguments params, error_string
+    return {status: "error", message: "You must provide arguments to " + error_string + "."}.to_json unless params.include? "arguments"
+  end
 end

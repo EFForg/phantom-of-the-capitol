@@ -94,6 +94,20 @@ CongressForms::App.controller do
     { arguments: handler.args, bioguide: handler.object.bioguide_id }.to_json
   end
 
+  put :'job-details/:job_id' do
+    error_string = "modify job details"
+    requires_job_id params, error_string
+    requires_arguments params, error_string
+
+    handler = YAML.load(@job.handler)
+    handler.args = params['arguments']
+    @job.handler = YAML.dump(handler)
+
+    @job.save
+
+    { status: "success" }.to_json
+  end
+
   options :'job-details/:job_id' do
     {}.to_json
   end
