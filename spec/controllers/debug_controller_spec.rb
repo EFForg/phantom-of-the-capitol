@@ -312,4 +312,11 @@ describe "Debug controller" do
       end
     end
   end
+
+  describe "options /job-details" do
+    it "should respond with a 200 status code" do
+      options '/job-details/doesnt_matter', { debug_key: DEBUG_KEY }
+      expect(last_response.status).to eq(200)
+    end
+  end
 end

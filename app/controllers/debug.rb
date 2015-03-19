@@ -94,6 +94,10 @@ CongressForms::App.controller do
     { arguments: handler.args, bioguide: handler.object.bioguide_id }.to_json
   end
 
+  options :'job-details/:job_id' do
+    {}.to_json
+  end
+
   get :'list-jobs/:bio_id' do
     requires_bio_id params, "list of jobs"
 
