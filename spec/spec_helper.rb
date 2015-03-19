@@ -36,6 +36,10 @@ def post_json route, json
   post route, json, {'CONTENT_TYPE' => 'application/json', 'ACCEPT' => 'application/json'}
 end
 
+def put_json route, json
+  put route, json, {'CONTENT_TYPE' => 'application/json', 'ACCEPT' => 'application/json'}
+end
+
 FactoryGirl.definition_file_paths = [
   File.join(Padrino.root, 'factories'),
   File.join(Padrino.root, 'test', 'factories'),
