@@ -108,6 +108,12 @@ CongressForms::App.controller do
     { status: "success" }.to_json
   end
 
+  delete :'job-details/:job_id' do
+    requires_job_id params, "retrieve job details"
+    @job.destroy
+    { status: "success" }.to_json
+  end
+
   options :'job-details/:job_id' do
     {}.to_json
   end
