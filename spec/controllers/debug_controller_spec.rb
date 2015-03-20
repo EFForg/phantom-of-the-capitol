@@ -352,6 +352,36 @@ describe "Debug controller" do
     end
   end
 
+  describe "delete /job-details" do
+    it "should not be accessable without a correct debug_key" do
+      delete '/job-details/TEST', { debug_key: DEBUG_KEY + "cruft" }
+      expect(last_response.status).to eq(401)
+      last_response_json = JSON.load(last_response.body)
+      expect(last_response_json["status"]).to eq("error")
+    end
+
+    it "should return an error response when a job id is not found" do
+      delete '/job-details/77', { debug_key: DEBUG_KEY }
+      last_response_json = JSON.load(last_response.body)
+      expect(last_response_json["status"]).to eq("error")
+    end
+
+    describe "with a job" do
+      before do
+        @fill_status = create :fill_status_failure_with_delayed_job
+      end
+
+      it "should successfully delete a job" do
+        job_id = YAML.load(@fill_status.extra)[:delayed_job_id]
+        delete '/job-details/' + job_id.to_s, { debug_key: DEBUG_KEY }
+
+        last_response_json = JSON.load(last_response.body)
+        expect(last_response_json["status"]).to eq("success")
+        expect{ Delayed::Job.find(job_id) }.to raise_error ActiveRecord::RecordNotFound
+      end
+    end
+  end
+
   describe "options /job-details" do
     it "should respond with a 200 status code" do
       options '/job-details/doesnt_matter', { debug_key: DEBUG_KEY }
