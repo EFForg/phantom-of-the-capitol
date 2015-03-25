@@ -1,3 +1,6 @@
+require 'securerandom'
+
+debug_fh = FillHash.new
 CongressForms::App.controller do
 
   before do
@@ -116,6 +119,29 @@ CongressForms::App.controller do
 
   options :'job-details/:job_id' do
     {}.to_json
+  end
+
+  get :'perform-job/:job_id' do
+    requires_job_id params, "peform job"
+
+    job_handler = YAML.load(@job.handler)
+    fill_handler = FillHandler.new(job_handler.object, true)
+    @job.destroy
+
+    result = fill_handler.fill(*job_handler.args)
+    result[:uid] = SecureRandom.hex
+    debug_fh[result[:uid]] = fill_handler if result[:status] == "captcha_needed"
+    result.to_json
+  end
+
+  post :'perform-job-captcha/:uid' do
+    requires_uid_and_answer params, "fill out captcha"
+
+    return {status: "error", message: "The unique id provided was not found."}.to_json unless debug_fh.include? @uid
+
+    result = debug_fh[@uid].fill_captcha @answer
+    debug_fh.delete(@uid)
+    result.to_json
   end
 
   get :'list-jobs/:bio_id' do
