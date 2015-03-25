@@ -47,15 +47,12 @@ CongressForms::App.controller do
 
   post :'fill-out-captcha' do
     content_type :json
-    return {status: "error", message: "You must provide a uid and answer to fill out captcha."}.to_json unless params.include? "uid" and params.include? "answer"
+    requires_uid_and_answer params, "fill out captcha"
 
-    uid = params["uid"]
-    answer = params["answer"]
+    return {status: "error", message: "The unique id provided was not found."}.to_json unless fh.include? @uid
 
-    return {status: "error", message: "The unique id provided was not found."}.to_json unless fh.include? uid
-
-    result = fh[uid].fill_captcha answer
-    fh.delete(uid)
+    result = fh[@uid].fill_captcha @answer
+    fh.delete(@uid)
     result.to_json
   end
 

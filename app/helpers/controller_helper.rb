@@ -23,4 +23,10 @@ CongressForms::App.helpers do
   def requires_arguments params, error_string
     return {status: "error", message: "You must provide arguments to " + error_string + "."}.to_json unless params.include? "arguments"
   end
+
+  def requires_uid_and_answer params, error_string
+    halt 200, {status: "error", message: "You must provide a uid and answer to " + error_string + "."}.to_json unless params.include? "uid" and params.include? "answer"
+    @uid = params["uid"]
+    @answer = params["answer"]
+  end
 end
