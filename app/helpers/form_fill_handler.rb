@@ -1,14 +1,15 @@
 require 'thread'
 
 class FillHandler
-  def initialize c
+  def initialize c, debug = false
     @c = c
+    @debug = debug
   end
 
   def create_thread fields={}, campaign_tag
     @thread = Thread.new do
       begin
-        if DELAY_ALL_NONCAPTCHA_FILLS and not @c.has_captcha?
+        if DELAY_ALL_NONCAPTCHA_FILLS and not @c.has_captcha? and not @debug
           @c.delay(queue: "default").fill_out_form fields, campaign_tag
           @result = true
         else
@@ -25,7 +26,7 @@ class FillHandler
     end
   end
 
-  def fill fields={}, campaign_tag
+  def fill fields={}, campaign_tag = ""
     create_thread fields, campaign_tag
 
     while not defined? @result
