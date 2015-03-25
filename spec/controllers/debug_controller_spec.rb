@@ -300,15 +300,16 @@ describe "Debug controller" do
 
     describe "with a job" do
       before do
-        @job = create :fill_status_failure_with_delayed_job
+        @fill_status = create :fill_status_failure_with_delayed_job
       end
 
       it "should accurately provide job details" do
-        get '/job-details/' + @job.id.to_s, { debug_key: DEBUG_KEY }
+        job_id = YAML.load(@fill_status.extra)[:delayed_job_id]
+        get '/job-details/' + job_id.to_s, { debug_key: DEBUG_KEY }
         last_response_json = JSON.load(last_response.body)
 
         expect(last_response_json['arguments'][0]).to eq(MOCK_VALUES)
-        expect(last_response_json['bioguide']).to eq(@job.congress_member.bioguide_id)
+        expect(last_response_json['bioguide']).to eq(@fill_status.congress_member.bioguide_id)
       end
     end
   end
