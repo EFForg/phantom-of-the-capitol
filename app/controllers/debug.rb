@@ -92,9 +92,9 @@ CongressForms::App.controller do
 
   get :'job-details/:job_id' do
     requires_job_id params, "retrieve job details"
-    handler = YAML.load(@job.handler)
-
-    { arguments: handler.args, bioguide: handler.object.bioguide_id }.to_json
+    id, args = DelayedJobHelper::congress_member_id_and_args_from_handler @job.handler
+    bioguide = CongressMember.find(id).bioguide_id
+    { arguments: args, bioguide: bioguide }.to_json
   end
 
   put :'job-details/:job_id' do
@@ -124,11 +124,12 @@ CongressForms::App.controller do
   get :'perform-job/:job_id' do
     requires_job_id params, "peform job"
 
-    job_handler = YAML.load(@job.handler)
-    fill_handler = FillHandler.new(job_handler.object, true)
+    id, args = DelayedJobHelper::congress_member_id_and_args_from_handler @job.handler
+    cm = CongressMember.find(id)
+    fill_handler = FillHandler.new(cm, true)
     @job.destroy
 
-    result = fill_handler.fill(*job_handler.args)
+    result = fill_handler.fill(*args)
     result[:uid] = SecureRandom.hex
     debug_fh[result[:uid]] = fill_handler if result[:status] == "captcha_needed"
     result.to_json
