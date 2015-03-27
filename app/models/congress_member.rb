@@ -395,13 +395,6 @@ class CongressMember < ActiveRecord::Base
     }
   end
 
-  def form_domain_url
-    visit_action = actions.where(action: "visit").first
-    return nil if visit_action.nil?
-    url = URI.parse(visit_action.value)
-    url.scheme + "://" + url.host
-  end
-
   def self.to_hash cm_array
     cm_hash = {}
     cm_array.each do |cm|
@@ -417,7 +410,7 @@ class CongressMember < ActiveRecord::Base
 
   def self.list_with_job_count cm_array
     members_ordered = cm_array.order(:bioguide_id)
-    cms = members_ordered.as_json(only: :bioguide_id, methods: :form_domain_url)
+    cms = members_ordered.as_json(only: :bioguide_id)
 
     jobs = Delayed::Job.where(queue: "error_or_failure")
 
