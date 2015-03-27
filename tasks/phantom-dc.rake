@@ -407,6 +407,7 @@ def create_congress_member_from_hash congress_member_details
       end
     end
     c.success_criteria = congress_member_details["contact_form"]["success"]
+    c.updated_at = Time.now
     c.save
   end
 end
