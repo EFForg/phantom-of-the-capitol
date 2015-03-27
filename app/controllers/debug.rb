@@ -22,7 +22,11 @@ CongressForms::App.controller do
   get :'recent-statuses-detailed/:bio_id' do
     requires_bio_id params, "most recent status"
 
-    statuses = @c.recent_fill_statuses.order(:updated_at).reverse
+    if params.include? "all_statuses"
+      statuses = @c.fill_statuses.order(:updated_at).reverse
+    else
+      statuses = @c.recent_fill_statuses.order(:updated_at).reverse
+    end
 
     statuses_arr = []
     statuses.each do |s|
