@@ -125,6 +125,53 @@ CongressForms::App.controller do
     {}.to_json
   end
 
+  post :'batch-job-save/:bio_id' do
+    error_string = "batch save jobs"
+    requires_bio_id params, error_string
+    return {status: "error", message: "You must provide a delayed job id to " + error_string + "."}.to_json unless params.include? "if_arguments" and params.include? "then_arguments"
+
+    if_arguments = JSON.parse(params["if_arguments"])
+    then_arguments = JSON.parse(params["then_arguments"])
+
+    DelayedJobHelper::filter_jobs_by_member(Delayed::Job.where(queue: "error_or_failure").order(created_at: :desc), @c).map do |job|
+      match = true
+      cm_id, job_args = DelayedJobHelper::congress_member_id_and_args_from_handler(job.handler)
+      if_arguments.each.with_index do |arg, arg_i|
+        if arg.is_a? Hash
+          arg.each do |field_i, field|
+            unless job_args[arg_i].include? field_i and job_args[arg_i][field_i] == field
+              match = false
+              break
+            end
+          end
+        else
+          unless job_args.length - 1 >= arg_i and job_args[arg_i] == arg
+            match = false
+            break
+          end
+        end
+      end
+      if match
+        then_arguments.each.with_index do |arg, arg_i|
+          if arg.is_a? Hash
+            arg.each do |field_i, field|
+              job_args[arg_i][field_i] = field
+            end
+          else
+            job_args[arg_i] = arg
+          end
+        end
+
+        handler = YAML.load(job.handler)
+        handler.args = job_args
+        job.handler = YAML.dump(handler)
+        job.save
+      end
+    end
+
+    { status: "success" }.to_json
+  end
+
   get :'perform-job/:job_id' do
     requires_job_id params, "peform job"
 
