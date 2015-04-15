@@ -72,7 +72,11 @@ CongressForms::App.controller do
 
     filter_by_campaign_tag
 
-    @statuses.success.group_by_day(:created_at).count.to_json
+    options = {}
+    options[:time_zone] = params["time_zone"] if params.include?("time_zone")
+    options[:format] = '%Y-%m-%d 00:00:00 UTC' if params.include?("give_as_utc") and params["give_as_utc"] == "true"
+
+    @statuses.success.group_by_day(:created_at, options).count.to_json
   end
 
   get :'successful-fills-by-member/' do
