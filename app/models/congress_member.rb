@@ -105,6 +105,12 @@ class CongressMember < ActiveRecord::Base
               captcha_value = yield url
               b.element(:css => a.selector).to_subtype.set(captcha_value)
             else
+              if a.options
+                options = YAML.load a.options
+                if options.include? "max_length"
+                  f[a.value] = f[a.value][0...(0.95 * options["max_length"]).floor]
+                end
+              end
               b.element(:css => a.selector).to_subtype.set(f[a.value].gsub("\t","    ")) unless f[a.value].nil?
             end
           else
@@ -200,6 +206,12 @@ class CongressMember < ActiveRecord::Base
               captcha_value = yield url
               session.find(a.selector).set(captcha_value)
             else
+              if a.options
+                options = YAML.load a.options
+                if options.include? "max_length"
+                  f[a.value] = f[a.value][0...(0.95 * options["max_length"]).floor]
+                end
+              end
               session.find(a.selector).set(f[a.value].gsub("\t","    ")) unless f[a.value].nil?
             end
           else
