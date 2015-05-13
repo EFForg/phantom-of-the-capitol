@@ -15,7 +15,7 @@ CongressForms::App.controller do
     halt 401, {status: "error", message: "You must provide a valid debug key to access this endpoint."}.to_json unless params.include? "debug_key" and params["debug_key"] == DEBUG_KEY
   end
 
-  before :'successful-fills-by-date', :'successful-fills-by-member/' do
+  before :'successful-fills-by-hour', :'successful-fills-by-date', :'successful-fills-by-member/' do
     set_campaign_tag_params params
   end
 
@@ -77,6 +77,28 @@ CongressForms::App.controller do
     options[:format] = '%Y-%m-%d 00:00:00 UTC' if params.include?("give_as_utc") and params["give_as_utc"] == "true"
 
     @statuses.success.group_by_day(:created_at, options).count.to_json
+  end
+
+  get :'successful-fills-by-hour', map: %r{/successful-fills-by-hour/([\w]*)} do
+    bio_id = params[:captures].first
+
+    requires_date params, "retrieve successful fills by hour"
+
+    if bio_id.blank?
+      @statuses = FillStatus
+    else
+      @statuses = CongressMember.bioguide(bio_id).fill_statuses
+    end
+
+    @statuses = @statuses.where('DATE_FORMAT(created_at, "%Y-%m-%d") = ?', @date)
+
+    filter_by_campaign_tag
+
+    options = {}
+    options[:time_zone] = params["time_zone"] if params.include?("time_zone")
+    options[:format] = '%Y-%m-%d %H:%M:00 UTC' if params.include?("give_as_utc") and params["give_as_utc"] == "true"
+
+    @statuses.success.group_by_hour(:created_at, options).count.to_json
   end
 
   get :'successful-fills-by-member/' do
