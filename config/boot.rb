@@ -60,6 +60,7 @@ end
 #
 Padrino.after_load do
   ActiveRecord::Base.default_timezone = :utc
+  Time.zone = TIME_ZONE
 end
 
 Padrino.load!

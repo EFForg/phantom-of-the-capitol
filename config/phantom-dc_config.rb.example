@@ -18,4 +18,4 @@ CarrierWave.configure do |config|
   config.fog_directory = 'phantom-dc'
 end
 
-Time.zone = "America/Los_Angeles"
+TIME_ZONE = "America/Los_Angeles"

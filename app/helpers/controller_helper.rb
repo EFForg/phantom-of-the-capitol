@@ -22,7 +22,7 @@ CongressForms::App.helpers do
 
   def requires_date params, error_string
     return {status: "error", message: "You must provide a date to " + error_string + "."}.to_json unless params.include? "date"
-    @date = params["date"]
+    @date = Time.zone.parse(params["date"])
   end
 
   def requires_arguments params, error_string

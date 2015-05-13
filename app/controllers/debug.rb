@@ -19,6 +19,11 @@ CongressForms::App.controller do
     set_campaign_tag_params params
   end
 
+  # For some reason, this is necessary.  See https://stackoverflow.com/questions/24356385/setting-up-time-zone-in-padrino
+  before :'successful-fills-by-hour', :'successful-fills-by-date' do
+    set_time_zone
+  end
+
   get :'recent-statuses-detailed/:bio_id' do
     requires_bio_id params, "most recent status"
 
@@ -58,8 +63,8 @@ CongressForms::App.controller do
   get :'successful-fills-by-date', map: %r{/successful-fills-by-date/([\w]*)} do
     bio_id = params[:captures].first
 
-    date_start = params.include?("date_start") ? Time.parse(params["date_start"]) : nil
-    date_end = params.include?("date_end") ? Time.parse(params["date_end"]) : nil
+    date_start = params.include?("date_start") ? Time.zone.parse(params["date_start"]) : nil
+    date_end = params.include?("date_end") ? Time.zone.parse(params["date_end"]) : nil
 
     if bio_id.blank?
       @statuses = FillStatus
@@ -90,7 +95,8 @@ CongressForms::App.controller do
       @statuses = CongressMember.bioguide(bio_id).fill_statuses
     end
 
-    @statuses = @statuses.where('DATE_FORMAT(created_at, "%Y-%m-%d") = ?', @date)
+    @statuses = @statuses.where('created_at > ?', @date)
+    @statuses = @statuses.where('created_at < ?', @date + 1.day)
 
     filter_by_campaign_tag
 
@@ -244,6 +250,10 @@ CongressForms::App.controller do
       rake_ct = CampaignTag.find_by_name("rake")
       @rake_ct_id = rake_ct.nil? ? -1 : rake_ct.id
     end
+  end
+
+  define_method :set_time_zone do
+    Time.zone = TIME_ZONE
   end
 
   define_method :filter_by_campaign_tag do
