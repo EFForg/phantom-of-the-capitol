@@ -72,7 +72,7 @@ CongressForms::App.controller do
       @statuses = CongressMember.bioguide(bio_id).fill_statuses
     end
 
-    @statuses = @statuses.where('created_at > ?', date_start) unless date_start.nil?
+    @statuses = @statuses.where('created_at >= ?', date_start) unless date_start.nil?
     @statuses = @statuses.where('created_at < ?', date_end) unless date_end.nil?
 
     filter_by_campaign_tag
@@ -95,7 +95,7 @@ CongressForms::App.controller do
       @statuses = CongressMember.bioguide(bio_id).fill_statuses
     end
 
-    @statuses = @statuses.where('created_at > ?', @date)
+    @statuses = @statuses.where('created_at >= ?', @date)
     @statuses = @statuses.where('created_at < ?', @date + 1.day)
 
     filter_by_campaign_tag
