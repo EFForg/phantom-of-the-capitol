@@ -170,6 +170,58 @@ describe "Debug controller" do
     end
   end
 
+  describe "route /successful-fills-by-hour" do
+    it "should not be accessable without a correct debug_key" do
+      get '/successful-fills-by-hour/TEST', { debug_key: DEBUG_KEY + "cruft" }
+      expect(last_response.status).to eq(401)
+      last_response_json = JSON.load(last_response.body)
+      expect(last_response_json["status"]).to eq("error")
+    end
+
+    describe "for multiple members with fill statuses" do
+      before do
+        c = create :congress_member, bioguide_id: "A010101"
+        c2 = create :congress_member, bioguide_id: "B010101"
+        2.times do
+          create :fill_status, congress_member: c, status: "success", created_at: Time.zone.parse('2015-01-01 00:00:00')
+        end
+        3.times do
+          create :fill_status, congress_member: c, status: "success", created_at: Time.zone.parse('2015-01-01 1:01:00')
+        end
+        create :fill_status, congress_member: c, status: "success", created_at: Time.zone.parse('2015-01-01 2:04:00')
+        create :fill_status, congress_member: c, status: "success", created_at: Time.zone.parse('2015-01-01 1:02:00'), campaign_tag: create(:campaign_tag, name: "test2")
+        create :fill_status_failure, congress_member: c, status: "failure", created_at: Time.zone.parse('2015-01-01 00:00:00')
+        create :fill_status_failure, congress_member: c2, status: "success", created_at: Time.zone.parse('2015-01-01 1:53:00')
+      end
+
+      it "should accurately select the number of successes for a given member" do
+        get '/successful-fills-by-hour/A010101', { debug_key: DEBUG_KEY, date: "2015-01-01", time_zone: Time.zone.name}
+        last_response_json = JSON.load(last_response.body)
+
+        expect(last_response_json.values.count).to eq(3)
+        expect(last_response_json[Time.zone.parse('2015-01-01 00:00:00').to_s]).to eq(2)
+        expect(last_response_json[Time.zone.parse('2015-01-01 01:00:00').to_s]).to eq(4)
+      end
+
+      it "should accurately select the number of successes for every member" do
+        get '/successful-fills-by-hour/', { debug_key: DEBUG_KEY, date: "2015-01-01", time_zone: Time.zone.name}
+        last_response_json = JSON.load(last_response.body)
+
+        expect(last_response_json.values.count).to eq(3)
+        expect(last_response_json[Time.zone.parse('2015-01-01 00:00:00').to_s]).to eq(2)
+        expect(last_response_json[Time.zone.parse('2015-01-01 01:00:00').to_s]).to eq(5)
+      end
+
+      it "should accurately select the number of successes for every member" do
+        get '/successful-fills-by-hour/', { debug_key: DEBUG_KEY, date: "2015-01-01", time_zone: Time.zone.name, campaign_tag: "test2" }
+        last_response_json = JSON.load(last_response.body)
+
+        expect(last_response_json.values.count).to eq(1)
+        expect(last_response_json[Time.zone.parse('2015-01-01 01:00:00').to_s]).to eq(1)
+      end
+    end
+  end
+
   describe "route /successful-fills-by-member" do
     it "should not be accessable without a correct debug_key" do
       get '/successful-fills-by-member/', { debug_key: DEBUG_KEY + "cruft" }
