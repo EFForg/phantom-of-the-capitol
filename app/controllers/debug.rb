@@ -38,13 +38,13 @@ CongressForms::App.controller do
       if s.status == 'error' or s.status == 'failure'
         begin
           extra = YAML.load(s.extra)
-          status_hash = {status: s.status, run_at: s.updated_at, dj_id: extra[:delayed_job_id]}
+          status_hash = {id: s.id, status: s.status, run_at: s.updated_at, dj_id: extra[:delayed_job_id]}
           status_hash[:screenshot] = extra[:screenshot] if extra.include? :screenshot
         rescue
-          status_hash = {status: s.status, run_at: s.updated_at}
+          status_hash = {id: s.id, status: s.status, run_at: s.updated_at}
         end
       elsif s.status == 'success'
-        status_hash = {status: s.status, run_at: s.updated_at}
+        status_hash = {id: s.id, status: s.status, run_at: s.updated_at}
       end
       statuses_arr.push(status_hash)
     end
