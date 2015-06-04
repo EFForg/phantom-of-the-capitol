@@ -4,12 +4,29 @@
 # This file can be used to start Padrino,
 # just execute it from the command line.
 
+require 'optparse'
+
+options = {}
+OptionParser.new do |opts|
+  opts.on("-v", "--[no-]verbose", "Run verbosely") do |v|
+    options[:verbose] = v
+  end
+end.parse!
+
+if not options[:verbose]
+  PADRINO_LOGGER = {
+    development: {stream: :null},
+    production: {stream: :null},
+    test: {stream: :null}
+  }
+end
+
 def require_boot
   require File.expand_path("../config/boot.rb", __FILE__)
 end
 
 def usage
-  puts "Usage: phantom-dc <command> [<args>]"
+  puts "Usage: phantom-dc [--verbose] <command> [<args>]"
   puts ""
   puts "Commands:"
   puts "  datasource\t\tmanipulate (add or delete) a data source"
@@ -17,10 +34,10 @@ end
 
 def usage_datasource
   format = "  %-10.10s%-40.40s\n"
-  puts "Usage: phantom-dc datasource <args>"
-  puts "Usage: phantom-dc datasource add <name> <path> <yaml_subpath>"
-  puts "Usage: phantom-dc datasource delete <name>"
-  puts "Usage: phantom-dc datasource list"
+  puts "Usage: phantom-dc [<flags>] datasource <args>"
+  puts "Usage: phantom-dc [<flags>] datasource add <name> <path> <yaml_subpath>"
+  puts "Usage: phantom-dc [<flags>] datasource delete <name>"
+  puts "Usage: phantom-dc [<flags>] datasource list"
   puts ""
   puts "Arguments:"
 
