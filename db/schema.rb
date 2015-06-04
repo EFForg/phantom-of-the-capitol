@@ -9,69 +9,79 @@
 # from scratch. The latter is a flawed and unsustainable approach (the more migrations
 # you'll amass, the slower it'll run and the greater likelihood for issues).
 #
-# It's strongly recommended to check this file into your version control system.
+# It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 10) do
+ActiveRecord::Schema.define(version: 11) do
 
-  create_table "application_settings", :force => true do |t|
-    t.string   "key"
-    t.text     "value"
-    t.datetime "created_at", :null => false
-    t.datetime "updated_at", :null => false
+  create_table "application_settings", force: :cascade do |t|
+    t.string   "key",        limit: 255
+    t.text     "value",      limit: 65535
+    t.datetime "created_at",               null: false
+    t.datetime "updated_at",               null: false
   end
 
-  add_index "application_settings", ["key"], :name => "index_application_settings_on_key", :unique => true
+  add_index "application_settings", ["key"], name: "index_application_settings_on_key", unique: true, using: :btree
 
-  create_table "campaign_tags", :force => true do |t|
-    t.string "name"
+  create_table "campaign_tags", force: :cascade do |t|
+    t.string "name", limit: 255
   end
 
-  create_table "congress_member_actions", :force => true do |t|
-    t.integer "congress_member_id"
-    t.integer "step"
-    t.string  "action"
-    t.string  "name"
-    t.string  "selector"
-    t.string  "value"
-    t.boolean "required",            :default => false
-    t.integer "maxlength"
-    t.string  "captcha_selector"
-    t.string  "captcha_id_selector"
-    t.text    "options"
+  create_table "congress_member_actions", force: :cascade do |t|
+    t.integer "congress_member_id",  limit: 4
+    t.integer "step",                limit: 4
+    t.string  "action",              limit: 255
+    t.string  "name",                limit: 255
+    t.string  "selector",            limit: 255
+    t.string  "value",               limit: 255
+    t.boolean "required",            limit: 1,     default: false
+    t.integer "maxlength",           limit: 4
+    t.string  "captcha_selector",    limit: 255
+    t.string  "captcha_id_selector", limit: 255
+    t.text    "options",             limit: 65535
   end
 
-  create_table "congress_members", :force => true do |t|
-    t.string   "bioguide_id"
-    t.string   "success_criteria"
+  create_table "congress_members", force: :cascade do |t|
+    t.string   "bioguide_id",      limit: 255
+    t.string   "success_criteria", limit: 255
     t.datetime "created_at"
     t.datetime "updated_at"
   end
 
-  add_index "congress_members", ["bioguide_id"], :name => "index_congress_members_on_bioguide_id", :unique => true
+  add_index "congress_members", ["bioguide_id"], name: "index_congress_members_on_bioguide_id", unique: true, using: :btree
 
-  create_table "delayed_jobs", :force => true do |t|
-    t.integer  "priority",   :default => 0, :null => false
-    t.integer  "attempts",   :default => 0, :null => false
-    t.text     "handler",                   :null => false
-    t.text     "last_error"
+  create_table "data_sources", force: :cascade do |t|
+    t.string   "name",         limit: 255
+    t.string   "path",         limit: 255
+    t.string   "yaml_subpath", limit: 255
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  add_index "data_sources", ["name"], name: "index_data_sources_on_name", using: :btree
+
+  create_table "delayed_jobs", force: :cascade do |t|
+    t.integer  "priority",   limit: 4,     default: 0, null: false
+    t.integer  "attempts",   limit: 4,     default: 0, null: false
+    t.text     "handler",    limit: 65535,             null: false
+    t.text     "last_error", limit: 65535
     t.datetime "run_at"
     t.datetime "locked_at"
     t.datetime "failed_at"
-    t.string   "locked_by"
-    t.string   "queue"
-    t.datetime "created_at",                :null => false
-    t.datetime "updated_at",                :null => false
+    t.string   "locked_by",  limit: 255
+    t.string   "queue",      limit: 255
+    t.datetime "created_at",                           null: false
+    t.datetime "updated_at",                           null: false
   end
 
-  add_index "delayed_jobs", ["priority", "run_at"], :name => "delayed_jobs_priority"
+  add_index "delayed_jobs", ["priority", "run_at"], name: "delayed_jobs_priority", using: :btree
 
-  create_table "fill_statuses", :force => true do |t|
-    t.integer  "congress_member_id"
-    t.integer  "campaign_tag_id"
-    t.datetime "created_at",         :null => false
-    t.datetime "updated_at",         :null => false
-    t.string   "status"
-    t.string   "extra"
+  create_table "fill_statuses", force: :cascade do |t|
+    t.integer  "congress_member_id", limit: 4
+    t.integer  "campaign_tag_id",    limit: 4
+    t.datetime "created_at",                     null: false
+    t.datetime "updated_at",                     null: false
+    t.string   "status",             limit: 255
+    t.string   "extra",              limit: 255
   end
 
 end
