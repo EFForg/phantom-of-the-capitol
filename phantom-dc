@@ -26,10 +26,11 @@ def require_boot
 end
 
 def usage
+  format = "  %-20.20s%-40.40s\n"
   puts "Usage: phantom-dc [--verbose] <command> [<args>]"
   puts ""
   puts "Commands:"
-  puts "  datasource\t\tmanipulate (add or delete) a data source"
+  printf format, "datasource", "manipulate (add or delete) a data source"
 end
 
 def usage_datasource
