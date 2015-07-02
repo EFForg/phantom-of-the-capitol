@@ -70,7 +70,12 @@ when "datasource"
     end
 
     require_boot
-    DataSource.create(name: ARGV[2], path: ARGV[3], yaml_subpath: ARGV[4])
+    if DataSource.find_by_name(ARGV[2]).nil?
+      DataSource.create(name: ARGV[2], path: ARGV[3], yaml_subpath: ARGV[4])
+    else
+      puts "Error: Data source with name " + ARGV[2] + " already exists!"
+      exit 1
+    end
     puts "Data source created."
   when "delete"
     if ARGV.length != 3
@@ -82,6 +87,7 @@ when "datasource"
     ds = DataSource.find_by(name: ARGV[2])
     if ds.nil?
       puts "Error: Data source with name '" + ARGV[2] + "' was not found."
+      exit 1
     else
       ds.destroy
       puts "Data source deleted."
