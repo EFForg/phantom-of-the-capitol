@@ -16,6 +16,10 @@ OptionParser.new do |opts|
     options[:from_git] = from_git
   end
 
+  opts.on("--prefix <prefix>", String, "Use a prefix when storing reps in the database") do |prefix|
+    options[:prefix] = prefix
+  end
+
   opts.on("-h", "--help", "Display help dialogue") do
     options[:help] = true
   end
@@ -44,7 +48,7 @@ end
 def usage_datasource
   format = "  %-10.10s%-40.40s\n"
   puts "Usage: phantom-dc [<flags>] datasource <args>"
-  puts "Usage: phantom-dc [<flags>] datasource add [--from-git <git-url>] <name> <path> <yaml_subpath>"
+  puts "Usage: phantom-dc [<flags>] datasource add [--from-git <git-url>] [--prefix <prefix>] <name> <path> <yaml_subpath>"
   puts "Usage: phantom-dc [<flags>] datasource delete <name>"
   puts "Usage: phantom-dc [<flags>] datasource list"
   puts ""
@@ -75,6 +79,7 @@ when "datasource"
 
     require_boot
     if DataSource.find_by_name(ARGV[2]).nil?
+      prefix = options[:prefix] || ""
       if options[:from_git]
         require 'pathname'
         full_path = Pathname.new(ARGV[3])
@@ -85,7 +90,7 @@ when "datasource"
         g = Git.open ARGV[3]
       end
       latest_commit = g.log(1).first.sha
-      DataSource.create(name: ARGV[2], path: ARGV[3], yaml_subpath: ARGV[4], latest_commit: latest_commit)
+      DataSource.create(name: ARGV[2], path: ARGV[3], yaml_subpath: ARGV[4], latest_commit: latest_commit, prefix: prefix)
     else
       puts "Error: Data source with name " + ARGV[2] + " already exists!"
       exit 1
@@ -110,18 +115,19 @@ when "datasource"
     require_boot
 
     name_length = [(DataSource.all.map{ |ds| ds.name.length }.max + 2) || 0, 20].max
+    prfx_length = [(DataSource.all.map{ |ds| ds.prefix.length }.max + 2) || 0, 10].max
     path_length = [(DataSource.all.map{ |ds| ds.path.length }.max + 2) || 0, 40].max
     subp_length = [(DataSource.all.map{ |ds| ds.yaml_subpath.length }.max + 2) || 0, 40].max
     comm_length = 42
 
-    format = "%-" + name_length.to_s + "." + name_length.to_s + "s%-" + path_length.to_s + "." + path_length.to_s + "s%-" + subp_length.to_s + "." + subp_length.to_s + "s%-" + comm_length.to_s + "." + comm_length.to_s + "s\n"
+    format = "%-" + name_length.to_s + "." + name_length.to_s + "s%-" + prfx_length.to_s + "." + prfx_length.to_s + "s%-" + path_length.to_s + "." + path_length.to_s + "s%-" + subp_length.to_s + "." + subp_length.to_s + "s%-" + comm_length.to_s + "." + comm_length.to_s + "s\n"
 
     separator = "=" * 600
-    printf format, "name", "path", "yaml_subpath", "latest commit"
-    printf format, separator, separator, separator, separator
+    printf format, "name", "prefix", "path", "yaml_subpath", "latest commit"
+    printf format, separator, separator, separator, separator, separator
 
     DataSource.all.each do |ds|
-      printf format, ds.name, ds.path, ds.yaml_subpath, ds.latest_commit.to_s
+      printf format, ds.name, ds.prefix, ds.path, ds.yaml_subpath, ds.latest_commit.to_s
     end
   else
     usage_datasource
