@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 11) do
+ActiveRecord::Schema.define(version: 12) do
 
   create_table "application_settings", force: :cascade do |t|
     t.string   "key",        limit: 255
@@ -50,11 +50,12 @@ ActiveRecord::Schema.define(version: 11) do
   add_index "congress_members", ["bioguide_id"], name: "index_congress_members_on_bioguide_id", unique: true, using: :btree
 
   create_table "data_sources", force: :cascade do |t|
-    t.string   "name",         limit: 255
-    t.string   "path",         limit: 255
-    t.string   "yaml_subpath", limit: 255
+    t.string   "name",          limit: 255
+    t.string   "path",          limit: 255
+    t.string   "yaml_subpath",  limit: 255
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.string   "latest_commit", limit: 255
   end
 
   add_index "data_sources", ["name"], name: "index_data_sources_on_name", using: :btree
