@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 12) do
+ActiveRecord::Schema.define(version: 13) do
 
   create_table "application_settings", force: :cascade do |t|
     t.string   "key",        limit: 255
@@ -56,6 +56,7 @@ ActiveRecord::Schema.define(version: 12) do
     t.datetime "created_at"
     t.datetime "updated_at"
     t.string   "latest_commit", limit: 255
+    t.string   "prefix",        limit: 255
   end
 
   add_index "data_sources", ["name"], name: "index_data_sources_on_name", using: :btree
