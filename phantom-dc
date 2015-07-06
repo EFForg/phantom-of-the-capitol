@@ -114,10 +114,10 @@ when "datasource"
   when "list"
     require_boot
 
-    name_length = [(DataSource.all.map{ |ds| ds.name.length }.max + 2) || 0, 20].max
-    prfx_length = [(DataSource.all.map{ |ds| ds.prefix.length }.max + 2) || 0, 10].max
-    path_length = [(DataSource.all.map{ |ds| ds.path.length }.max + 2) || 0, 40].max
-    subp_length = [(DataSource.all.map{ |ds| ds.yaml_subpath.length }.max + 2) || 0, 40].max
+    name_length = [(DataSource.all.map{ |ds| ds.name.length }.max.to_i + 2), 20].max
+    prfx_length = [(DataSource.all.map{ |ds| ds.prefix.length }.max.to_i + 2) || 0, 10].max
+    path_length = [(DataSource.all.map{ |ds| ds.path.length }.max.to_i + 2), 40].max
+    subp_length = [(DataSource.all.map{ |ds| ds.yaml_subpath.length }.max.to_i + 2), 40].max
     comm_length = 42
 
     format = "%-" + name_length.to_s + "." + name_length.to_s + "s%-" + prfx_length.to_s + "." + prfx_length.to_s + "s%-" + path_length.to_s + "." + path_length.to_s + "s%-" + subp_length.to_s + "." + subp_length.to_s + "s%-" + comm_length.to_s + "." + comm_length.to_s + "s\n"
