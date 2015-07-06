@@ -80,9 +80,12 @@ when "datasource"
         full_path = Pathname.new(ARGV[3])
         parent_path = full_path.parent
         base_path = full_path.basename
-        Git.clone options[:from_git], base_path, path: parent_path
+        g = Git.clone options[:from_git], base_path, path: parent_path
+      else
+        g = Git.open ARGV[3]
       end
-      DataSource.create(name: ARGV[2], path: ARGV[3], yaml_subpath: ARGV[4])
+      latest_commit = g.log(1).first.sha
+      DataSource.create(name: ARGV[2], path: ARGV[3], yaml_subpath: ARGV[4], latest_commit: latest_commit)
     else
       puts "Error: Data source with name " + ARGV[2] + " already exists!"
       exit 1
