@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 13) do
+ActiveRecord::Schema.define(version: 14) do
 
   create_table "application_settings", force: :cascade do |t|
     t.string   "key",        limit: 255
