@@ -12,8 +12,8 @@ OptionParser.new do |opts|
     options[:verbose] = v
   end
 
-  opts.on("--from-git <git-url>", String, "Add a data source from git") do |from_git|
-    options[:from_git] = from_git
+  opts.on("--git-clone <git-url>", String, "Add a data source by cloning from git") do |git_url|
+    options[:git_url] = git_url
   end
 
   opts.on("--prefix <prefix>", String, "Use a prefix when storing reps in the database") do |prefix|
@@ -48,7 +48,7 @@ end
 def usage_datasource
   format = "  %-10.10s%-40.40s\n"
   puts "Usage: phantom-dc [<flags>] datasource <args>"
-  puts "Usage: phantom-dc [<flags>] datasource add [--from-git <git-url>] [--prefix <prefix>] <name> <path> <yaml_subpath>"
+  puts "Usage: phantom-dc [<flags>] datasource add [--git-clone <git-url>] [--prefix <prefix>] <name> <path> <yaml_subpath>"
   puts "Usage: phantom-dc [<flags>] datasource delete <name>"
   puts "Usage: phantom-dc [<flags>] datasource list"
   puts ""
@@ -80,12 +80,12 @@ when "datasource"
     require_boot
     if DataSource.find_by_name(ARGV[2]).nil?
       prefix = options[:prefix] || ""
-      if options[:from_git]
+      if options[:git_url]
         require 'pathname'
         full_path = Pathname.new(ARGV[3])
         parent_path = full_path.parent
         base_path = full_path.basename
-        Git.clone options[:from_git], base_path, path: parent_path
+        Git.clone options[:git_url], base_path, path: parent_path
       else
         Git.open ARGV[3]
       end
