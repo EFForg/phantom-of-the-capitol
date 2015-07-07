@@ -29,8 +29,6 @@ RUN tar -jxvf phantomjs.tar.bz2 > /dev/null
 RUN rm phantomjs.tar.bz2
 ENV PATH $PATH:/home/phantomdc/phantomjs-1.9.8-linux-x86_64/bin
 
-RUN git clone https://github.com/unitedstates/contact-congress.git
-
 RUN curl -O https://raw.githubusercontent.com/wayneeseguin/rvm/master/binscripts/rvm-installer
 RUN curl -O https://raw.githubusercontent.com/wayneeseguin/rvm/master/binscripts/rvm-installer.asc
 RUN gpg --verify rvm-installer.asc

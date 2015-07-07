@@ -4,6 +4,7 @@ phantomdc:
     - db
   environment:
     RACK_ENV: production
+    LOAD_CONGRESS: true
   ports:
     - "3001"
   volumes_from:
