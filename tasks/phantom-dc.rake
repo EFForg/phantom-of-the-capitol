@@ -215,11 +215,14 @@ namespace :'phantom-dc' do
     update_db_with_git_object g, args[:destination_directory] + "/contact-congress"
   end
   desc "Git pull and reload changed CongressMember records into db"
-  task :update_git, :contact_congress_directory do |t, args|
-    g = Git.open args[:contact_congress_directory]
-    g.pull
+  task :update_git do |t, args|
 
-    update_db_with_git_object g, args[:contact_congress_directory]
+    DataSource.all.each do |ds|
+      g = Git.open ds.path
+      g.pull
+
+      update_db_with_git_object g, ds
+    end
   end
   desc "Set updated at for congress members"
   task :updated_at, :regex, :time do |t, args|
@@ -334,31 +337,31 @@ namespace :'phantom-dc' do
   end
 end
 
-def update_db_with_git_object g, contact_congress_directory
-    current_commit = Application.contact_congress_commit
+def update_db_with_git_object g, data_source
+    current_commit = data_source.latest_commit
 
-    new_commit = g.log.first.to_s
+    new_commit = g.log.first.sha
 
     if current_commit == new_commit
-      puts "Already at latest commit. Aborting!"
+      puts data_source.name + ": Already at latest commit. Aborting!"
     else
       if current_commit.nil?
-        files_changed = Dir[contact_congress_directory+'/members/*.yaml'].map { |d| d.sub(contact_congress_directory, "") }
-        puts "No previous commit found, reloading all congress members into db"
+        files_changed = Dir[data_source.path + '/' + data_source.yaml_subpath + '/*.yaml'].map { |d| d.sub(data_source.path, "") }
+        puts data_source.name + "No previous commit found, reloading all congress members into db"
       else
-        files_changed = g.diff(current_commit, new_commit).path('members/').map { |d| d.path }
+        files_changed = g.diff(current_commit, new_commit).path(data_source.yaml_subpath).map { |d| d.path }
         puts files_changed.count.to_s + " congress members form files have changed between commits " + current_commit.to_s + " and " + new_commit
       end
 
 
       files_changed.each do |file_changed|
-        f = contact_congress_directory + '/' + file_changed
+        f = data_source.path + '/' + file_changed
         create_congress_member_exception_wrapper(f) do
           begin
             congress_member_details = YAML.load_file(f)
             bioguide = congress_member_details["bioguide"]
-            CongressMember.find_or_create_by(bioguide_id: bioguide).actions.each { |a| a.destroy }
-            create_congress_member_from_hash congress_member_details
+            CongressMember.find_or_create_by(bioguide_id: data_source.prefix + bioguide).actions.each { |a| a.destroy }
+            create_congress_member_from_hash congress_member_details, data_source.prefix
           rescue Errno::ENOENT
             puts "File " + f + " is missing, skipping..."
           rescue NoMethodError
@@ -367,7 +370,8 @@ def update_db_with_git_object g, contact_congress_directory
         end
       end
       
-      Application.contact_congress_commit = new_commit
+      data_source.latest_commit = new_commit
+      data_source.save
     end
 end
 
@@ -384,8 +388,8 @@ def create_congress_member_exception_wrapper file_path
 end
 
 
-def create_congress_member_from_hash congress_member_details
-  CongressMember.with_new_or_existing_bioguide(congress_member_details["bioguide"]) do |c|
+def create_congress_member_from_hash congress_member_details, prefix
+  CongressMember.with_new_or_existing_bioguide(prefix + congress_member_details["bioguide"]) do |c|
     step_increment = 0
     congress_member_details["contact_form"]["steps"].each do |s|
       action, value = s.first
