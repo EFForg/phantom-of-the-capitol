@@ -206,14 +206,6 @@ namespace :'phantom-dc' do
     end
 
   end
-  desc "Git clone the contact congress repo and load records into the db"
-  task :clone_git, :destination_directory do |t, args|
-    uri = "https://github.com/unitedstates/contact-congress.git"
-    name = "contact-congress"
-    g = Git.clone(uri, name, :path => args[:destination_directory])
-
-    update_db_with_git_object g, args[:destination_directory] + "/contact-congress"
-  end
   desc "Git pull and reload changed CongressMember records into db"
   task :update_git do |t, args|
 
