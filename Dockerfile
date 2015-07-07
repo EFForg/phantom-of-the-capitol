@@ -54,7 +54,9 @@ ADD tasks ./tasks/
 ADD Procfile README.md Rakefile config.ru ./
 
 USER root
-RUN chown -R phantomdc:phantomdc .
+RUN mkdir /datasources
+RUN chown -R phantomdc:phantomdc /datasources .
+VOLUME /datasources
 USER phantomdc
 
 RUN cp config/database-example.rb config/database.rb
