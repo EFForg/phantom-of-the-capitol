@@ -49,15 +49,13 @@ Create the database, then
 
 #### Populating the database
 
-Clone a copy of the contact-congress and store it somewhere:
+Once you have Phantom DC running, you have to add data sources.  Data sources are git repositories which tell Phantom DC how to fill out forms.  In most cases, you want the US congress data source.  To add it, use the CLI to run the following:
 
- - `git clone https://github.com/unitedstates/contact-congress`
+ - `./phantom-dc datasource add --git-clone https://github.com/unitedstates/contact-congress.git us_congress ./us_congress members/`
 
 Then cd back over to phantom-of-the-capitol and run
 
- - `bundle exec rake phantom-dc:update_git[contact_congress_directory]`
-
-replacing `contact_congress_directory` with the path where you cloned the `contact-congress` project.
+ - `bundle exec rake phantom-dc:update_git`
 
 #### Running
 
