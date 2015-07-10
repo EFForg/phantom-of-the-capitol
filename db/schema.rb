@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 14) do
+ActiveRecord::Schema.define(version: 15) do
 
   create_table "application_settings", force: :cascade do |t|
     t.string   "key",        limit: 255
@@ -38,6 +38,9 @@ ActiveRecord::Schema.define(version: 14) do
     t.string  "captcha_selector",    limit: 255
     t.string  "captcha_id_selector", limit: 255
     t.text    "options",             limit: 65535
+    t.string  "question_selector",   limit: 255
+    t.string  "answer_selector",     limit: 255
+    t.text    "pairs",               limit: 65535
   end
 
   create_table "congress_members", force: :cascade do |t|

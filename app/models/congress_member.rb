@@ -266,6 +266,48 @@ class CongressMember < ActiveRecord::Base
           else
             session.find(a.selector, text: Regexp.compile(a.value), wait: wait_val)
           end
+        when "question" #find the question and match it to a hash key
+          pairs_hash = YAML.load a.pairs
+          q=session.find(a.question_selector).text
+          answer=pairs_hash[q]
+          session.find(a.answer_selector).set(answer) unless answer.nil?
+        when "math" 
+          q=session.find(a.question_selector).text #find the question
+          
+          if q[0].starts_with?("*") #replace the preceding "*" from the string
+            q=q[1..q.length-1]
+          end
+
+          if a.selector.to_s.length > 0 #if the question has a bunch of text, it's in the selector
+            q.sub! a.selector,""
+          end
+
+          q.sub! ":","" #remove the trailing ":"
+          q.strip!      #strip white space and it's assumed to be "number operator number"
+
+          parts = q.split(" ")
+          numbers = { "Zero" => 0, "One" => 1, "Two" => 2, "Three" => 3, "Four" => 4, "Five" => 5, "Six" => 6, "Seven" => 7, "Eight" => 8, "Nine" => 9 }
+
+          if parts[0].to_i == 0 && parts[0].to_s.length>1 #is the first number a string? Match it to the numbers hash above
+            parts[0]=numbers[parts[0]]
+          end
+
+          if parts[2].to_i == 0 && parts[2].to_s.length>1 #is the second number a string? Match it to the numbers hash above
+            parts[2]=numbers[parts[2]]
+          end
+
+          case parts[1]
+            when "+"
+              answer=parts[0].to_i+parts[2].to_i
+            when "-"
+              answer=parts[0].to_i-parts[2].to_i
+            when "*", "x", "X", "×"
+              answer=parts[0].to_i*parts[2].to_i
+            when "/", "÷"
+              answer=parts[0].to_i/parts[2].to_i
+          end
+
+          session.find(a.answer_selector).set(answer) unless answer.nil?
         when "check"
           session.find(a.selector).set(true)
         when "uncheck"
