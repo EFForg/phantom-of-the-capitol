@@ -158,6 +158,8 @@ class CongressMember < ActiveRecord::Base
           else
             b.element(:css => a.selector + '[value="' + f[a.value].gsub('"', '\"') + '"]').to_subtype.set
           end
+        when "javascript"
+          b.execute_script(a.value)
         end
       end
 
@@ -276,6 +278,8 @@ class CongressMember < ActiveRecord::Base
           else
             session.find(a.selector + '[value="' + f[a.value].gsub('"', '\"') + '"]').set(true)
           end
+        when "javascript"
+          session.driver.evaluate_script(a.value)
         end
       end
 

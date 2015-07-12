@@ -14,7 +14,7 @@ class CongressMemberAction < ActiveRecord::Base
   serialize :options, LegacySerializer
 
   extend Enumerize
-  enumerize :action, in: %w(visit fill_in select click_on find check uncheck choose wait)
+  enumerize :action, in: %w(visit fill_in select click_on find check uncheck choose wait javascript)
 
   def as_required_json o={}
     as_json(REQUIRED_JSON.merge o)
