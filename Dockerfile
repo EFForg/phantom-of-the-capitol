@@ -1,6 +1,9 @@
-FROM ubuntu
+FROM debian
 RUN apt-get update
-RUN apt-get -y install curl imagemagick libmysql++-dev libpq-dev git libqt4-dev xvfb lsof
+RUN apt-get install -y --no-install-recommends curl imagemagick libmysql++-dev libpq-dev git libqt5webkit5-dev qt5-default xvfb lsof sudo bzip2 ca-certificates
+
+# Create a symlink to what will be the phantomjs exec path
+RUN ln -s /home/phantomdc/phantomjs-1.9.8-linux-x86_64/bin/phantomjs /bin/phantomjs
 
 # Create a new user and switch to that user
 RUN export uid=1000 gid=1000 && \
@@ -27,7 +30,6 @@ WORKDIR /home/phantomdc
 RUN curl -Lo phantomjs.tar.bz2 https://bitbucket.org/ariya/phantomjs/downloads/phantomjs-1.9.8-linux-x86_64.tar.bz2
 RUN tar -jxvf phantomjs.tar.bz2 > /dev/null
 RUN rm phantomjs.tar.bz2
-ENV PATH $PATH:/home/phantomdc/phantomjs-1.9.8-linux-x86_64/bin
 
 RUN curl -O https://raw.githubusercontent.com/wayneeseguin/rvm/master/binscripts/rvm-installer
 RUN curl -O https://raw.githubusercontent.com/wayneeseguin/rvm/master/binscripts/rvm-installer.asc
@@ -40,8 +42,6 @@ RUN mkdir /home/phantomdc/phantom-of-the-capitol
 WORKDIR /home/phantomdc/phantom-of-the-capitol
 
 ADD Gemfile Gemfile.lock .ruby-gemset .ruby-version ./
-RUN bash -l -c 'gem install json -v 1.8.2'
-RUN bash -l -c 'gem install nokogiri -v 1.6.6.2'
 RUN bash -l -c 'bundle install'
 
 RUN mkdir app config db public spec tasks

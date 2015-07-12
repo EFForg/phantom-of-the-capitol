@@ -57,6 +57,10 @@ Then cd back over to phantom-of-the-capitol and run
 
  - `bundle exec rake phantom-dc:update_git`
 
+Run this rake task any time you want to update the database to the latest commit of each repository.  To add and remove datasources, see the help dialogue for the CLI:
+
+ - `./phantom-dc datasource --help`
+
 #### Running
 
 Just run `rackup`
