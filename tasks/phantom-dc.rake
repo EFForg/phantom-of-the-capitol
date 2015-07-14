@@ -368,36 +368,55 @@ def create_congress_member_exception_wrapper file_path
   end
 end
 
-
+#
+# Create new CongressMember from hash
+#
 def create_congress_member_from_hash congress_member_details, prefix
   CongressMember.with_new_or_existing_bioguide(prefix + congress_member_details["bioguide"]) do |c|
     step_increment = 0
-    congress_member_details["contact_form"]["steps"].each do |s|
-      action, value = s.first
-      case action
-      when "visit"
-        create_action_add_to_member(action, step_increment += 1, c) do |cmf|
-          cmf.value = value
-        end
-      when "fill_in", "select", "click_on", "find", "check", "uncheck", "choose", "wait", "javascript"
-        value.each do |field|
-          create_action_add_to_member(action, step_increment += 1, c) do |cmf|
-            field.each do |attribute|
-              if cmf.attributes.keys.include? attribute[0]
-                cmf.update_attribute(attribute[0], attribute[1])
-              end
-            end
-          end
-        end
-      end
-    end
+    congress_member_case_switch congress_member_details
     c.success_criteria = congress_member_details["contact_form"]["success"]
     c.updated_at = Time.now
     c.save
   end
 end
 
+#
+# Case switch for creating action for CongressMember
+#
+def congress_member_case_switch congress_member_details
+  congress_member_details["contact_form"]["steps"].each do |s|
+    action, value = s.first
+    case action
+    when "visit"
+      create_action_add_to_member(action, step_increment += 1, c) do |cmf|
+        cmf.value = value
+      end
+    when "fill_in", "select", "click_on", "find", "check", "uncheck", "choose", "wait", "javascript"
+      create_action_and_update_attributes value
 
+    end
+  end
+end
+
+#
+# Create action for CongressMember and update attributes
+#
+def create_action_and_update_attributes value
+  value.each do |field|
+    create_action_add_to_member(action, step_increment += 1, c) do |cmf|
+      field.each do |attribute|
+        if cmf.attributes.keys.include? attribute[0]
+          cmf.update_attribute(attribute[0], attribute[1])
+        end
+      end
+    end
+  end
+end
+
+#
+# Create action and add it to CongressMember
+#
 def create_action_add_to_member action, step, member
   cmf = CongressMemberAction.new(:action => action, :step => step)
   yield cmf
@@ -412,7 +431,9 @@ def retrieve_captchad_cached captcha_hash, cm_id
   #captcha_hash[cm_id] = CongressMember.find(cm_id).has_captcha?
 end
 
-
+#
+# Build hash from captcha
+#
 def build_captcha_hash
   captcha_hash = {}
   CongressMemberAction.where(value: "$CAPTCHA_SOLUTION").each do |cma|
@@ -421,7 +442,9 @@ def build_captcha_hash
   captcha_hash
 end
 
-
+#
+# Retrieve delayed jobs
+#
 def retrieve_jobs args
   job_id = args[:job_id].blank? ? nil : args[:job_id].to_i
 
@@ -432,7 +455,9 @@ def retrieve_jobs args
   end
 end
 
-
+#
+# Push jobs
+#
 def push_jobs jobs
   jobs.each do |job|
     cm_id, cm_args = DelayedJobHelper::congress_member_id_and_args_from_handler(job.handler)
@@ -449,7 +474,9 @@ def push_jobs jobs
   end
 end
 
-
+#
+# Process cached jobs for CongressMember
+#
 def congress_member_process_cached job
   cm_id, cm_args = DelayedJobHelper::congress_member_id_and_args_from_handler(job.handler)
   cm = CongressMember::retrieve_cached(cm_hash, cm_id)
@@ -458,7 +485,9 @@ def congress_member_process_cached job
   cm.fill_out_form cm_args[0].merge(overrides), cm_args[1]
 end
 
-
+#
+# Process captcha jobs for CongressMember
+#
 def process_captcha_jobs jobs
   jobs.each do |job|
     begin
@@ -473,7 +502,9 @@ def process_captcha_jobs jobs
   end
 end
 
-
+#
+# Process noncaptcha jobs for CongressMember
+#
 def process_noncaptcha_jobs jobs
   jobs.each do |job|
     begin
