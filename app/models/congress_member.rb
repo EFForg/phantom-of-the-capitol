@@ -11,6 +11,8 @@ class CongressMember < ActiveRecord::Base
 
   RECENT_FILL_IMAGE_BASE = 'https://img.shields.io/badge/'
   RECENT_FILL_IMAGE_EXT = '.svg'
+  
+  @@bioguide_id_ref = ''
 
   class FillFailure < StandardError
   end
@@ -40,8 +42,11 @@ class CongressMember < ActiveRecord::Base
 
   def fill_out_form f={}, ct = nil, &block
     status_fields = {congress_member: self, status: "success", extra: {}}.merge(ct.nil? ? {} : {campaign_tag: ct})
+
     begin
       begin
+        @@bioguide_id_ref = self.bioguide_id
+
         if REQUIRES_WATIR.include? self.bioguide_id
           success_hash = fill_out_form_with_watir f, &block
         elsif REQUIRES_WEBKIT.include? self.bioguide_id
@@ -408,7 +413,8 @@ class CongressMember < ActiveRecord::Base
   end
 
   def self.random_screenshot_location
-    Padrino.root + "/public/screenshots/" + SecureRandom.hex(13) + ".png"
+    puts "\n\n" + @@bioguide_id_ref + "\n\n"
+    Padrino.root + "/public/screenshots/" + Time.now.strftime('%Y%m%d%H%M%S%L') + "_" + @@bioguide_id_ref + "-" + SecureRandom.hex(4) + ".png"
   end
 
   def has_captcha?
