@@ -196,6 +196,7 @@ class CongressMember < ActiveRecord::Base
     session.driver.options[:phantomjs_options] = ['--ssl-protocol=TLSv1'] if driver == :poltergeist
     begin
       actions.order(:step).each do |a|
+#        puts a.name
         case a.action
         when "visit"
           session.visit(a.value)
@@ -226,7 +227,22 @@ class CongressMember < ActiveRecord::Base
           begin
             session.within a.selector do
               options = YAML.load a.options
+              
+              
+#              puts YAML.dump options
+#              if options.is_a?(Hash)
+#
+#               # puts options.keys
+#
+#                keykey=(f[a.value].gsub('? "','')).gsub('"','')
+#                puts keykey
+#                puts options['\n\t\t\t\t\t\t\t\t\t\t\tEconomy\n\t\t\t\t\t\t\t\t\t\t']
+#              end
+#
+#              puts options.count
+
               if f[a.value].nil?
+                #puts 3
                 unless PLACEHOLDER_VALUES.include? a.value
                   begin
                     elem = session.find('option[value="' + a.value.gsub('"', '\"') + '"]')
@@ -241,7 +257,8 @@ class CongressMember < ActiveRecord::Base
                   end
                   elem.select_option
                 end
-              elsif options[f[a.value]].nil?
+              elsif options.include?f[a.value] or options[f[a.value]].nil?
+                #puts "use as the value"
                 begin
                   elem = session.find('option[value="' + f[a.value].gsub('"', '\"') + '"]')
                 rescue Capybara::Ambiguous
@@ -255,6 +272,7 @@ class CongressMember < ActiveRecord::Base
                 end
                 elem.select_option
               else
+                #puts "converted to key"
                 begin
                   elem = session.find('option[value="' + options[f[a.value]].gsub('"', '\"') + '"]')
                 rescue Capybara::Ambiguous
@@ -270,7 +288,7 @@ class CongressMember < ActiveRecord::Base
               end
             end
           rescue Capybara::ElementNotFound => e
-            raise e, e.message unless a.options == "DEPENDENT"
+            #raise e, e.message unless (a.options == "DEPENDENT" or a.required == 0 or a.required == 1)
           end
         when "click_on"
           session.find(a.selector).click
