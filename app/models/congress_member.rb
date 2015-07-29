@@ -196,7 +196,7 @@ class CongressMember < ActiveRecord::Base
     session.driver.options[:phantomjs_options] = ['--ssl-protocol=TLSv1'] if driver == :poltergeist
     begin
       actions.order(:step).each do |a|
-#        puts a.name
+ #       puts a.name
         case a.action
         when "visit"
           session.visit(a.value)
@@ -230,6 +230,7 @@ class CongressMember < ActiveRecord::Base
               
               
 #              puts YAML.dump options
+
 #              if options.is_a?(Hash)
 #
 #               # puts options.keys
@@ -245,9 +246,9 @@ class CongressMember < ActiveRecord::Base
                 #puts 3
                 unless PLACEHOLDER_VALUES.include? a.value
                   begin
-                    elem = session.find('option[value="' + a.value.gsub('"', '\"') + '"]')
+                    elem = session.find('option[value="' + a.value.to_s.gsub('"', '\"') + '"]')
                   rescue Capybara::Ambiguous
-                    elem = session.first('option[value="' + a.value.gsub('"', '\"') + '"]')
+                    elem = session.first('option[value="' + a.value.to_s.gsub('"', '\"') + '"]')
                   rescue Capybara::ElementNotFound
                     begin
                       elem = session.find('option', text: Regexp.compile("^" + Regexp.escape(a.value) + "$"))
@@ -257,12 +258,12 @@ class CongressMember < ActiveRecord::Base
                   end
                   elem.select_option
                 end
-              elsif options.include?f[a.value] and options[f[a.value]].nil?
+              elsif  options.is_a?(Array) or (options[f[a.value]].nil? and options.is_a?(Hash))
                 #puts "use as the value"
                 begin
-                  elem = session.find('option[value="' + f[a.value].gsub('"', '\"') + '"]')
+                  elem = session.find('option[value="' + f[a.value].to_s.gsub('"', '\"') + '"]')
                 rescue Capybara::Ambiguous
-                  elem = session.first('option[value="' + f[a.value].gsub('"', '\"') + '"]')
+                  elem = session.first('option[value="' + f[a.value].to_s.gsub('"', '\"') + '"]')
                 rescue Capybara::ElementNotFound
                   begin
                     elem = session.find('option', text: Regexp.compile("^" + Regexp.escape(f[a.value]) + "$"))
@@ -274,9 +275,9 @@ class CongressMember < ActiveRecord::Base
               else
                 #puts "converted to key"
                 begin
-                  elem = session.find('option[value="' + options[f[a.value]].gsub('"', '\"') + '"]')
+                  elem = session.find('option[value="' + options[f[a.value]].to_s.gsub('"', '\"') + '"]')
                 rescue Capybara::Ambiguous
-                  elem = session.first('option[value="' + options[f[a.value]].gsub('"', '\"') + '"]')
+                  elem = session.first('option[value="' + options[f[a.value]].to_s.gsub('"', '\"') + '"]')
                 rescue Capybara::ElementNotFound
                   begin
                     elem = session.find('option', text: Regexp.compile("^" + Regexp.escape(options[f[a.value]]) + "$"))
@@ -288,7 +289,7 @@ class CongressMember < ActiveRecord::Base
               end
             end
           rescue Capybara::ElementNotFound => e
-            #raise e, e.message unless (a.options == "DEPENDENT" or a.required == 0 or a.required == 1)
+            raise e, e.message unless (a.options == "DEPENDENT" or a.required == 0)
           end
         when "click_on"
           session.find(a.selector).click
