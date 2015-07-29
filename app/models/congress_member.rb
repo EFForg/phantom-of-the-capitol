@@ -257,7 +257,7 @@ class CongressMember < ActiveRecord::Base
                   end
                   elem.select_option
                 end
-              elsif options.include?f[a.value] or options[f[a.value]].nil?
+              elsif options.include?f[a.value] and options[f[a.value]].nil?
                 #puts "use as the value"
                 begin
                   elem = session.find('option[value="' + f[a.value].gsub('"', '\"') + '"]')
