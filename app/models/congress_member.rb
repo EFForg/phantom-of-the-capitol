@@ -225,6 +225,7 @@ class CongressMember < ActiveRecord::Base
         when "select"
           begin
             session.within a.selector do
+              options = YAML.load a.options
               if f[a.value].nil?
                 unless PLACEHOLDER_VALUES.include? a.value
                   begin
@@ -240,7 +241,7 @@ class CongressMember < ActiveRecord::Base
                   end
                   elem.select_option
                 end
-              else
+              elsif options[f[a.value]].nil?
                 begin
                   elem = session.find('option[value="' + f[a.value].gsub('"', '\"') + '"]')
                 rescue Capybara::Ambiguous
@@ -250,6 +251,19 @@ class CongressMember < ActiveRecord::Base
                     elem = session.find('option', text: Regexp.compile("^" + Regexp.escape(f[a.value]) + "$"))
                   rescue Capybara::Ambiguous
                     elem = session.first('option', text: Regexp.compile("^" + Regexp.escape(f[a.value]) + "$"))
+                  end
+                end
+                elem.select_option
+              else
+                begin
+                  elem = session.find('option[value="' + options[f[a.value]].gsub('"', '\"') + '"]')
+                rescue Capybara::Ambiguous
+                  elem = session.first('option[value="' + options[f[a.value]].gsub('"', '\"') + '"]')
+                rescue Capybara::ElementNotFound
+                  begin
+                    elem = session.find('option', text: Regexp.compile("^" + Regexp.escape(options[f[a.value]]) + "$"))
+                  rescue Capybara::Ambiguous
+                    elem = session.first('option', text: Regexp.compile("^" + Regexp.escape(options[f[a.value]]) + "$"))
                   end
                 end
                 elem.select_option
@@ -413,7 +427,6 @@ class CongressMember < ActiveRecord::Base
   end
 
   def self.random_screenshot_location
-    puts "\n\n" + @@bioguide_id_ref + "\n\n"
     Padrino.root + "/public/screenshots/" + Time.now.strftime('%Y%m%d%H%M%S%L') + "_" + @@bioguide_id_ref + "-" + SecureRandom.hex(4) + ".png"
   end
 
