@@ -81,6 +81,8 @@ class CongressMember < ActiveRecord::Base
       raise e
     ensure
       FillStatus.new(status_fields).save if RECORD_FILL_STATUSES
+      ActiveRecord::Base.connection.close
+      #puts "connection closed"
     end
     true
   end
