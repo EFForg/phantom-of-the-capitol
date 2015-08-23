@@ -9,7 +9,7 @@ class FillHandler
   def create_thread fields={}, campaign_tag
     @thread = Thread.new do
       begin
-        if DELAY_ALL_NONCAPTCHA_FILLS and not @c.has_captcha? and not @debug
+        if DELAY_ALL_NONCAPTCHA_FILLS and not @c.has_captcha? and not @c.has_google_recaptcha? and not @debug
           @c.delay(queue: "default").fill_out_form fields, campaign_tag
           @result = true
         else
@@ -42,10 +42,13 @@ class FillHandler
 
   def fill_captcha answer
     return false unless @thread
-
+    @result = nil
     @answer = answer
     @thread.run
-    @thread.join
+    #@thread.join
+    while @result.nil?
+      Thread.pass
+    end
 
     FillHandler::check_result @result
   end
@@ -61,3 +64,4 @@ class FillHandler
     end
   end
 end
+

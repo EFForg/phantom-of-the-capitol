@@ -50,6 +50,8 @@ class CongressMember < ActiveRecord::Base
           success_hash = fill_out_form_with_poltergeist f, &block
         end
       rescue Exception => e
+        p e.message
+        pp e.backtrace
         status_fields[:status] = "error"
         message = YAML.load(e.message)
         status_fields[:extra][:screenshot] = message[:screenshot] if message.is_a?(Hash) and message.include? :screenshot
@@ -191,6 +193,15 @@ class CongressMember < ActiveRecord::Base
     session = Capybara::Session.new(driver)
     session.driver.options[:js_errors] = false if driver == :poltergeist
     session.driver.options[:phantomjs_options] = ['--ssl-protocol=TLSv1'] if driver == :poltergeist
+    if has_google_recaptcha?
+      case driver
+      when :poltergeist
+        session.driver.headers = { 'User-Agent' => "Lynx/2.8.8dev.3 libwww-FM/2.14 SSL-MM/1.4.1"}
+      when :webkit
+        session.driver.header 'User-Agent' , "Lynx/2.8.8dev.3 libwww-FM/2.14 SSL-MM/1.4.1"
+      end
+    end
+
     begin
       actions.order(:step).each do |a|
         case a.action
@@ -201,12 +212,33 @@ class CongressMember < ActiveRecord::Base
         when "fill_in"
           if a.value.starts_with?("$")
             if a.value == "$CAPTCHA_SOLUTION"
-              location = CAPTCHA_LOCATIONS.keys.include?(bioguide_id) ? CAPTCHA_LOCATIONS[bioguide_id] : session.driver.evaluate_script('document.querySelector("' + a.captcha_selector.gsub('"', '\"') + '").getBoundingClientRect();')
+              if a.captcha_selector == ".g-recaptcha iframe"
+                begin
+                  url = self.class::save_google_recaptcha_and_store_poltergeist(session)
+                  captcha_value = yield url
+                  frame = session.find(a.captcha_selector)
+                  session.within_frame(0) do
+                      for i in captcha_value.split(",")
+                        session.execute_script("document.querySelector('.fbc-imageselect-checkbox-#{i}').checked=true")
+                      end
+                      sleep 0.5
+                      session.find(".fbc-button-verify input").click
+                      @recaptcha_value = session.find("textarea").value
+                  end
+                  session.fill_in(a.name,with:@recaptcha_value)
+                rescue Exception => e
+                  p e.message
+                  url = nil
+                  captcha_value = nil
+                  retry
+                end
+              else
+                location = CAPTCHA_LOCATIONS.keys.include?(bioguide_id) ? CAPTCHA_LOCATIONS[bioguide_id] : session.driver.evaluate_script('document.querySelector("' + a.captcha_selector.gsub('"', '\"') + '").getBoundingClientRect();')
+                url = self.class::save_captcha_and_store_poltergeist session, location["left"], location["top"], location["width"], location["height"]
 
-              url = self.class::save_captcha_and_store_poltergeist session, location["left"], location["top"], location["width"], location["height"]
-
-              captcha_value = yield url
-              session.find(a.selector).set(captcha_value)
+                captcha_value = yield url
+                session.find(a.selector).set(captcha_value)
+              end
             else
               if a.options
                 options = YAML.load a.options
@@ -280,6 +312,13 @@ class CongressMember < ActiveRecord::Base
           end
         when "javascript"
           session.driver.evaluate_script(a.value)
+        when "iframe"
+          if a.value == 'back'
+            session.switch_to.default_content
+          else
+            iframe = session.find(a.value)
+            session.switch_to.frame(a.selector)
+          end
         end
       end
 
@@ -365,6 +404,14 @@ class CongressMember < ActiveRecord::Base
     url
   end
 
+  def self.save_google_recaptcha_and_store_poltergeist session
+    screenshot_location = random_captcha_location
+    session.save_screenshot(screenshot_location,selector:".g-recaptcha iframe")
+    url = store_captcha_from_location screenshot_location
+    File.unlink screenshot_location
+    url
+  end
+
   def self.random_captcha_location
     Padrino.root + "/public/captchas/" + SecureRandom.hex(13) + ".png"
   end
@@ -375,6 +422,10 @@ class CongressMember < ActiveRecord::Base
 
   def has_captcha?
     !actions.find_by_value("$CAPTCHA_SOLUTION").nil?
+  end
+
+  def has_google_recaptcha?
+    !actions.find_by_captcha_selector(".g-recaptcha iframe").nil?
   end
 
   def check_success body_text
@@ -442,3 +493,5 @@ class CongressMember < ActiveRecord::Base
   end
 
 end
+
+
