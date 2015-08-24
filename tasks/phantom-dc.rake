@@ -390,7 +390,7 @@ def create_congress_member_from_hash congress_member_details, prefix
         create_action_add_to_member(action, step_increment += 1, c) do |cmf|
           cmf.value = value
         end
-      when "fill_in", "select", "click_on", "find", "check", "uncheck", "choose", "wait", "question", "math"
+      when "fill_in", "select", "click_on", "find", "check", "uncheck", "choose", "wait", "javascript", "question", "math"
         value.each do |field|
           create_action_add_to_member(action, step_increment += 1, c) do |cmf|
             field.each do |attribute|
