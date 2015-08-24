@@ -214,19 +214,16 @@ class CongressMember < ActiveRecord::Base
                 begin
                   url = self.class::save_google_recaptcha_and_store_poltergeist(session,a.captcha_selector)
                   captcha_value = yield url
-                  frame = session.find(a.captcha_selector)
                   session.within_frame(0) do
-                      for i in captcha_value.split(",")
-                        session.execute_script("document.querySelector('.fbc-imageselect-checkbox-#{i}').checked=true")
-                      end
-                      sleep 0.5
-                      session.find(".fbc-button-verify input").click
-                      @recaptcha_value = session.find("textarea").value
+                    for i in captcha_value.split(",")
+                      session.execute_script("document.querySelector('.fbc-imageselect-checkbox-#{i}').checked=true")
+                    end
+                    sleep 0.5
+                    session.find(".fbc-button-verify input").click
+                    @recaptcha_value = session.find("textarea").value
                   end
                   session.fill_in(a.name,with:@recaptcha_value)
                 rescue Exception => e
-                  url = nil
-                  captcha_value = nil
                   retry
                 end
               else
