@@ -425,7 +425,7 @@ class CongressMember < ActiveRecord::Base
   end
 
   def has_google_recaptcha?
-    !actions.find_by_captcha_selector(".g-recaptcha iframe").nil?
+    !actions.select{|action|action.options and action.options['google_recaptcha']}.nil?
   end
 
   def check_success body_text
