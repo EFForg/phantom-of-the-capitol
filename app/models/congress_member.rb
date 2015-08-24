@@ -211,6 +211,7 @@ class CongressMember < ActiveRecord::Base
           if a.value.starts_with?("$")
             if a.value == "$CAPTCHA_SOLUTION"
               if a.options and a.options["google_recaptcha"]
+                self.clear_iframes(session)
                 begin
                   url = self.class::save_google_recaptcha_and_store_poltergeist(session,a.captcha_selector)
                   captcha_value = yield url
@@ -337,6 +338,15 @@ class CongressMember < ActiveRecord::Base
         Process.kill(3, pid)
       end
     end
+  end
+
+  def clear_iframes(session)
+    session.execute_script("
+      var elements = document.querySelectorAll('iframe');
+      Array.prototype.forEach.call(elements, function(el, i){
+        if (!el.parentNode.parentNode.parentNode.parentNode.classList.contains('g-recaptcha')) { el.parentNode.removeChild(el); }
+      });
+    ")
   end
 
   def self.crop_screenshot_from_coords screenshot_location, x, y, width, height
