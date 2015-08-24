@@ -220,7 +220,7 @@ class CongressMember < ActiveRecord::Base
                       session.execute_script("document.querySelector('.fbc-imageselect-checkbox-#{i}').checked=true")
                     end
                     sleep 0.5
-                    session.find(".fbc-button-verify input").click
+                    session.find(".fbc-button-verify input").trigger('click')
                     @recaptcha_value = session.find("textarea").value
                   end
                   session.fill_in(a.name,with:@recaptcha_value)
