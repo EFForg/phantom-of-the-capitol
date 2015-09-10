@@ -42,7 +42,7 @@ This project relies on [Contact Congress](https://github.com/unitedstates/contac
 
 Create the database, then
 
- - `cp config/database-example.rb config/database.rb`
+ - `cp config/database.rb.example config/database.rb`
  - `vim config/database.rb # fill in db info`
  - `cp config/phantom-dc_config.rb.example config/phantom-dc_config.rb`
  - `bundle exec rake ar:create ar:schema:load`

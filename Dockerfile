@@ -80,7 +80,7 @@ RUN chown -R phantomdc:phantomdc /datasources .
 VOLUME /datasources
 USER phantomdc
 
-RUN cp config/database-example.rb config/database.rb
+RUN cp config/database.rb.example config/database.rb
 RUN cp config/phantom-dc_config.rb.example config/phantom-dc_config.rb
 
 ADD ./docker/phantomdc/entrypoint.sh /home/phantomdc/

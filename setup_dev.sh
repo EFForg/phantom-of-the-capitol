@@ -25,7 +25,7 @@ mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql -u root mysql -p"$mysql_root"
 
 cd /vagrant
 
-cp -a config/database-example.rb config/database.rb
+cp -a config/database.rb.example config/database.rb
 cp -a config/phantom-dc_config.rb.example config/phantom-dc_config.rb
 
 sed -i "s@^  :password.*@  :password => '$mysql_phantom_dc',@" config/database.rb
