@@ -43,9 +43,11 @@ source /home/vagrant/.rvm/scripts/rvm
 rvm install ruby-2.2.0
 
 cd /vagrant
+gem install bundler
 gem install json -v '1.8.2'
 gem install nokogiri -v '1.6.6.2'
 bundle install
+echo 'cd /vagrant' >> ~/.bashrc
 
 echo "Loading schema..."
 bundle exec rake ar:create ar:schema:load > /dev/null
