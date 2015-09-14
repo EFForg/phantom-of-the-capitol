@@ -211,7 +211,7 @@ class CongressMember < ActiveRecord::Base
               if a.options
                 options = YAML.load a.options
                 if options.include? "max_length"
-                  f[a.value] = f[a.value][0...(0.95 * options["max_length"]).floor]
+                  f[a.value] = f[a.value][0...(0.95 * options["max_length"]).floor] unless f[a.value].nil?
                 end
               end
               session.find(a.selector).set(f[a.value].gsub("\t","    ")) unless f[a.value].nil?
