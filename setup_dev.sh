@@ -40,7 +40,7 @@ curl -O https://raw.githubusercontent.com/wayneeseguin/rvm/master/binscripts/rvm
 gpg2 --verify rvm-installer.asc &&
 bash rvm-installer stable
 source /home/vagrant/.rvm/scripts/rvm
-rvm install ruby-2.1.0
+rvm install ruby-2.2.0
 
 cd /vagrant
 gem install json -v '1.8.2'
