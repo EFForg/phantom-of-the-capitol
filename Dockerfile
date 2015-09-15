@@ -70,7 +70,7 @@ ADD db ./db/
 ADD public ./public/
 ADD spec ./spec/
 ADD tasks ./tasks/
-ADD Procfile README.md Rakefile config.ru ./
+ADD Procfile README.md Rakefile config.ru phantom-dc ./
 
 # Datasources should be a persistent volume, owned by phantomdc
 # All the above added files & directories should also be owned by phantomdc
@@ -83,9 +83,7 @@ USER phantomdc
 RUN cp config/database.rb.example config/database.rb
 RUN cp config/phantom-dc_config.rb.example config/phantom-dc_config.rb
 
-RUN sed -i 's/AWS/Local/g' config/phantom-dc_config.rb
-RUN DEBUG_KEY=`head -c 30 /dev/urandom | base64 | sed -e 's/+/-/g' -e 's/\//./g'` && \
-  sed -i "s/DEBUG_KEY = \"\"/DEBUG_KEY = \"$DEBUG_KEY\"/g" config/phantom-dc_config.rb
+ENV RACK_ENV production
 
 ADD ./docker/phantomdc/entrypoint.sh /home/phantomdc/
 CMD ["bash", "-l", "-c", "thin start --port 3001 --threaded"]
