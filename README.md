@@ -30,8 +30,10 @@ representative based on their address.
 This API is deployed for public consumption at [https://congressforms.eff.org/](https://congressforms.eff.org/).  Navigate there to see notes on consumption.    
 
 
+# How to Contribute to this Project
 
-### Dev/ Production Setup with Docker (recommended)
+
+## Dev/ Production Setup with Docker (recommended)
 
 Docker makes it easy to set up Phantom DC for development, production, and testing.
 
@@ -69,7 +71,6 @@ To run the tests, run the `phantom-dc-db` instance as above, then run:
 
 
 
-
 ## Development Environment Installation and Setup with Vagrant
 
 #### Requirements
@@ -101,11 +102,12 @@ An API key for using `SmartyStreets` allows rake tasks to run.
        vi config/phantom-dc_config.rb
 
 
-#### Running
+##### Within Vagrant VM
 
     $  vagrant ssh
 
     $  cd /vagrant; \
+       bundle exec rake ar:create; \
        bundle exec rake ar:schema:load; \
        rackup --host 0.0.0.0
 
@@ -159,7 +161,7 @@ Run this rake task any time you want to update the DataSource repos to the lates
 
 Just run `rackup`
 
-#Testing
+# Testing
 
 If you haven't set up the test db, create it, using `config/database.rb`
 
