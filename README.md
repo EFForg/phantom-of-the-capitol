@@ -31,7 +31,46 @@ This API is deployed for public consumption at [https://congressforms.eff.org/](
 
 
 
-## Development Environment Installation and Setup
+### Dev/ Production Setup with Docker (recommended)
+
+Docker makes it easy to set up Phantom DC for development, production, and testing.
+
+Here's an example which will get you a quick production instance:
+
+    $ docker run -it --name=phantom-dc-db \
+        -v /var/lib/mysql \
+        -e MYSQL_ROOT_PASSWORD=changeme \
+        -e MYSQL_APP_PASSWORD=changeme \
+        hainish/phantom-of-the-capitol-db
+
+...and in another terminal...
+
+    $ docker run -it --rm --name=phantom-dc \
+        --link=phantom-dc-db:db \
+        -p 3001:3001 \
+        --volumes-from=phantom-dc-db \
+        -e CORS_ALLOWED_DOMAINS='http://example.com' \
+        -e LOAD_CONGRESS=true \
+        -e DEBUG_KEY=changeme \
+        hainish/phantom-of-the-capitol
+
+Take a look at `config/phantom-dc_config.rb.example` to get an idea of what configuration options you can pass on to the `phantom-dc` docker instance with the `-e` flag.  In most instances, you'll want to change the AWS config options.
+
+To run in development mode, pass in `-e RACK_ENV=development`.  If you're actively developing, you'll probably also want to share your host git path with the container by passing in `-v $(pwd):/home/phantomdc/phantom-of-the-capitol`.
+
+To run the tests, run the `phantom-dc-db` instance as above, then run:
+
+    $ docker run -it --rm --name=phantom-dc
+        --link=phantom-dc-db:db \
+        --volumes-from=phantom-dc-db \
+        -e RACK_ENV=test \
+        hainish/phantom-of-the-capitol \
+        bash -l -c 'rspec spec'
+
+
+
+
+## Development Environment Installation and Setup with Vagrant
 
 #### Requirements
 

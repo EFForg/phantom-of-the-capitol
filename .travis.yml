@@ -4,7 +4,7 @@ rvm:
 before_script:
   - mysql -e 'create database phantom_dc_test;'
   - mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql -u root mysql
-  - cp config/database-example.rb config/database.rb
+  - cp config/database.rb.example config/database.rb
   - sed -i "s@^  :username.*@  :username => 'root',@" config/database.rb
   - cp config/phantom-dc_config.rb.example config/phantom-dc_config.rb
   - "PADRINO_ENV=test bundle exec rake ar:create ar:schema:load"
