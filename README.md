@@ -1,5 +1,5 @@
 # Phantom of the Capitol
-### Phantom DC for short
+### Phantom DC for Short
 A RESTful API for retrieving the required fields for and filling out the contact
 forms of members of the US Congress.
 
@@ -25,15 +25,15 @@ representative based on their address.
 
 
 
-# How to use this API
+# How to Use This API
 
 This API is deployed for public consumption at [https://congressforms.eff.org/](https://congressforms.eff.org/).  Navigate there to see notes on consumption.    
 
 
-# How to Contribute to this Project
+# How to Contribute to This Project
 
 
-## Dev/ Production Setup with Docker (recommended)
+## Dev/ Production Setup with Docker (Recommended)
 
 Docker makes it easy to set up Phantom DC for development, production, and testing.
 
@@ -139,7 +139,7 @@ Create the mysql database:
        bundle exec rake ar:create; \
        bundle exec rake ar:schema:load
 
-## Populating the database
+## Populating the Database
 
 Once you have Phantom DC running, you have to add DataSources.  DataSources are
 git repositories containing a subdirectory filled with yml files which tell
@@ -194,7 +194,7 @@ Now, you should be able to point your browser to `http://localhost:8000/congress
   - a screenshot at the point of failure
  3. view the actions for this member of congress, as the database sees them (e.g. if you want to make sure the actions match the latest YAML from `contact-congress`)
 
-## Re-running jobs that resulted in `error` or `failure`
+## Re-Running Jobs That Resulted in `error` or `failure`
 
 Any jobs that result in an `error` or `failure` are added to the [Delayed::Job](https://github.com/collectiveidea/delayed_job) job queue, unless the `SKIP_DELAY` environment variable is set.  This job queue should be checked periodically and the jobs themselves debugged and re-run to ensure delivery.  A number of convenience rake tasks have been provided for this purpose.
 
