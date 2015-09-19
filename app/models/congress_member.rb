@@ -191,6 +191,15 @@ class CongressMember < ActiveRecord::Base
     session = Capybara::Session.new(driver)
     session.driver.options[:js_errors] = false if driver == :poltergeist
     session.driver.options[:phantomjs_options] = ['--ssl-protocol=TLSv1'] if driver == :poltergeist
+    if has_google_recaptcha?
+      case driver
+      when :poltergeist
+        session.driver.headers = { 'User-Agent' => "Lynx/2.8.8dev.3 libwww-FM/2.14 SSL-MM/1.4.1"}
+      when :webkit
+        session.driver.header 'User-Agent' , "Lynx/2.8.8dev.3 libwww-FM/2.14 SSL-MM/1.4.1"
+      end
+    end
+
     begin
       actions.order(:step).each do |a|
         case a.action
@@ -201,12 +210,29 @@ class CongressMember < ActiveRecord::Base
         when "fill_in"
           if a.value.starts_with?("$")
             if a.value == "$CAPTCHA_SOLUTION"
-              location = CAPTCHA_LOCATIONS.keys.include?(bioguide_id) ? CAPTCHA_LOCATIONS[bioguide_id] : session.driver.evaluate_script('document.querySelector("' + a.captcha_selector.gsub('"', '\"') + '").getBoundingClientRect();')
+              if a.options and a.options["google_recaptcha"]
+                begin
+                  url = self.class::save_google_recaptcha_and_store_poltergeist(session,a.captcha_selector)
+                  captcha_value = yield url
+                  session.within_frame(recaptcha_frame_index(session)) do
+                    for i in captcha_value.split(",")
+                      session.execute_script("document.querySelector('.fbc-imageselect-checkbox-#{i}').checked=true")
+                    end
+                    sleep 0.5
+                    session.find(".fbc-button-verify input").trigger('click')
+                    @recaptcha_value = session.find("textarea").value
+                  end
+                  session.fill_in(a.name,with:@recaptcha_value)
+                rescue Exception => e
+                  retry
+                end
+              else
+                location = CAPTCHA_LOCATIONS.keys.include?(bioguide_id) ? CAPTCHA_LOCATIONS[bioguide_id] : session.driver.evaluate_script('document.querySelector("' + a.captcha_selector.gsub('"', '\"') + '").getBoundingClientRect();')
+                url = self.class::save_captcha_and_store_poltergeist session, location["left"], location["top"], location["width"], location["height"]
 
-              url = self.class::save_captcha_and_store_poltergeist session, location["left"], location["top"], location["width"], location["height"]
-
-              captcha_value = yield url
-              session.find(a.selector).set(captcha_value)
+                captcha_value = yield url
+                session.find(a.selector).set(captcha_value)
+              end
             else
               if a.options
                 options = YAML.load a.options
@@ -313,6 +339,15 @@ class CongressMember < ActiveRecord::Base
     end
   end
 
+  def recaptcha_frame_index(session)
+    (0..10).each do |frame_index|
+      if  session.within_frame(frame_index){session.current_url} =~ /recaptcha/
+        return frame_index
+      end
+    end
+    raise
+  end
+
   def self.crop_screenshot_from_coords screenshot_location, x, y, width, height
     img = MiniMagick::Image.open(screenshot_location)
     img.crop width.to_s + 'x' + height.to_s + "+" + x.to_s + "+" + y.to_s
@@ -365,6 +400,14 @@ class CongressMember < ActiveRecord::Base
     url
   end
 
+  def self.save_google_recaptcha_and_store_poltergeist session,selector
+    screenshot_location = random_captcha_location
+    session.save_screenshot(screenshot_location,selector:selector)
+    url = store_captcha_from_location screenshot_location
+    File.unlink screenshot_location
+    url
+  end
+
   def self.random_captcha_location
     Padrino.root + "/public/captchas/" + SecureRandom.hex(13) + ".png"
   end
@@ -375,6 +418,10 @@ class CongressMember < ActiveRecord::Base
 
   def has_captcha?
     !actions.find_by_value("$CAPTCHA_SOLUTION").nil?
+  end
+
+  def has_google_recaptcha?
+    !actions.select{|action|action.options and action.options['google_recaptcha']}.empty?
   end
 
   def check_success body_text
@@ -442,3 +489,5 @@ class CongressMember < ActiveRecord::Base
   end
 
 end
+
+
