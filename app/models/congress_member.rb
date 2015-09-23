@@ -340,8 +340,9 @@ class CongressMember < ActiveRecord::Base
   end
 
   def recaptcha_frame_index(session)
-    (0..10).each do |frame_index|
-      if  session.within_frame(frame_index){session.current_url} =~ /recaptcha/
+    num_frames = session.evaluate_script("window.frames.length")
+    (0...num_frames).each do |frame_index|
+      if session.within_frame(frame_index){session.current_url} =~ /recaptcha/
         return frame_index
       end
     end
