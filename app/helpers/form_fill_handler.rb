@@ -42,10 +42,12 @@ class FillHandler
 
   def fill_captcha answer
     return false unless @thread
+
     @result = nil
     @answer = answer
+
     @thread.run
-    #@thread.join
+
     while @result.nil?
       Thread.pass
     end
