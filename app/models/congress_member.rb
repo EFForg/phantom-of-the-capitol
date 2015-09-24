@@ -215,6 +215,9 @@ class CongressMember < ActiveRecord::Base
                 begin
                   url = self.class::save_google_recaptcha_and_store_poltergeist(session,a.captcha_selector)
                   captcha_value = yield url
+                  if captcha_value == false
+                    break # finish_workflow has been called
+                  end
                   # We can not directly reference the captcha id due to problem stated in https://github.com/EFForg/phantom-of-the-capitol/pull/74#issuecomment-139127811
                   session.within_frame(recaptcha_frame_index(session)) do
                     for i in captcha_value.split(",")
@@ -233,6 +236,9 @@ class CongressMember < ActiveRecord::Base
                 url = self.class::save_captcha_and_store_poltergeist session, location["left"], location["top"], location["width"], location["height"]
 
                 captcha_value = yield url
+                if captcha_value == false
+                  break # finish_workflow has been called
+                end
                 session.find(a.selector).set(captcha_value)
               end
             else

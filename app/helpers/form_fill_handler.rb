@@ -37,7 +37,7 @@ class FillHandler
   end
 
   def finish_workflow
-    fill_captcha "answer"
+    fill_captcha false
   end
 
   def fill_captcha answer
