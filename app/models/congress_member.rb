@@ -195,6 +195,7 @@ class CongressMember < ActiveRecord::Base
       case driver
       when :poltergeist
         session.driver.headers = { 'User-Agent' => "Lynx/2.8.8dev.3 libwww-FM/2.14 SSL-MM/1.4.1"}
+        session.driver.timeout = 4 # needed in case some iframes don't respond
       when :webkit
         session.driver.header 'User-Agent' , "Lynx/2.8.8dev.3 libwww-FM/2.14 SSL-MM/1.4.1"
       end
@@ -214,6 +215,7 @@ class CongressMember < ActiveRecord::Base
                 begin
                   url = self.class::save_google_recaptcha_and_store_poltergeist(session,a.captcha_selector)
                   captcha_value = yield url
+                  # We can not directly reference the captcha id due to problem stated in https://github.com/EFForg/phantom-of-the-capitol/pull/74#issuecomment-139127811
                   session.within_frame(recaptcha_frame_index(session)) do
                     for i in captcha_value.split(",")
                       session.execute_script("document.querySelector('.fbc-imageselect-checkbox-#{i}').checked=true")
@@ -342,8 +344,11 @@ class CongressMember < ActiveRecord::Base
   def recaptcha_frame_index(session)
     num_frames = session.evaluate_script("window.frames.length")
     (0...num_frames).each do |frame_index|
-      if session.within_frame(frame_index){session.current_url} =~ /recaptcha/
-        return frame_index
+      begin
+        if session.within_frame(frame_index){session.current_url} =~ /recaptcha/
+          return frame_index
+        end
+      rescue
       end
     end
     raise
