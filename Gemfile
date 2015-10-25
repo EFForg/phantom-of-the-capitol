@@ -48,6 +48,7 @@ gem 'typhoeus'
 gem 'watir-webdriver'
 gem 'smarty_streets'
 gem 'groupdate'
+gem 'sentry-raven'
 
 
 # Or Padrino Edge

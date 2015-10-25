@@ -50,6 +50,8 @@ GEM
     excon (0.44.3)
     factory_girl (4.5.0)
       activesupport (>= 3.0.0)
+    faraday (0.9.2)
+      multipart-post (>= 1.2, < 3)
     ffi (1.9.10)
     fission (0.5.0)
       CFPropertyList (~> 2.2)
@@ -158,6 +160,7 @@ GEM
     moneta (0.7.20)
     multi_json (1.11.2)
     multi_xml (0.5.5)
+    multipart-post (2.0.0)
     mysql2 (0.3.18)
     net-scp (1.2.1)
       net-ssh (>= 2.6.5)
@@ -234,6 +237,8 @@ GEM
       multi_json (~> 1.0)
       rubyzip (~> 1.0)
       websocket (~> 1.0)
+    sentry-raven (0.15.2)
+      faraday (>= 0.7.6)
     sinatra (1.4.5)
       rack (~> 1.4)
       rack-protection (~> 1.4)
@@ -295,6 +300,7 @@ DEPENDENCIES
   rake
   redcarpet
   rspec
+  sentry-raven
   slim
   smarty_streets
   thin
