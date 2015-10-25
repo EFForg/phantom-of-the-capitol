@@ -1,5 +1,6 @@
 module CongressForms
   class App < Padrino::Application
+    use Raven::Rack
     use ActiveRecord::ConnectionAdapters::ConnectionManagement
     register Padrino::Rendering
     register Padrino::Mailer

@@ -26,6 +26,12 @@ SmartyStreets.configure do |c|
   c.candidates = 1
 end
 
+unless SENTRY_DSN.nil?
+  Raven.configure do |config|
+    config.dsn = SENTRY_DSN
+  end
+end
+
 ##
 # ## Enable devel logging
 #

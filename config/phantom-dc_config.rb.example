@@ -10,6 +10,9 @@ DEBUG_KEY = ENV_PRIME['DEBUG_KEY'] || "" # password needed to access sensitive i
 SMARTY_STREETS_ID = ENV_PRIME['SMARTY_STREETS_ID'] || "" 
 SMARTY_STREETS_TOKEN = ENV_PRIME['SMARTY_STREETS_TOKEN'] || ""
 
+# For the Sentry exception tracking platform.  Leave as nil if unused.
+SENTRY_DSN = nil
+
 CarrierWave.configure do |config|
   config.fog_credentials = {
     provider:              ENV_PRIME['FOG_PROVIDER'] || 'Local', # AWS or Local
