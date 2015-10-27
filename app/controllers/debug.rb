@@ -224,7 +224,7 @@ CongressForms::App.controller do
     return {status: "error", message: "The unique id provided was not found."}.to_json unless debug_fh.include? @uid
 
     result = debug_fh[@uid].fill_captcha @answer
-    debug_fh.delete(@uid)
+    debug_fh.delete(@uid) if result[:status] != "captcha_needed"
     result.to_json
   end
 
