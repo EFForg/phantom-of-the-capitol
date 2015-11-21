@@ -20,45 +20,14 @@ namespace :'phantom-dc' do
       cm_hash = CongressMember::to_hash CongressMember.all
       captcha_hash = build_captcha_hash
 
-      jobs.each do |job|
-        cm_id, cm_args = DelayedJobHelper::congress_member_id_and_args_from_handler(job.handler)
-        unless cm_args[1] == "rake" and args[:job_id].nil?
-          cm = CongressMember::retrieve_cached(cm_hash, cm_id)
-          if regex.nil? or regex.match(cm.bioguide_id)
-            if retrieve_captchad_cached(captcha_hash, cm.id)
-              captcha_jobs.push job
-            else
-              noncaptcha_jobs.push job
-            end
-          end
-        end
-      end
-      captcha_jobs.each do |job|
-        begin
-          cm_id, cm_args = DelayedJobHelper::congress_member_id_and_args_from_handler(job.handler)
-          cm = CongressMember::retrieve_cached(cm_hash, cm_id)
-          puts red("Job #" + job.id.to_s + ", bioguide " + cm.bioguide_id)
-          pp cm_args
-          result = cm.fill_out_form cm_args[0].merge(overrides), cm_args[1] do |img|
-            puts img
-            STDIN.gets.strip
-          end
-        rescue
-        end
-        job.destroy
-      end
-      noncaptcha_jobs.each do |job|
-        begin
-          cm_id, cm_args = DelayedJobHelper::congress_member_id_and_args_from_handler(job.handler)
-          cm = CongressMember::retrieve_cached(cm_hash, cm_id)
-          puts red("Job #" + job.id.to_s + ", bioguide " + cm.bioguide_id)
-          pp cm_args
-          result = cm.fill_out_form cm_args[0].merge(overrides), cm_args[1]
-        rescue
-        end
-        job.destroy
-      end
+      push_jobs jobs
+
+      process_captcha_jobs captcha_jobs
+
+      process_noncaptcha_jobs noncaptcha_jobs
     end
+
+
     desc "override a field on the Delayed::Job error_or_failure queue, optionally provide bioguide regex or job id"
     task :override_field, :regex, :job_id, :overrides, :conditions do |t, args|
       regex = args[:regex].blank? ? nil : Regexp.compile(args[:regex])
@@ -84,6 +53,8 @@ namespace :'phantom-dc' do
         end
       end
     end
+
+
     desc "destroy all fills on the Delayed::Job error_or_failure queue provided a specific bioguide or job_id"
     task :destroy_fills, :bioguide, :job_id do |t, args|
       cm = CongressMember.bioguide(args[:bioguide])
@@ -98,6 +69,8 @@ namespace :'phantom-dc' do
         end
       end
     end
+
+
     desc "calculate # of jobs per member on the Delayed::Job error_or_failure queue"
     task :jobs_per_member do |t, args|
       jobs = Delayed::Job.where(queue: "error_or_failure")
@@ -124,6 +97,8 @@ namespace :'phantom-dc' do
       puts "\nTotal members: "+people.length.to_s
       puts "Total captcha'd members: "+captchad_hash.length.to_s
     end
+
+
     desc "for error_or_failure jobs that have no zip4, look up the zip4, save, and retry"
     task :zip4_retry, :regex do |t, args|
       regex = args[:regex].blank? ? nil : Regexp.compile(args[:regex])
@@ -168,6 +143,8 @@ namespace :'phantom-dc' do
         job.destroy
       end
     end
+
+
     desc "delete jobs that were generated during the fill_out_all rake task"
     task :delete_rake do |t, args|
       jobs = Delayed::Job.where(queue: "error_or_failure")
@@ -176,6 +153,8 @@ namespace :'phantom-dc' do
         job.destroy if handler.args[1] == "rake"
       end
     end
+
+
     desc "fix duplicate values of any field: choose the first one"
     task :fix_duplicates, :field, :regex do |t, args|
       regex = args[:regex].blank? ? nil : Regexp.compile(args[:regex])
@@ -206,6 +185,8 @@ namespace :'phantom-dc' do
     end
 
   end
+
+
   desc "Git pull and reload changed CongressMember records into db"
   task :update_git do |t, args|
 
@@ -216,6 +197,8 @@ namespace :'phantom-dc' do
       update_db_with_git_object g, ds
     end
   end
+
+
   desc "Set updated at for congress members"
   task :updated_at, :regex, :time do |t, args|
     time = args[:time].blank? ? Time.now : eval(args[:time])
@@ -226,6 +209,8 @@ namespace :'phantom-dc' do
       c.save
     end
   end
+
+
   desc "Analyze how common the expected values of fields are"
   task :common_fields do |t, args|
     values_hash = {}
@@ -253,6 +238,8 @@ namespace :'phantom-dc' do
       puts v[0] + " : " + appears_percent.to_s + "% (" + required_percent.to_s + "%)"
     end
   end
+
+
   desc "Run through filling out of all congress members"
   task :fill_out_all, :regex do |t, args|
     response = Typhoeus.get("https://raw.githubusercontent.com/EFForg/congress-zip-plus-four/master/legislators.json")
@@ -276,7 +263,7 @@ namespace :'phantom-dc' do
     cm.each do |c|
       if congress_defaults.include? c.bioguide_id
         if !c.has_captcha?
-          noncaptchad.push(c) 
+          noncaptchad.push(c)
         else
           captchad.push(c)
         end
@@ -329,6 +316,7 @@ namespace :'phantom-dc' do
   end
 end
 
+
 def update_db_with_git_object g, data_source
     current_commit = data_source.latest_commit
 
@@ -361,11 +349,12 @@ def update_db_with_git_object g, data_source
           end
         end
       end
-      
+
       data_source.latest_commit = new_commit
       data_source.save
     end
 end
+
 
 def create_congress_member_exception_wrapper file_path
   begin
@@ -379,35 +368,55 @@ def create_congress_member_exception_wrapper file_path
   end
 end
 
-
+#
+# Create new CongressMember from hash
+#
 def create_congress_member_from_hash congress_member_details, prefix
   CongressMember.with_new_or_existing_bioguide(prefix + congress_member_details["bioguide"]) do |c|
     step_increment = 0
-    congress_member_details["contact_form"]["steps"].each do |s|
-      action, value = s.first
-      case action
-      when "visit"
-        create_action_add_to_member(action, step_increment += 1, c) do |cmf|
-          cmf.value = value
-        end
-      when "fill_in", "select", "click_on", "find", "check", "uncheck", "choose", "wait", "javascript"
-        value.each do |field|
-          create_action_add_to_member(action, step_increment += 1, c) do |cmf|
-            field.each do |attribute|
-              if cmf.attributes.keys.include? attribute[0]
-                cmf.update_attribute(attribute[0], attribute[1])
-              end
-            end
-          end
-        end
-      end
-    end
+    congress_member_case_switch congress_member_details
     c.success_criteria = congress_member_details["contact_form"]["success"]
     c.updated_at = Time.now
     c.save
   end
 end
 
+#
+# Case switch for creating action for CongressMember
+#
+def congress_member_case_switch congress_member_details
+  congress_member_details["contact_form"]["steps"].each do |s|
+    action, value = s.first
+    case action
+    when "visit"
+      create_action_add_to_member(action, step_increment += 1, c) do |cmf|
+        cmf.value = value
+      end
+    when "fill_in", "select", "click_on", "find", "check", "uncheck", "choose", "wait", "javascript"
+      create_action_and_update_attributes value
+
+    end
+  end
+end
+
+#
+# Create action for CongressMember and update attributes
+#
+def create_action_and_update_attributes value
+  value.each do |field|
+    create_action_add_to_member(action, step_increment += 1, c) do |cmf|
+      field.each do |attribute|
+        if cmf.attributes.keys.include? attribute[0]
+          cmf.update_attribute(attribute[0], attribute[1])
+        end
+      end
+    end
+  end
+end
+
+#
+# Create action and add it to CongressMember
+#
 def create_action_add_to_member action, step, member
   cmf = CongressMemberAction.new(:action => action, :step => step)
   yield cmf
@@ -415,12 +424,16 @@ def create_action_add_to_member action, step, member
   cmf.save
 end
 
+
 def retrieve_captchad_cached captcha_hash, cm_id
   return captcha_hash[cm_id] if captcha_hash.include? cm_id
   return false
   #captcha_hash[cm_id] = CongressMember.find(cm_id).has_captcha?
 end
 
+#
+# Build hash from captcha
+#
 def build_captcha_hash
   captcha_hash = {}
   CongressMemberAction.where(value: "$CAPTCHA_SOLUTION").each do |cma|
@@ -429,6 +442,9 @@ def build_captcha_hash
   captcha_hash
 end
 
+#
+# Retrieve delayed jobs
+#
 def retrieve_jobs args
   job_id = args[:job_id].blank? ? nil : args[:job_id].to_i
 
@@ -436,5 +452,65 @@ def retrieve_jobs args
     Delayed::Job.where(queue: "error_or_failure")
   else
     [Delayed::Job.find(job_id)]
+  end
+end
+
+#
+# Push jobs
+#
+def push_jobs jobs
+  jobs.each do |job|
+    cm_id, cm_args = DelayedJobHelper::congress_member_id_and_args_from_handler(job.handler)
+    unless cm_args[1] == "rake" and args[:job_id].nil?
+      cm = CongressMember::retrieve_cached(cm_hash, cm_id)
+      if regex.nil? or regex.match(cm.bioguide_id)
+        if retrieve_captchad_cached(captcha_hash, cm.id)
+          captcha_jobs.push job
+        else
+          noncaptcha_jobs.push job
+        end
+      end
+    end
+  end
+end
+
+#
+# Process cached jobs for CongressMember
+#
+def congress_member_process_cached job
+  cm_id, cm_args = DelayedJobHelper::congress_member_id_and_args_from_handler(job.handler)
+  cm = CongressMember::retrieve_cached(cm_hash, cm_id)
+  puts red("Job #" + job.id.to_s + ", bioguide " + cm.bioguide_id)
+  pp cm_args
+  cm.fill_out_form cm_args[0].merge(overrides), cm_args[1]
+end
+
+#
+# Process captcha jobs for CongressMember
+#
+def process_captcha_jobs jobs
+  jobs.each do |job|
+    begin
+      result = congress_member_process_cached job
+      result do |img|
+        puts img
+        STDIN.gets.strip
+      end
+    rescue
+    end
+    job.destroy
+  end
+end
+
+#
+# Process noncaptcha jobs for CongressMember
+#
+def process_noncaptcha_jobs jobs
+  jobs.each do |job|
+    begin
+      result = congress_member_process_cached job
+    rescue
+    end
+    job.destroy
   end
 end
