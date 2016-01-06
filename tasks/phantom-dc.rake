@@ -216,6 +216,16 @@ namespace :'phantom-dc' do
       update_db_with_git_object g, ds
     end
   end
+  desc "Reload CongressMember record into db given data source and bioguide regex"
+  task :update_member, :data_source_name, :regex do |t, args|
+    data_source = args[:data_source_name].blank? ? nil : DataSource.find_by_name(args[:data_source_name])
+    cm = args[:regex].blank? ? [] : CongressMember.where("bioguide_id REGEXP '" + args[:regex].gsub("'","") + "'")
+
+    cm.each do |c|
+      f = data_source.path + '/' + data_source.yaml_subpath + '/' + c.bioguide_id + '.yaml'
+      update_db_member_by_file f, data_source.prefix
+    end
+  end
   desc "Set updated at for congress members"
   task :updated_at, :regex, :time do |t, args|
     time = args[:time].blank? ? Time.now : eval(args[:time])
@@ -348,23 +358,27 @@ def update_db_with_git_object g, data_source
 
       files_changed.each do |file_changed|
         f = data_source.path + '/' + file_changed
-        create_congress_member_exception_wrapper(f) do
-          begin
-            congress_member_details = YAML.load_file(f)
-            bioguide = congress_member_details["bioguide"]
-            CongressMember.find_or_create_by(bioguide_id: data_source.prefix + bioguide).actions.each { |a| a.destroy }
-            create_congress_member_from_hash congress_member_details, data_source.prefix
-          rescue Errno::ENOENT
-            puts "File " + f + " is missing, skipping..."
-          rescue NoMethodError
-            puts "File " + f + " does not have a bioguide defined, skipping..."
-          end
-        end
+        update_db_member_by_file f, data_source.prefix
       end
       
       data_source.latest_commit = new_commit
       data_source.save
     end
+end
+
+def update_db_member_by_file f, prefix
+  create_congress_member_exception_wrapper(f) do
+    begin
+      congress_member_details = YAML.load_file(f)
+      bioguide = congress_member_details["bioguide"]
+      CongressMember.find_or_create_by(bioguide_id: prefix + bioguide).actions.each { |a| a.destroy }
+      create_congress_member_from_hash congress_member_details, prefix
+    rescue Errno::ENOENT
+      puts "File " + f + " is missing, skipping..."
+    rescue NoMethodError
+      puts "File " + f + " does not have a bioguide defined, skipping..."
+    end
+  end
 end
 
 def create_congress_member_exception_wrapper file_path
