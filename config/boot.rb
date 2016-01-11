@@ -17,7 +17,7 @@ HEADLESS.start
 
 require 'capybara/poltergeist'
 Capybara.run_server = false
-Capybara.default_wait_time = 5
+Capybara.default_max_wait_time = 5
 
 
 SmartyStreets.configure do |c|
