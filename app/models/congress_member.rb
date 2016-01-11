@@ -332,11 +332,11 @@ class CongressMember < ActiveRecord::Base
         session.driver.quit
       when :webkit
         # ugly, but it works
-        pid = session.driver.browser.instance_variable_get("@connection").instance_variable_get("@pid")
-        stdin = session.driver.browser.instance_variable_get("@connection").instance_variable_get("@pipe_stdin")
-        stdout = session.driver.browser.instance_variable_get("@connection").instance_variable_get("@pipe_stdout")
-        stderr = session.driver.browser.instance_variable_get("@connection").instance_variable_get("@pipe_stderr")
-        socket = session.driver.browser.instance_variable_get("@connection").instance_variable_get("@socket")
+        pid = session.driver.instance_variable_get("@browser").instance_variable_get("@connection").instance_variable_get("@pid")
+        stdin = session.driver.instance_variable_get("@browser").instance_variable_get("@connection").instance_variable_get("@pipe_stdin")
+        stdout = session.driver.instance_variable_get("@browser").instance_variable_get("@connection").instance_variable_get("@pipe_stdout")
+        stderr = session.driver.instance_variable_get("@browser").instance_variable_get("@connection").instance_variable_get("@pipe_stderr")
+        socket = session.driver.instance_variable_get("@browser").instance_variable_get("@connection").instance_variable_get("@socket")
 
         stdin.close
         stdout.close
