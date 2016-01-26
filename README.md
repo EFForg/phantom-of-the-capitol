@@ -129,7 +129,7 @@ command.
 
 Create the mysql database:
 
-    $  cp config/database-example.rb config/database.rb; \
+    $  cp config/database.rb.example config/database.rb; \
 
        # fill in db info as with any rails app \
        vi config/database.rb; \
