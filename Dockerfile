@@ -61,6 +61,7 @@ RUN mkdir /home/phantomdc/phantom-of-the-capitol
 WORKDIR /home/phantomdc/phantom-of-the-capitol
 
 ADD Gemfile Gemfile.lock .ruby-gemset .ruby-version ./
+RUN bash -l -c 'gem install bundler'
 RUN bash -l -c 'bundle install'
 
 RUN mkdir app config db public spec tasks
