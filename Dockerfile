@@ -33,8 +33,6 @@ RUN export uid=1000 gid=1000 && \
     echo "phantomdc ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/phantomdc && \
     chmod 0440 /etc/sudoers.d/phantomdc && \
     chown ${uid}:${gid} -R /home/phantomdc
-USER phantomdc
-ENV HOME /home/phantomdc/
 
 # Get the rvm signing key in a secure way
 RUN mkdir /tmp/gpg && \
@@ -62,7 +60,11 @@ RUN mkdir /home/phantomdc/phantom-of-the-capitol
 WORKDIR /home/phantomdc/phantom-of-the-capitol
 
 ADD Gemfile Gemfile.lock .ruby-gemset .ruby-version ./
+RUN chown -R phantomdc:phantomdc /home/phantomdc
 RUN bash -l -c 'gem install bundler'
+
+USER phantomdc
+ENV HOME /home/phantomdc
 RUN bash -l -c 'bundle install'
 
 RUN mkdir app config db public spec tasks
@@ -77,6 +79,7 @@ ADD Procfile README.md Rakefile config.ru phantom-dc ./
 # Datasources should be a persistent volume, owned by phantomdc
 # All the above added files & directories should also be owned by phantomdc
 USER root
+RUN chown -R phantomdc:phantomdc /home/phantomdc/
 RUN mkdir /datasources
 RUN chown -R phantomdc:phantomdc /datasources .
 VOLUME /datasources
