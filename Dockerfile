@@ -34,13 +34,7 @@ RUN export uid=1000 gid=1000 && \
     chmod 0440 /etc/sudoers.d/phantomdc && \
     chown ${uid}:${gid} -R /home/phantomdc
 
-# Get the rvm signing key in a secure way
-RUN mkdir /tmp/gpg && \
-  chmod 700 /tmp/gpg && \
-  gpg --homedir /tmp/gpg --keyserver keys.gnupg.net --recv D39DC0E3 && \
-  gpg --homedir /tmp/gpg --export 409B6B1796C275462A1703113804BB82D39DC0E3 | gpg --import - && \
-  rm -rf /tmp/gpg
-
+USER phantomdc
 WORKDIR /home/phantomdc
 
 # Set up phantomjs, making sure to check the known good sha256sum
@@ -48,6 +42,13 @@ RUN curl -Lo phantomjs.tar.bz2 https://bitbucket.org/ariya/phantomjs/downloads/p
   bash -l -c '[ "`sha256sum phantomjs.tar.bz2 | cut -f1 -d" "`" = "86dd9a4bf4aee45f1a84c9f61cf1947c1d6dce9b9e8d2a907105da7852460d2f" ]' && \
   tar -jxvf phantomjs.tar.bz2 > /dev/null && \
   rm phantomjs.tar.bz2
+
+# Get the rvm signing key in a secure way
+RUN mkdir /tmp/gpg && \
+  chmod 700 /tmp/gpg && \
+  gpg --homedir /tmp/gpg --keyserver keys.gnupg.net --recv D39DC0E3 && \
+  gpg --homedir /tmp/gpg --export 409B6B1796C275462A1703113804BB82D39DC0E3 | gpg --import - && \
+  rm -rf /tmp/gpg
 
 RUN curl -O https://raw.githubusercontent.com/wayneeseguin/rvm/master/binscripts/rvm-installer
 RUN curl -O https://raw.githubusercontent.com/wayneeseguin/rvm/master/binscripts/rvm-installer.asc
@@ -59,12 +60,13 @@ RUN bash -l -c 'rvm install ruby-2.2.0'
 RUN mkdir /home/phantomdc/phantom-of-the-capitol
 WORKDIR /home/phantomdc/phantom-of-the-capitol
 
+USER root
 ADD Gemfile Gemfile.lock .ruby-gemset .ruby-version ./
 RUN chown -R phantomdc:phantomdc /home/phantomdc
-RUN bash -l -c 'gem install bundler'
 
 USER phantomdc
 ENV HOME /home/phantomdc
+RUN bash -l -c 'gem install bundler'
 RUN bash -l -c 'bundle install'
 
 RUN mkdir app config db public spec tasks
