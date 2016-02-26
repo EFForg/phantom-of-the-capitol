@@ -16,6 +16,7 @@ class FillStatus < ActiveRecord::Base
 
   belongs_to :congress_member
   belongs_to :campaign_tag
+  belongs_to :delayed_job, class_name: "::Delayed::Job"
 
   serialize :extra, LegacySerializer
 

@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 14) do
+ActiveRecord::Schema.define(version: 15) do
 
   create_table "application_settings", force: :cascade do |t|
     t.string   "key",        limit: 255
@@ -84,6 +84,7 @@ ActiveRecord::Schema.define(version: 14) do
     t.datetime "updated_at",                     null: false
     t.string   "status",             limit: 255
     t.string   "extra",              limit: 255
+    t.integer  "delayed_job_id",     limit: 4
   end
 
 end
