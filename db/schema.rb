@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 14) do
+ActiveRecord::Schema.define(version: 15) do
 
   create_table "application_settings", force: :cascade do |t|
     t.string   "key",        limit: 255
@@ -33,7 +33,7 @@ ActiveRecord::Schema.define(version: 14) do
     t.string  "name",                limit: 255
     t.string  "selector",            limit: 255
     t.string  "value",               limit: 255
-    t.boolean "required",            limit: 1,     default: false
+    t.boolean "required",                          default: false
     t.integer "maxlength",           limit: 4
     t.string  "captcha_selector",    limit: 255
     t.string  "captcha_id_selector", limit: 255
@@ -85,5 +85,12 @@ ActiveRecord::Schema.define(version: 14) do
     t.string   "status",             limit: 255
     t.string   "extra",              limit: 255
   end
+
+  create_table "fill_statuses_jobs", force: :cascade do |t|
+    t.integer "fill_status_id", limit: 4
+    t.integer "delayed_job_id", limit: 4
+  end
+
+  add_index "fill_statuses_jobs", ["fill_status_id", "delayed_job_id"], name: "index_fill_statuses_jobs_on_fill_status_id_and_delayed_job_id", unique: true, using: :btree
 
 end

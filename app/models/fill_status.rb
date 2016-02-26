@@ -17,6 +17,9 @@ class FillStatus < ActiveRecord::Base
   belongs_to :congress_member
   belongs_to :campaign_tag
 
+  has_one :fill_statuses_job, class_name: "::FillStatusesJob", dependent: :destroy
+  has_one :delayed_job, through: :fill_statuses_job
+
   serialize :extra, LegacySerializer
 
   def initialize attrs = {}
