@@ -11,6 +11,8 @@ class CongressMember < ActiveRecord::Base
 
   RECENT_FILL_IMAGE_BASE = 'https://img.shields.io/badge/'
   RECENT_FILL_IMAGE_EXT = '.svg'
+  
+  @@bioguide_id_ref = ''
 
   class FillFailure < StandardError
   end
@@ -40,8 +42,11 @@ class CongressMember < ActiveRecord::Base
 
   def fill_out_form f={}, ct = nil, &block
     status_fields = {congress_member: self, status: "success", extra: {}}.merge(ct.nil? ? {} : {campaign_tag: ct})
+
     begin
       begin
+        @@bioguide_id_ref = self.bioguide_id
+
         if REQUIRES_WATIR.include? self.bioguide_id
           success_hash = fill_out_form_with_watir f, &block
         elsif REQUIRES_WEBKIT.include? self.bioguide_id
@@ -76,6 +81,8 @@ class CongressMember < ActiveRecord::Base
       raise e
     ensure
       FillStatus.new(status_fields).save if RECORD_FILL_STATUSES
+      ActiveRecord::Base.connection.close
+      #puts "connection closed"
     end
     true
   end
@@ -203,6 +210,7 @@ class CongressMember < ActiveRecord::Base
 
     begin
       actions.order(:step).each do |a|
+ #       puts a.name
         case a.action
         when "visit"
           session.visit(a.value)
@@ -256,12 +264,29 @@ class CongressMember < ActiveRecord::Base
         when "select"
           begin
             session.within a.selector do
+              options = YAML.load a.options
+              
+              
+#              puts YAML.dump options
+
+#              if options.is_a?(Hash)
+#
+#               # puts options.keys
+#
+#                keykey=(f[a.value].gsub('? "','')).gsub('"','')
+#                puts keykey
+#                puts options['\n\t\t\t\t\t\t\t\t\t\t\tEconomy\n\t\t\t\t\t\t\t\t\t\t']
+#              end
+#
+#              puts options.count
+
               if f[a.value].nil?
+                #puts 3
                 unless PLACEHOLDER_VALUES.include? a.value
                   begin
-                    elem = session.find('option[value="' + a.value.gsub('"', '\"') + '"]')
+                    elem = session.find('option[value="' + a.value.to_s.gsub('"', '\"') + '"]')
                   rescue Capybara::Ambiguous
-                    elem = session.first('option[value="' + a.value.gsub('"', '\"') + '"]')
+                    elem = session.first('option[value="' + a.value.to_s.gsub('"', '\"') + '"]')
                   rescue Capybara::ElementNotFound
                     begin
                       elem = session.find('option', text: Regexp.compile("^" + Regexp.escape(a.value) + "$"))
@@ -271,11 +296,12 @@ class CongressMember < ActiveRecord::Base
                   end
                   elem.select_option
                 end
-              else
+              elsif  options.is_a?(Array) or (options[f[a.value]].nil? and options.is_a?(Hash))
+                #puts "use as the value"
                 begin
-                  elem = session.find('option[value="' + f[a.value].gsub('"', '\"') + '"]')
+                  elem = session.find('option[value="' + f[a.value].to_s.gsub('"', '\"') + '"]')
                 rescue Capybara::Ambiguous
-                  elem = session.first('option[value="' + f[a.value].gsub('"', '\"') + '"]')
+                  elem = session.first('option[value="' + f[a.value].to_s.gsub('"', '\"') + '"]')
                 rescue Capybara::ElementNotFound
                   begin
                     elem = session.find('option', text: Regexp.compile("^" + Regexp.escape(f[a.value]) + "$"))
@@ -284,10 +310,24 @@ class CongressMember < ActiveRecord::Base
                   end
                 end
                 elem.select_option
+              else
+                #puts "converted to key"
+                begin
+                  elem = session.find('option[value="' + options[f[a.value]].to_s.gsub('"', '\"') + '"]')
+                rescue Capybara::Ambiguous
+                  elem = session.first('option[value="' + options[f[a.value]].to_s.gsub('"', '\"') + '"]')
+                rescue Capybara::ElementNotFound
+                  begin
+                    elem = session.find('option', text: Regexp.compile("^" + Regexp.escape(options[f[a.value]]) + "$"))
+                  rescue Capybara::Ambiguous
+                    elem = session.first('option', text: Regexp.compile("^" + Regexp.escape(options[f[a.value]]) + "$"))
+                  end
+                end
+                elem.select_option
               end
             end
           rescue Capybara::ElementNotFound => e
-            raise e, e.message unless a.options == "DEPENDENT"
+            raise e, e.message unless (a.options == "DEPENDENT" or a.required == 0)
           end
         when "click_on"
           session.find(a.selector).click
@@ -302,6 +342,48 @@ class CongressMember < ActiveRecord::Base
           else
             session.find(a.selector, text: Regexp.compile(a.value), wait: wait_val)
           end
+        when "question" #find the question and match it to a hash key
+          pairs_hash = YAML.load a.pairs
+          q=session.find(a.question_selector).text
+          answer=pairs_hash[q]
+          session.find(a.answer_selector).set(answer) unless answer.nil?
+        when "math" 
+          q=session.find(a.question_selector).text #find the question
+          
+          if q[0].starts_with?("*") #replace the preceding "*" from the string
+            q=q[1..q.length-1]
+          end
+
+          if a.selector.to_s.length > 0 #if the question has a bunch of text, it's in the selector
+            q.sub! a.selector,""
+          end
+
+          q.sub! ":","" #remove the trailing ":"
+          q.strip!      #strip white space and it's assumed to be "number operator number"
+
+          parts = q.split(" ")
+          numbers = { "Zero" => 0, "One" => 1, "Two" => 2, "Three" => 3, "Four" => 4, "Five" => 5, "Six" => 6, "Seven" => 7, "Eight" => 8, "Nine" => 9 }
+
+          if parts[0].to_i == 0 && parts[0].to_s.length>1 #is the first number a string? Match it to the numbers hash above
+            parts[0]=numbers[parts[0]]
+          end
+
+          if parts[2].to_i == 0 && parts[2].to_s.length>1 #is the second number a string? Match it to the numbers hash above
+            parts[2]=numbers[parts[2]]
+          end
+
+          case parts[1]
+            when "+"
+              answer=parts[0].to_i+parts[2].to_i
+            when "-"
+              answer=parts[0].to_i-parts[2].to_i
+            when "*", "x", "X", "×"
+              answer=parts[0].to_i*parts[2].to_i
+            when "/", "÷"
+              answer=parts[0].to_i/parts[2].to_i
+          end
+
+          session.find(a.answer_selector).set(answer) unless answer.nil?
         when "check"
           session.find(a.selector).set(true)
         when "uncheck"
@@ -425,7 +507,7 @@ class CongressMember < ActiveRecord::Base
   end
 
   def self.random_screenshot_location
-    Padrino.root + "/public/screenshots/" + SecureRandom.hex(13) + ".png"
+    Padrino.root + "/public/screenshots/" + Time.now.strftime('%Y%m%d%H%M%S%L') + "_" + @@bioguide_id_ref + "-" + SecureRandom.hex(4) + ".png"
   end
 
   def has_captcha?
