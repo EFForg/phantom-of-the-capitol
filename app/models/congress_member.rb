@@ -72,6 +72,7 @@ class CongressMember < ActiveRecord::Base
         last_job.last_error = e.message + "\n" + e.backtrace.inspect
         last_job.save
         status_fields[:extra][:delayed_job_id] = last_job.id
+        status_fields[:delayed_job_id] = last_job.id
       end
       raise e
     ensure

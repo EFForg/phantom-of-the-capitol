@@ -149,6 +149,8 @@ CongressForms::App.controller do
 
   delete :'job-details/:job_id' do
     requires_job_id params, "retrieve job details"
+
+    # FillStatus.find_by(delayed_job_id: @job.id).update_params(delayed_job_id: nil)
     @job.destroy
     { status: "success" }.to_json
   end
@@ -210,6 +212,7 @@ CongressForms::App.controller do
     id, args = DelayedJobHelper::congress_member_id_and_args_from_handler @job.handler
     cm = CongressMember.find(id)
     fill_handler = FillHandler.new(cm, true)
+    # FillStatus.find_by(delayed_job_id: @job.id).update_params(delayed_job_id: nil)
     @job.destroy
 
     result = fill_handler.fill(*args)

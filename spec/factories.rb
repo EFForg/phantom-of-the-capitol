@@ -59,6 +59,7 @@ FactoryGirl.define do
           job.last_error = "Some failure"
           job.save
           fs.extra = { delayed_job_id: job.id, screenshot: "https://www.example.com/blah.png" }
+          fs.delayed_job_id = job.id
           fs.save
         end
       end
