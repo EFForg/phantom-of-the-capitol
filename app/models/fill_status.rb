@@ -1,3 +1,13 @@
+# Indicates whether a form fill was successful.
+# status:
+#   failure - indicates that all the actions were performed successfully, but
+#             the success criteria listed in the congress member's .yaml file
+#             was not met.
+#   error   - indicates that there was an error while performing the actions of
+#             filling the form.
+#   success - All of the actions were performed successfully and the
+#             "success criteria" was met
+#
 class FillStatus < ActiveRecord::Base
   scope :success, -> { where "status = 'success'" }
   scope :error, -> { where "status = 'error'" }

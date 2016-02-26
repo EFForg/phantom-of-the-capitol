@@ -1,4 +1,8 @@
 CongressForms::App.helpers do
+
+  # respond with an error if bio_id was not specified in params
+  # else lookup congress member, exposed as @c
+  # will respond with error if CongressMember not found
   def requires_bio_id params, retrieval_string
     return {status: "error", message: "You must provide a bio_id to retrieve the " + retrieval_string + "."}.to_json unless params.include? "bio_id"
 
