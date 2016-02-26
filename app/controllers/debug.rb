@@ -231,9 +231,17 @@ CongressForms::App.controller do
   get :'list-jobs/:bio_id' do
     requires_bio_id params, "list of jobs"
 
-    DelayedJobHelper::filter_jobs_by_member(Delayed::Job.where(queue: "error_or_failure").order(created_at: :desc), @c).map do |job|
-      job.as_json only: [:id, :created_at, :updated_at, :last_error]
-    end.to_json
+    jobs = []
+    @c.fill_statuses.order(created_at: :desc).each do |f|
+      extra = YAML.load f.extra
+      delayed_job_id = extra[:delayed_job_id]
+      begin
+        job = Delayed::Job.find(delayed_job_id)
+        jobs << (job.as_json only: [:id, :created_at, :updated_at, :last_error]) if job
+      rescue
+      end
+    end
+    jobs.to_json
   end
 
   private
