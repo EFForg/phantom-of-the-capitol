@@ -8,6 +8,7 @@ namespace :jobs do
   desc "Clear the delayed_job queue."
   task :clear => :environment do
     Delayed::Job.delete_all
+    FillStatusesJob.delete_all
   end
 
   desc 'delayed_job worker process'

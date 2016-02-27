@@ -149,7 +149,9 @@ CongressForms::App.controller do
 
   delete :'job-details/:job_id' do
     requires_job_id params, "retrieve job details"
-    @job.destroy
+
+    DelayedJobHelper::destroy_job_and_dependents @job
+
     { status: "success" }.to_json
   end
 
@@ -210,7 +212,8 @@ CongressForms::App.controller do
     id, args = DelayedJobHelper::congress_member_id_and_args_from_handler @job.handler
     cm = CongressMember.find(id)
     fill_handler = FillHandler.new(cm, true)
-    @job.destroy
+
+    DelayedJobHelper::destroy_job_and_dependents @job
 
     result = fill_handler.fill(*args)
     result[:uid] = SecureRandom.hex

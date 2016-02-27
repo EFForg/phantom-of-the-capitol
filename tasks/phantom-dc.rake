@@ -45,7 +45,7 @@ namespace :'phantom-dc' do
           end
         rescue
         end
-        job.destroy
+        DelayedJobHelper::destroy_job_and_dependents job
       end
       noncaptcha_jobs.each do |job|
         begin
@@ -56,7 +56,7 @@ namespace :'phantom-dc' do
           result = cm.fill_out_form cm_args[0].merge(overrides), cm_args[1]
         rescue
         end
-        job.destroy
+        DelayedJobHelper::destroy_job_and_dependents job
       end
     end
     desc "override a field on the Delayed::Job error_or_failure queue, optionally provide bioguide regex or job id"
@@ -94,7 +94,7 @@ namespace :'phantom-dc' do
         cm_id, = DelayedJobHelper::congress_member_id_and_args_from_handler(job.handler)
         if not args[:job_id].nil? or cm_id.to_i == cm.id
           puts red("Destroying job #" + job.id.to_s)
-          job.destroy
+          DelayedJobHelper::destroy_job_and_dependents job
         end
       end
     end
@@ -165,7 +165,7 @@ namespace :'phantom-dc' do
           end
         rescue
         end
-        job.destroy
+        DelayedJobHelper::destroy_job_and_dependents job
       end
     end
     desc "delete jobs that were generated during the fill_out_all rake task"
@@ -173,7 +173,7 @@ namespace :'phantom-dc' do
       jobs = Delayed::Job.where(queue: "error_or_failure")
       jobs.each do |job|
         handler = YAML.load job.handler
-        job.destroy if handler.args[1] == "rake"
+        DelayedJobHelper::destroy_job_and_dependents(job) if handler.args[1] == "rake"
       end
     end
     desc "fix duplicate values of any field: choose the first one"
