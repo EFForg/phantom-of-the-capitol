@@ -51,6 +51,14 @@ class DelayedJobHelper
     end
   end
 
+  def self.destroy_job_and_dependents job
+    begin
+      FillStatusesJob.find_by(delayed_job_id: job.id).destroy
+    rescue NoMethodError
+    end
+    job.destroy
+  end
+
 private
   def self.hash_from_mapping mapping
     children = mapping.children
