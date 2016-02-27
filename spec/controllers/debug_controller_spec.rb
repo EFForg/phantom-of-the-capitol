@@ -32,7 +32,7 @@ describe "Debug controller" do
       it "should give detailed recent statuses" do
         get '/recent-statuses-detailed/' + @c.bioguide_id, { debug_key: DEBUG_KEY }
         last_response_json = JSON.load(last_response.body)
-        expect(last_response_json.first["dj_id"]).to eq(YAML.load(@failure_fill_status.extra)[:delayed_job_id])
+        expect(last_response_json.first["dj_id"]).to eq(@failure_fill_status.delayed_job.id)
         expect(last_response_json.first["screenshot"]).to eq(YAML.load(@failure_fill_status.extra)[:screenshot])
       end
     end
@@ -282,7 +282,7 @@ describe "Debug controller" do
       end
 
       it "should provide the mock values" do
-        get '/job-details/' + YAML.load(@status.extra)[:delayed_job_id].to_s, { debug_key: DEBUG_KEY }
+        get '/job-details/' + @status.delayed_job.id.to_s, { debug_key: DEBUG_KEY }
         last_response_json = JSON.load(last_response.body)
 
         MOCK_VALUES.keys.each do |k|
@@ -291,7 +291,7 @@ describe "Debug controller" do
       end
 
       it "should provide the bioguide id" do
-        get '/job-details/' + YAML.load(@status.extra)[:delayed_job_id].to_s, { debug_key: DEBUG_KEY }
+        get '/job-details/' + @status.delayed_job.id.to_s, { debug_key: DEBUG_KEY }
         last_response_json = JSON.load(last_response.body)
 
           expect(last_response_json['bioguide']).to eq(@status.congress_member.bioguide_id)
@@ -356,7 +356,7 @@ describe "Debug controller" do
       end
 
       it "should accurately provide job details" do
-        job_id = YAML.load(@fill_status.extra)[:delayed_job_id]
+        job_id = @fill_status.delayed_job.id
         get '/job-details/' + job_id.to_s, { debug_key: DEBUG_KEY }
         last_response_json = JSON.load(last_response.body)
 
@@ -386,7 +386,7 @@ describe "Debug controller" do
       end
 
       it "should successfully modify a job" do
-        job_id = YAML.load(@fill_status.extra)[:delayed_job_id]
+        job_id = @fill_status.delayed_job.id
         arguments = [{
           "$NAME_FIRST" => "Testing",
           "$NAME_LAST" => "McTesterson"
@@ -425,7 +425,7 @@ describe "Debug controller" do
       end
 
       it "should successfully delete a job" do
-        job_id = YAML.load(@fill_status.extra)[:delayed_job_id]
+        job_id = @fill_status.delayed_job.id
         delete '/job-details/' + job_id.to_s, { debug_key: DEBUG_KEY }
 
         last_response_json = JSON.load(last_response.body)
@@ -462,7 +462,7 @@ describe "Debug controller" do
       end
 
       it "should perform the job successfully" do
-        job_id = YAML.load(@fill_status.extra)[:delayed_job_id]
+        job_id = @fill_status.delayed_job.id
         get '/perform-job/' + job_id.to_s, { debug_key: DEBUG_KEY }
         expect(last_response.status).to eq(200)
         last_response_json = JSON.load(last_response.body)
@@ -477,7 +477,7 @@ describe "Debug controller" do
       end
 
       it "should provide information that a captcha is needed and a uid" do
-        job_id = YAML.load(@fill_status.extra)[:delayed_job_id]
+        job_id = @fill_status.delayed_job.id
         get '/perform-job/' + job_id.to_s, { debug_key: DEBUG_KEY }
         expect(last_response.status).to eq(200)
         last_response_json = JSON.load(last_response.body)
@@ -507,7 +507,7 @@ describe "Debug controller" do
       end
 
       it "should perform the job successfully" do
-        job_id = YAML.load(@fill_status.extra)[:delayed_job_id]
+        job_id = @fill_status.delayed_job.id
         get '/perform-job/' + job_id.to_s, { debug_key: DEBUG_KEY }
         last_response_json = JSON.load(last_response.body)
         post '/perform-job-captcha/' + last_response_json["uid"], { debug_key: DEBUG_KEY, answer: "placeholder" }

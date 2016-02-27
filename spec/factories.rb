@@ -41,6 +41,10 @@ FactoryGirl.define do
     congress_member
   end
 
+  factory :fill_statuses_job do
+    fill_status
+  end
+
   factory :fill_status do
     congress_member
     campaign_tag
@@ -48,7 +52,7 @@ FactoryGirl.define do
 
     factory :fill_status_failure do
       status "failure"
-      extra({ delayed_job_id: 100, screenshot: "https://www.example.com/blah.png" })
+      extra({ screenshot: "https://www.example.com/blah.png" })
 
       factory :fill_status_failure_with_delayed_job do
         after(:create) do |fs|
@@ -58,8 +62,9 @@ FactoryGirl.define do
           job.run_at = Time.now
           job.last_error = "Some failure"
           job.save
-          fs.extra = { delayed_job_id: job.id, screenshot: "https://www.example.com/blah.png" }
+          fs.extra = { screenshot: "https://www.example.com/blah.png" }
           fs.save
+          create :fill_statuses_job, fill_status_id: fs.id, delayed_job_id: job.id
         end
       end
     end
