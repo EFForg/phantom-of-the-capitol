@@ -71,11 +71,15 @@ class CongressMember < ActiveRecord::Base
         last_job.run_at = Time.now
         last_job.last_error = e.message + "\n" + e.backtrace.inspect
         last_job.save
-        status_fields[:extra][:delayed_job_id] = last_job.id
       end
       raise e
     ensure
-      FillStatus.new(status_fields).save if RECORD_FILL_STATUSES
+      if RECORD_FILL_STATUSES
+        fs = FillStatus.create(status_fields)
+        if status_fields[:status] != "success"
+          FillStatusesJob.create(fill_status_id: fs.id, delayed_job_id: last_job.id)
+        end
+      end
     end
     true
   end

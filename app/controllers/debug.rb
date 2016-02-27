@@ -38,7 +38,7 @@ CongressForms::App.controller do
       if s.status == 'error' or s.status == 'failure'
         begin
           extra = YAML.load(s.extra)
-          status_hash = {id: s.id, status: s.status, run_at: s.updated_at, dj_id: extra[:delayed_job_id]}
+          status_hash = {id: s.id, status: s.status, run_at: s.updated_at, dj_id: s.delayed_job.id}
           status_hash[:screenshot] = extra[:screenshot] if extra.include? :screenshot
         rescue
           status_hash = {id: s.id, status: s.status, run_at: s.updated_at}
@@ -235,14 +235,8 @@ CongressForms::App.controller do
     requires_bio_id params, "list of jobs"
 
     jobs = []
-    @c.fill_statuses.order(created_at: :desc).each do |f|
-      extra = YAML.load f.extra
-      delayed_job_id = extra[:delayed_job_id]
-      begin
-        job = Delayed::Job.find(delayed_job_id)
-        jobs << (job.as_json only: [:id, :created_at, :updated_at, :last_error]) if job
-      rescue
-      end
+    @c.fill_statuses.joins(:delayed_job).order(created_at: :desc).each do |f|
+      jobs << (f.delayed_job.as_json only: [:id, :created_at, :updated_at, :last_error])
     end
     jobs.to_json
   end
