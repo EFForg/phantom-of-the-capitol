@@ -167,7 +167,8 @@ CongressForms::App.controller do
     if_arguments = JSON.parse(params["if_arguments"])
     then_arguments = JSON.parse(params["then_arguments"])
 
-    DelayedJobHelper::filter_jobs_by_member(Delayed::Job.where(queue: "error_or_failure").order(created_at: :desc), @c).map do |job|
+    @c.fill_statuses.joins(:delayed_job).order(created_at: :desc).each do |f|
+      job = f.delayed_job
       match = true
       cm_id, job_args = DelayedJobHelper::congress_member_id_and_args_from_handler(job.handler)
       if_arguments.each.with_index do |arg, arg_i|
