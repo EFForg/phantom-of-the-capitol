@@ -17,3 +17,14 @@ db:
     MYSQL_APP_PASSWORD: 'changeme'
   volumes:
     - /var/lib/mysql
+
+# Uncomment the following lines if you'd like the members of congress to be
+# updated from the YAML files every 15 minutes.  Otherwise you'll have to
+# manually update them via `rake phantom-dc:update_git` within the container.
+#
+#cron:
+#  image: docker
+#  volumes:
+#    - /var/run/docker.sock:/var/run/docker.sock
+#    - ./docker/cron/crontab:/etc/crontabs/root
+#  command: crond -f
