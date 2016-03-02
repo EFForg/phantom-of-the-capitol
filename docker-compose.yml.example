@@ -5,6 +5,7 @@ phantomdc:
   environment:
     RACK_ENV: production
     LOAD_CONGRESS: true
+    DEBUG_KEY: 'changeme'
   ports:
     - "3001:3001"
   volumes_from:

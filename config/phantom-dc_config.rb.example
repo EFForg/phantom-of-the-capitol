@@ -2,7 +2,7 @@
 
 CAPTCHA_TIMEOUT = ENV_PRIME['CAPTCHA_TIMEOUT'] || 120
 DELAY_ALL_NONCAPTCHA_FILLS = ENV_PRIME['DELAY_ALL_NONCAPTCHA_FILLS'] || false
-CORS_ALLOWED_DOMAINS = ENV_PRIME['CORS_ALLOWED_DOMAINS'] || %w[http://www.example.com]
+CORS_ALLOWED_DOMAINS = ENV_PRIME['CORS_ALLOWED_DOMAINS'] || %w[https://efforg.github.io]
 RECORD_FILL_STATUSES = ENV_PRIME['RECORD_FILL_STATUSES'] || true
 DEBUG_KEY = ENV_PRIME['DEBUG_KEY'] || "" # password needed to access sensitive info on this instance. change!
 
