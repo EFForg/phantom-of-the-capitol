@@ -64,6 +64,15 @@ $  docker run -it --rm --name=phantom-dc
       bash -l -c 'rspec spec'
 ```
 
+You may also want to run a cron daemon for your production setup which pulls the latest YAML files from `contact-congress` or your other data sources every so often.  Only run this after giving time (~5min should do it) for the phantom-dc container to initially populate its members of congress upon the first run:
+
+```bash
+$  docker run -it --rm --name=phantom-dc-cron \
+      -v /var/run/docker.sock:/var/run/docker.sock \
+      -v $(pwd)/docker/cron/crontab:/etc/crontabs/root \
+      docker crond -f
+```
+
 ## Development Environment Installation and Setup with Vagrant
 
 #### Requirements
