@@ -1,10 +1,10 @@
-phantomdc:
+app:
   build: .
   links:
     - db
   environment:
     RACK_ENV: production
-    LOAD_CONGRESS: true
+    LOAD_CONGRESS: "true" # or "false", depending on whether you want congressional data loaded into your datasource
     DEBUG_KEY: 'changeme'
   ports:
     - "3001:3001"

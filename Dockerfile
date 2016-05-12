@@ -1,97 +1,49 @@
-FROM debian
+FROM ruby:2.2.0 
 
 MAINTAINER William Budington "bill@eff.org"
 
 RUN apt-get update && \
   apt-get install -y --no-install-recommends \
-    openssh-client \
-    curl \
-    imagemagick \
-    libmysql++-dev \
-    libpq-dev \
-    git \
     libqt5webkit5-dev \
     qt5-default \
     xvfb \
-    lsof \
-    sudo \
-    bzip2 \
-    ca-certificates && \
+    lsof && \
   apt-get clean && \
   rm -rf /var/lib/apt/lists/* \
     /tmp/* \
     /var/tmp/*
 
 # Create a symlink to what will be the phantomjs exec path
-RUN ln -s /home/phantomdc/phantomjs-2.1.1-linux-x86_64/bin/phantomjs /bin/phantomjs
-
-# Create a new user, phantomdc
-RUN export uid=1000 gid=1000 && \
-    mkdir -p /home/phantomdc && \
-    echo "phantomdc:x:${uid}:${gid}:PhantomDC,,,:/home/phantomdc:/bin/bash" >> /etc/passwd && \
-    echo "phantomdc:x:${uid}:" >> /etc/group && \
-    echo "phantomdc ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/phantomdc && \
-    chmod 0440 /etc/sudoers.d/phantomdc && \
-    chown ${uid}:${gid} -R /home/phantomdc
-
-USER phantomdc
-WORKDIR /home/phantomdc
+RUN ln -s /phantomjs-2.1.1-linux-x86_64/bin/phantomjs /bin/phantomjs
 
 # Set up phantomjs, making sure to check the known good sha256sum
-RUN curl -Lo phantomjs.tar.bz2 https://bitbucket.org/ariya/phantomjs/downloads/phantomjs-2.1.1-linux-x86_64.tar.bz2 && \
+RUN curl -sLo phantomjs.tar.bz2 https://bitbucket.org/ariya/phantomjs/downloads/phantomjs-2.1.1-linux-x86_64.tar.bz2 && \
   bash -l -c '[ "`sha256sum phantomjs.tar.bz2 | cut -f1 -d" "`" = "86dd9a4bf4aee45f1a84c9f61cf1947c1d6dce9b9e8d2a907105da7852460d2f" ]' && \
   tar -jxvf phantomjs.tar.bz2 > /dev/null && \
   rm phantomjs.tar.bz2
 
-# Get the rvm signing key in a secure way
-RUN mkdir /tmp/gpg && \
-  chmod 700 /tmp/gpg && \
-  gpg --homedir /tmp/gpg --keyserver keys.gnupg.net --recv D39DC0E3 && \
-  gpg --homedir /tmp/gpg --export 409B6B1796C275462A1703113804BB82D39DC0E3 | gpg --import - && \
-  rm -rf /tmp/gpg
-
-RUN curl -O https://raw.githubusercontent.com/wayneeseguin/rvm/master/binscripts/rvm-installer
-RUN curl -O https://raw.githubusercontent.com/wayneeseguin/rvm/master/binscripts/rvm-installer.asc
-RUN gpg --verify rvm-installer.asc
-
-RUN bash rvm-installer stable
-RUN bash -l -c 'rvm install ruby-2.2.0'
-
-RUN mkdir /home/phantomdc/phantom-of-the-capitol
-WORKDIR /home/phantomdc/phantom-of-the-capitol
-
-USER root
-ADD Gemfile Gemfile.lock .ruby-gemset .ruby-version ./
-RUN chown -R phantomdc:phantomdc /home/phantomdc
-
-USER phantomdc
-ENV HOME /home/phantomdc
-RUN bash -l -c 'gem install bundler'
-RUN bash -l -c 'bundle install'
-
-RUN mkdir app config db public spec tasks
-ADD app ./app/
-ADD config ./config/
-ADD db ./db/
-ADD public ./public/
-ADD spec ./spec/
-ADD tasks ./tasks/
-ADD Procfile README.md Rakefile config.ru phantom-dc ./
-
-# Datasources should be a persistent volume, owned by phantomdc
-# All the above added files & directories should also be owned by phantomdc
-USER root
-RUN chown -R phantomdc:phantomdc /home/phantomdc/
-RUN mkdir /datasources
-RUN chown -R phantomdc:phantomdc /datasources .
+# Datasources should be a persistent volume
 VOLUME /datasources
-USER phantomdc
+
+RUN mkdir /opt/phantomdc
+WORKDIR /opt/phantomdc
+ADD Gemfile Gemfile.lock ./
+
+RUN bundle install
+
+ADD app ./app
+ADD config ./config
+ADD db ./db
+ADD public ./public
+ADD spec ./spec
+ADD tasks ./tasks
+ADD Procfile README.md Rakefile config.ru phantom-dc ./
 
 RUN cp config/database.rb.example config/database.rb
 RUN cp config/phantom-dc_config.rb.example config/phantom-dc_config.rb
 
 ENV RACK_ENV production
 
-ADD ./docker/phantomdc/entrypoint.sh /home/phantomdc/
-CMD ["bash", "-l", "-c", "thin start --port 3001 --threaded"]
-ENTRYPOINT ["/home/phantomdc/entrypoint.sh"]
+ADD ./docker/app/entrypoint.sh ./
+CMD ["thin", "start", "--port", "3001", "--threaded"]
+ENTRYPOINT ["/opt/phantomdc/entrypoint.sh"]
