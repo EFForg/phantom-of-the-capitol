@@ -34,7 +34,7 @@ $  docker run -it --name=phantom-dc-db \
       -v /var/lib/mysql \
       -e MYSQL_ROOT_PASSWORD=changeme \
       -e MYSQL_APP_PASSWORD=changeme \
-      hainish/phantom-of-the-capitol-db
+      electronicfrontierfoundation/phantom-of-the-capitol-db
 ```
 ...and in another terminal...
 
@@ -46,7 +46,7 @@ $  docker run -it --rm --name=phantom-dc \
       -e CORS_ALLOWED_DOMAINS='http://example.com' \
       -e LOAD_CONGRESS=true \
       -e DEBUG_KEY=changeme \
-      hainish/phantom-of-the-capitol
+      electronicfrontierfoundation/phantom-of-the-capitol
 ```
 
 Take a look at `config/phantom-dc_config.rb.example` to get an idea of what configuration options you can pass on to the `phantom-dc` docker instance with the `-e` flag. In most instances, you'll want to change the AWS config options.
@@ -60,7 +60,7 @@ $  docker run -it --rm --name=phantom-dc
       --link=phantom-dc-db:db \
       --volumes-from=phantom-dc-db \
       -e RACK_ENV=test \
-      hainish/phantom-of-the-capitol \
+      electronicfrontierfoundation/phantom-of-the-capitol \
       bash -l -c 'rspec spec'
 ```
 
