@@ -14,6 +14,7 @@ namespace :'phantom-dc' do
 
       jobs = retrieve_jobs args
 
+      recaptcha_jobs = []
       captcha_jobs = []
       noncaptcha_jobs = []
 
@@ -26,7 +27,9 @@ namespace :'phantom-dc' do
           cm = CongressMember::retrieve_cached(cm_hash, cm_id)
 
           if regex.nil? or regex.match(cm.bioguide_id)
-            if retrieve_captchad_cached(captcha_hash, cm.id)
+            if cm.has_google_recaptcha?
+              recaptcha_jobs.push job
+            elsif retrieve_captchad_cached(captcha_hash, cm.id)
               captcha_jobs.push job
             else
               noncaptcha_jobs.push job
@@ -36,7 +39,7 @@ namespace :'phantom-dc' do
       end
 
       if ENV["RECAPTCHA_JOBS"]
-        jobs.each do |job|
+        recaptcha_jobs.each do |job|
           begin
             cm_id, cm_args = DelayedJobHelper::congress_member_id_and_args_from_handler(job.handler)
             cm = CongressMember::retrieve_cached(cm_hash, cm_id)
