@@ -45,9 +45,7 @@ namespace :'phantom-dc' do
             cm = CongressMember::retrieve_cached(cm_hash, cm_id)
             puts red("Job #" + job.id.to_s + ", bioguide " + cm.bioguide_id)
             pp cm_args
-            result = cm.fill_out_form_with_watir cm_args[0].merge(overrides)do |img|
-              STDIN.gets.strip
-            end
+            result = cm.fill_out_form_with_watir cm_args[0].merge(overrides)
           rescue
           end
           DelayedJobHelper::destroy_job_and_dependents job
@@ -61,6 +59,7 @@ namespace :'phantom-dc' do
           puts red("Job #" + job.id.to_s + ", bioguide " + cm.bioguide_id)
           pp cm_args
           result = cm.fill_out_form cm_args[0].merge(overrides), cm_args[1] do |img|
+            puts img
             STDIN.gets.strip
           end
         rescue
