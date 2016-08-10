@@ -90,6 +90,7 @@ class CongressMember < ActiveRecord::Base
     b = Watir::Browser.new
     begin
       actions.order(:step).each do |a|
+        p "#{a.action} - #{a.value}"
         case a.action
         when "visit"
           b.goto a.value
