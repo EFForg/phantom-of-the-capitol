@@ -24,6 +24,7 @@ namespace :'phantom-dc' do
         cm_id, cm_args = DelayedJobHelper::congress_member_id_and_args_from_handler(job.handler)
         unless cm_args[1] == "rake" and args[:job_id].nil?
           cm = CongressMember::retrieve_cached(cm_hash, cm_id)
+
           if regex.nil? or regex.match(cm.bioguide_id)
             if retrieve_captchad_cached(captcha_hash, cm.id)
               captcha_jobs.push job
@@ -33,6 +34,23 @@ namespace :'phantom-dc' do
           end
         end
       end
+
+      if ENV["RECAPTCHA_JOBS"]
+        jobs.each do |job|
+          begin
+            cm_id, cm_args = DelayedJobHelper::congress_member_id_and_args_from_handler(job.handler)
+            cm = CongressMember::retrieve_cached(cm_hash, cm_id)
+            puts red("Job #" + job.id.to_s + ", bioguide " + cm.bioguide_id)
+            pp cm_args
+            result = cm.fill_out_form_with_watir cm_args[0].merge(overrides)do |img|
+              STDIN.gets.strip
+            end
+          rescue
+          end
+          DelayedJobHelper::destroy_job_and_dependents job
+        end
+        exit
+      end
       captcha_jobs.each do |job|
         begin
           cm_id, cm_args = DelayedJobHelper::congress_member_id_and_args_from_handler(job.handler)
@@ -40,7 +58,6 @@ namespace :'phantom-dc' do
           puts red("Job #" + job.id.to_s + ", bioguide " + cm.bioguide_id)
           pp cm_args
           result = cm.fill_out_form cm_args[0].merge(overrides), cm_args[1] do |img|
-            puts img
             STDIN.gets.strip
           end
         rescue
@@ -404,7 +421,7 @@ def create_congress_member_from_hash congress_member_details, prefix
         create_action_add_to_member(action, step_increment += 1, c) do |cmf|
           cmf.value = value
         end
-      when "fill_in", "select", "click_on", "find", "check", "uncheck", "choose", "wait", "javascript"
+      when "fill_in", "select", "click_on", "find", "check", "uncheck", "choose", "wait", "javascript", "recaptcha"
         value.each do |field|
           create_action_add_to_member(action, step_increment += 1, c) do |cmf|
             field.each do |attribute|

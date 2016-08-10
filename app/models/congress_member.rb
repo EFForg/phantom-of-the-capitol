@@ -87,9 +87,10 @@ class CongressMember < ActiveRecord::Base
   # we might want to implement the "wait" option for the "find"
   # directive (see fill_out_form_with_poltergeist)
   def fill_out_form_with_watir f={}
-    b = Watir::Browser.new
+    b = Watir::Browser.new :chrome
     begin
       actions.order(:step).each do |a|
+        p "#{a.action} - #{a.value}"
         case a.action
         when "visit"
           b.goto a.value
@@ -164,6 +165,12 @@ class CongressMember < ActiveRecord::Base
           end
         when "javascript"
           b.execute_script(a.value)
+        when "recaptcha"
+          if ENV["RECAPTCHA_JOBS"]
+            sleep 100
+          else
+            return
+          end
         end
       end
 
