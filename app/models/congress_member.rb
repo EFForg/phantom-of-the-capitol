@@ -87,7 +87,7 @@ class CongressMember < ActiveRecord::Base
   # we might want to implement the "wait" option for the "find"
   # directive (see fill_out_form_with_poltergeist)
   def fill_out_form_with_watir f={}
-    b = Watir::Browser.new :chrome
+    b = Watir::Browser.new
     begin
       actions.order(:step).each do |a|
         case a.action
