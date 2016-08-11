@@ -5,8 +5,8 @@ require File.expand_path("../../app/helpers/delayed_job_helper.rb", __FILE__)
 
 namespace :'phantom-dc' do
   namespace :'delayed_job' do
-    desc "perform all fills on the Delayed::Job error_or_failure queue, captchad fills first, optionally provide bioguide regex or job id"
-    task :perform_fills, :regex, :job_id, :overrides do |t, args|
+    desc "perform all fills on the Delayed::Job error_or_failure queue, captchad fills first, optionally provide bioguide regex, job id or activate recaptcha fills mode"
+    task :perform_fills, :regex, :job_id, :overrides, :recaptcha_mode do |t, args|
       require 'pp'
 
       regex = args[:regex].blank? ? nil : Regexp.compile(args[:regex])
@@ -38,7 +38,7 @@ namespace :'phantom-dc' do
         end
       end
 
-      if ENV["RECAPTCHA_JOBS"]
+      if args[:recaptcha_mode].present?
         recaptcha_jobs.each do |job|
           begin
             cm_id, cm_args = DelayedJobHelper::congress_member_id_and_args_from_handler(job.handler)
@@ -77,6 +77,10 @@ namespace :'phantom-dc' do
         end
         DelayedJobHelper::destroy_job_and_dependents job
       end
+    end
+    desc "perform recaptcha fills by hand using watir, optionally provide bioguide regex or job id"
+    task :perform_recaptcha_fills, :regex, :job_id, :overrides do |t,args|
+      Rake::Task['phantom-dc:delayed_job:perform_fills'].invoke(args[:regex],args[:job_id],args[:overrides],true)
     end
     desc "override a field on the Delayed::Job error_or_failure queue, optionally provide bioguide regex or job id"
     task :override_field, :regex, :job_id, :overrides, :conditions do |t, args|
