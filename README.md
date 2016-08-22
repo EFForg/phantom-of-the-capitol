@@ -266,6 +266,24 @@ $  rake phantom-dc:delayed_job:zip4_retry
 $  rake phantom-dc:delayed_job:zip4_retry[A000000]
 ```
 
+## Manually Jobs That Have ReCaptchas
+
+Since forms with ReCaptchas cannot be filled automatically, nor can they use Phantom's CAPTCHA system, they have to be run manually afrer they error, using a local installation.
+
+First, comment out lines 15 and 16 in `boot.rb`:
+
+```ruby
+#HEADLESS = Headless.new
+#HEADLESS.start
+```
+
+Then run this rake task:
+
+### `rake phantom-dc:delayed_job:perform_recaptcha_fills`
+
+This will run each ReCaptcha job and open the form in a local Firefox browser, pre-filling it with information from the job. You can then manually fill the ReCaptcha and submit. To continue on, enter `Control-C` in the terminal to complete the current job and move to the next until they all are finished.
+
+
 ### Padrino Console
 
 If you prefer to dive deep, you can fire up the padrino console with `padrino c` and debug jobs:
