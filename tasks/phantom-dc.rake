@@ -5,8 +5,8 @@ require File.expand_path("../../app/helpers/delayed_job_helper.rb", __FILE__)
 
 namespace :'phantom-dc' do
   namespace :'delayed_job' do
-    desc "perform all fills on the Delayed::Job error_or_failure queue, captchad fills first, optionally provide bioguide regex or job id"
-    task :perform_fills, :regex, :job_id, :overrides do |t, args|
+    desc "perform all fills on the Delayed::Job error_or_failure queue, captchad fills first, optionally provide bioguide regex, job id or activate recaptcha fills mode"
+    task :perform_fills, :regex, :job_id, :overrides, :recaptcha_mode do |t, args|
       require 'pp'
 
       regex = args[:regex].blank? ? nil : Regexp.compile(args[:regex])
@@ -14,24 +14,43 @@ namespace :'phantom-dc' do
 
       jobs = retrieve_jobs args
 
+      recaptcha_jobs = []
       captcha_jobs = []
       noncaptcha_jobs = []
 
       cm_hash = CongressMember::to_hash CongressMember.all
-      captcha_hash = build_captcha_hash
+      captcha_hash,recaptcha_hash = build_captcha_hash
 
       jobs.each do |job|
         cm_id, cm_args = DelayedJobHelper::congress_member_id_and_args_from_handler(job.handler)
         unless cm_args[1] == "rake" and args[:job_id].nil?
           cm = CongressMember::retrieve_cached(cm_hash, cm_id)
+
           if regex.nil? or regex.match(cm.bioguide_id)
-            if retrieve_captchad_cached(captcha_hash, cm.id)
+            if retrieve_captchad_cached(recaptcha_hash, cm.id)
+              recaptcha_jobs.push job
+            elsif retrieve_captchad_cached(captcha_hash, cm.id)
               captcha_jobs.push job
             else
               noncaptcha_jobs.push job
             end
           end
         end
+      end
+
+      if args[:recaptcha_mode].present?
+        recaptcha_jobs.each do |job|
+          begin
+            cm_id, cm_args = DelayedJobHelper::congress_member_id_and_args_from_handler(job.handler)
+            cm = CongressMember::retrieve_cached(cm_hash, cm_id)
+            puts red("Job #" + job.id.to_s + ", bioguide " + cm.bioguide_id)
+            pp cm_args
+            result = cm.fill_out_form_with_watir cm_args[0].merge(overrides)
+          rescue
+          end
+          DelayedJobHelper::destroy_job_and_dependents job
+        end
+        exit
       end
       captcha_jobs.each do |job|
         begin
@@ -59,6 +78,10 @@ namespace :'phantom-dc' do
         DelayedJobHelper::destroy_job_and_dependents job
       end
     end
+    desc "perform recaptcha fills by hand using watir, optionally provide bioguide regex or job id"
+    task :perform_recaptcha_fills, :regex, :job_id, :overrides do |t,args|
+      Rake::Task['phantom-dc:delayed_job:perform_fills'].invoke(args[:regex],args[:job_id],args[:overrides],true)
+    end
     desc "override a field on the Delayed::Job error_or_failure queue, optionally provide bioguide regex or job id"
     task :override_field, :regex, :job_id, :overrides, :conditions do |t, args|
       regex = args[:regex].blank? ? nil : Regexp.compile(args[:regex])
@@ -68,7 +91,6 @@ namespace :'phantom-dc' do
       jobs = retrieve_jobs args
 
       cm_hash = CongressMember::to_hash CongressMember.all
-      captcha_hash = build_captcha_hash
 
       jobs.each do |job|
         cm_id, = DelayedJobHelper::congress_member_id_and_args_from_handler(job.handler)
@@ -404,7 +426,7 @@ def create_congress_member_from_hash congress_member_details, prefix
         create_action_add_to_member(action, step_increment += 1, c) do |cmf|
           cmf.value = value
         end
-      when "fill_in", "select", "click_on", "find", "check", "uncheck", "choose", "wait", "javascript"
+      when "fill_in", "select", "click_on", "find", "check", "uncheck", "choose", "wait", "javascript", "recaptcha"
         value.each do |field|
           create_action_add_to_member(action, step_increment += 1, c) do |cmf|
             field.each do |attribute|
@@ -440,7 +462,12 @@ def build_captcha_hash
   CongressMemberAction.where(value: "$CAPTCHA_SOLUTION").each do |cma|
     captcha_hash[cma.congress_member_id] = true
   end
-  captcha_hash
+
+  recaptcha_hash = {}
+  CongressMemberAction.where(action: "recaptcha").each do |cma|
+    recaptcha_hash[cma.congress_member_id] = true
+  end
+  [captcha_hash,recaptcha_hash]
 end
 
 def retrieve_jobs args

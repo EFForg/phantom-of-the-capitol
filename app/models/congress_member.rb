@@ -164,6 +164,8 @@ class CongressMember < ActiveRecord::Base
           end
         when "javascript"
           b.execute_script(a.value)
+        when "recaptcha"
+          sleep 100
         end
       end
 
@@ -318,6 +320,8 @@ class CongressMember < ActiveRecord::Base
           end
         when "javascript"
           session.driver.evaluate_script(a.value)
+        when "recaptcha"
+          raise
         end
       end
 
@@ -437,7 +441,7 @@ class CongressMember < ActiveRecord::Base
   end
 
   def has_google_recaptcha?
-    !actions.select{|action|action.options and action.options['google_recaptcha']}.empty?
+    !actions.select{|action|action.action and action.action == "recaptcha"}.empty?
   end
 
   def check_success body_text
