@@ -277,6 +277,8 @@ First, comment out lines 15 and 16 in `boot.rb`:
 #HEADLESS.start
 ```
 
+Make sure you're database configuration connects to whatever database has the ReCaptcha form fills.
+
 Then run this rake task:
 
 ### `rake phantom-dc:delayed_job:perform_recaptcha_fills`
