@@ -393,7 +393,7 @@ def update_db_member_by_file f, prefix
     begin
       congress_member_details = YAML.load_file(f)
       bioguide = congress_member_details["bioguide"]
-      CongressMember.find_or_create_by(bioguide_id: prefix + bioguide).actions.each { |a| a.destroy }
+      CongressMember.find_or_create_by(bioguide_id: prefix + bioguide).actions.delete_all
       create_congress_member_from_hash congress_member_details, prefix
     rescue Errno::ENOENT
       puts "File " + f + " is missing, skipping..."
@@ -431,7 +431,7 @@ def create_congress_member_from_hash congress_member_details, prefix
           create_action_add_to_member(action, step_increment += 1, c) do |cmf|
             field.each do |attribute|
               if cmf.attributes.keys.include? attribute[0]
-                cmf.update_attribute(attribute[0], attribute[1])
+                cmf.assign_attribute(attribute[0], attribute[1])
               end
             end
           end
