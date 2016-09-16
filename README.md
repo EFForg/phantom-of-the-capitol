@@ -64,7 +64,7 @@ $  docker run -it --rm --name=phantom-dc
       bash -l -c 'rspec spec'
 ```
 
-You may also want to run a cron daemon for your production setup which pulls the latest YAML files from `contact-congress` or your other data sources every so often.  Only run this after giving time (~5min should do it) for the phantom-dc container to initially populate its members of congress upon the first run:
+You may also want to run a cron daemon for your production setup which pulls the latest YAML files from `contact-congress` or your other data sources every so often.  Only run this after giving time for the phantom-dc container to initially populate its members of congress upon the first run:
 
 ```bash
 $  docker run -it --rm --name=phantom-dc-cron \
