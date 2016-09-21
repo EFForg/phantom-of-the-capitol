@@ -431,7 +431,7 @@ def create_congress_member_from_hash congress_member_details, prefix
           create_action_add_to_member(action, step_increment += 1, c) do |cmf|
             field.each do |attribute|
               if cmf.attributes.keys.include? attribute[0]
-                cmf.assign_attribute(attribute[0], attribute[1])
+                cmf.assign_attributes(attribute[0] => attribute[1])
               end
             end
           end
