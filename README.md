@@ -266,7 +266,7 @@ $  rake phantom-dc:delayed_job:zip4_retry
 $  rake phantom-dc:delayed_job:zip4_retry[A000000]
 ```
 
-## Manually Jobs That Have ReCaptchas
+## Manually Run Jobs That Have ReCaptchas
 
 Since forms with ReCaptchas cannot be filled automatically, nor can they use Phantom's CAPTCHA system, they have to be run manually afrer they error, using a local installation.
 
