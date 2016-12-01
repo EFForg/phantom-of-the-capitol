@@ -393,7 +393,8 @@ def update_db_member_by_file f, prefix
     begin
       congress_member_details = YAML.load_file(f)
       bioguide = congress_member_details["bioguide"]
-      CongressMember.find_or_create_by(bioguide_id: prefix + bioguide).actions.each { |a| a.destroy }
+      congress_member_details.merge!(get_legislator_info(bioguide))
+      CongressMember.find_or_create_by(bioguide_id: prefix + bioguide).actions.delete_all
       create_congress_member_from_hash congress_member_details, prefix
     rescue Errno::ENOENT
       puts "File " + f + " is missing, skipping..."
@@ -431,7 +432,7 @@ def create_congress_member_from_hash congress_member_details, prefix
           create_action_add_to_member(action, step_increment += 1, c) do |cmf|
             field.each do |attribute|
               if cmf.attributes.keys.include? attribute[0]
-                cmf.update_attribute(attribute[0], attribute[1])
+                cmf.assign_attributes(attribute[0] => attribute[1])
               end
             end
           end
@@ -439,6 +440,19 @@ def create_congress_member_from_hash congress_member_details, prefix
       end
     end
     c.success_criteria = congress_member_details["contact_form"]["success"]
+
+    term = congress_member_details["terms"][-1]
+    if term["type"] == "sen"
+      c.chamber = "senate"
+      c.senate_class = term["class"]
+      c.house_district = nil
+    else
+      c.chamber = "house"
+      c.house_district = term["district"]
+      c.senate_class = nil
+    end
+    c.state = term["state"]
+
     c.updated_at = Time.now
     c.save
   end
@@ -478,4 +492,20 @@ def retrieve_jobs args
   else
     [Delayed::Job.find(job_id)]
   end
+end
+
+def get_legislator_info(bioguide_id)
+  @legislator_info ||=
+    begin
+      url = "https://raw.githubusercontent.com/unitedstates/congress-legislators/master/legislators-current.yaml"
+      info = YAML.load(RestClient.get(url)).map{ |i| [i["id"]["bioguide"], i] }.to_h
+
+      url = "https://raw.githubusercontent.com/unitedstates/congress-legislators/master/legislators-historical.yaml"
+      historical_info = YAML.load(RestClient.get(url)).
+                        select{ |i| i["terms"][-1]["start"] > "2010-01-01" }.
+                        map{ |i| [i["id"]["bioguide"], i] }.to_h
+      info.merge!(historical_info)
+    end
+
+  @legislator_info.fetch(bioguide_id)
 end

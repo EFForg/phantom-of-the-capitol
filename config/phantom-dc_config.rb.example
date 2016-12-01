@@ -13,6 +13,17 @@ SMARTY_STREETS_TOKEN = ENV_PRIME['SMARTY_STREETS_TOKEN'] || ""
 # For the Sentry exception tracking platform.  Leave as nil if unused.
 SENTRY_DSN = nil
 
+# Communicating With Congress
+Cwc::Client.configure(
+  api_key: ENV_PRIME["CWC_API_KEY"],
+  host: ENV_PRIME["CWC_HOST"],
+  delivery_agent: ENV_PRIME["CWC_DELIVERY_AGENT"],
+  delivery_agent_ack_email: ENV_PRIME["CWC_DELIVERY_AGENT_ACK_EMAIL"],
+  delivery_agent_contact_name: ENV_PRIME["CWC_DELIVERY_AGENT_CONTACT_NAME"],
+  delivery_agent_contact_email: ENV_PRIME["CWC_DELIVERY_AGENT_CONTACT_EMAIL"],
+  delivery_agent_contact_phone: ENV_PRIME["CWC_DELIVERY_AGENT_CONTACT_PHONE"]
+)
+
 CarrierWave.configure do |config|
   config.fog_credentials = {
     provider:              ENV_PRIME['FOG_PROVIDER'] || 'Local', # AWS or Local

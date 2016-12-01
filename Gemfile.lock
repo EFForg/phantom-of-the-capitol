@@ -1,3 +1,8 @@
+PATH
+  remote: ../cwc
+  specs:
+    cwc (0.0.1)
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -311,6 +316,7 @@ DEPENDENCIES
   capybara
   capybara-webkit
   carrierwave
+  cwc!
   database_cleaner
   delayed_job_active_record
   enumerize

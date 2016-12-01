@@ -22,7 +22,13 @@ CongressForms::App.controller do
     response = {}
     bio_ids.each do |bio_id|
       c = CongressMember.bioguide(bio_id)
-      response[bio_id] = c.as_required_json unless c.nil?
+      next if c.nil?
+
+      if Cwc::Client.new.office_supported?(c.cwc_office_code)
+        response[bio_id] = c.as_cwc_required_json
+      else
+        response[bio_id] = c.as_required_json
+      end
     end
     response.to_json
   end
@@ -90,4 +96,13 @@ CongressForms::App.controller do
     end
   end
 
+
+  before :'fill-out-form' do
+    if params["bio_id"] && (cm = CongressMember.bioguide(params["bio_id"]))
+      if Cwc::Client.new.office_supported?(cm.cwc_office_code)
+        status, headers, body = call env.merge("PATH_INFO" => "/cwc/#{cm.cwc_office_code}/messages")
+        halt status, headers, body
+      end
+    end
+  end
 end

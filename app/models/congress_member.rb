@@ -38,6 +38,58 @@ class CongressMember < ActiveRecord::Base
     }.merge o)
   end
 
+  def as_cwc_required_json o={}
+    prefixes = [
+      "Mr.",
+      "Mrs.",
+      "Ms.",
+      "Mr. and Mrs.",
+      "Miss",
+      "Dr.",
+      "Dr. and Mrs.",
+      "Dr. and Mr.",
+      "Admiral",
+      "Captain",
+      "Chief Master Sergeant",
+      "Colonel",
+      "Commander",
+      "Corporal",
+      "Father",
+      "Lieutenant",
+      "Lieutenant Colonel",
+      "Master Sergeant",
+      "Reverend",
+      "Sergeant",
+      "Second Lieutenant",
+      "Sergeant Major",
+      "Sister",
+      "Technical Sergeant"
+    ]
+    {
+      required_actions: [
+        { "value" => "$NAME_PREFIX",	"maxlength" => nil,	"options_hash" => prefixes },
+        { "value" => "$NAME_FIRST",	"maxlength" => nil,	"options_hash" => nil },
+        { "value" => "$NAME_LAST",	"maxlength" => nil,	"options_hash" => nil },
+        { "value" => "$ADDRESS_STREET",	"maxlength" => nil,	"options_hash" => nil },
+        { "value" => "$ADDRESS_CITY",	"maxlength" => nil,	"options_hash" => nil },
+        { "value" => "$ADDRESS_ZIP5",	"maxlength" => nil,	"options_hash" => nil },
+        { "value" => "$EMAIL",		"maxlength" => nil,	"options_hash" => nil },
+        { "value" => "$SUBJECT",	"maxlength" => nil,	"options_hash" => nil },
+        { "value" => "$MESSAGE",	"maxlength" => nil,	"options_hash" => nil },
+        {
+          "value" => "$ADDRESS_STATE_POSTAL_ABBREV", "maxlength" => nil, "options_hash" => [
+            "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "DC", "FL", "GA",
+            "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD", "MA",
+            "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM", "NY",
+            "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX",
+            "UT", "VT", "VA", "WA", "WV", "WI", "WY"
+          ]
+        },
+        { "value" => "$TOPIC", "maxlength" => nil, "options_hash" => Cwc::TopicCodes}
+      ]
+    }.merge(o)
+  end
+
   def fill_out_form f={}, ct = nil, &block
     status_fields = {congress_member: self, status: "success", extra: {}}.merge(ct.nil? ? {} : {campaign_tag: ct})
     begin
@@ -476,6 +528,23 @@ class CongressMember < ActiveRecord::Base
       errors: statuses.error.count,
       failures: statuses.failure.count
     }
+  end
+
+  def cwc_office_code
+    if chamber == "senate"
+      sprintf("S%s%02d", state, senate_class-1)
+    else
+      sprintf("H%s%02d", state, house_district)
+    end
+  end
+
+  def self.find_by_cwc_office_code!(code)
+    office = Cwc::Office.new(code)
+    if office.senate?
+      find_by!(state: office.state, senate_class: office.senate_class)
+    else
+      find_by!(state: office.state, house_district: office.house_district)
+    end
   end
 
   def self.to_hash cm_array
