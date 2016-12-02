@@ -36,7 +36,7 @@ CongressForms::App.controller do
       constituent: {
         prefix:		fields["$NAME_PREFIX"],
         first_name:	fields["$NAME_FIRST"],
-        last_name:	fields["$NAME_FIRST"],
+        last_name:	fields["$NAME_LAST"],
         address:	Array(fields["$ADDRESS_STREET"]),
         city:		fields["$ADDRESS_CITY"],
         state_abbreviation: fields["$ADDRESS_STATE_POSTAL_ABBREV"],
