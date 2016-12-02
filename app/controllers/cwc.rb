@@ -14,8 +14,7 @@ CongressForms::App.controller do
     return { status: "error", message: "Congress member with provided bio id not found" }.to_json if cm.nil?
 
     missing_parameters = []
-    fields = params["fields"]
-    cm = CongressMember.find_by_cwc_office_code!(params[:office_code])
+    fields = params["fields"] || {}
     cm.as_cwc_required_json[:required_actions].each do |field|
       unless fields.include?(field["value"])
         missing_parameters << field["value"]
