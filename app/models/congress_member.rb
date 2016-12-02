@@ -420,6 +420,48 @@ class CongressMember < ActiveRecord::Base
     raise
   end
 
+  def message_via_cwc(fields, campaign_tag=nil)
+    cwc_client = Cwc::Client.new
+    message = cwc_client.create_message(
+      campaign_id: campaign_tag || SecureRandom.hex(16),
+
+      recipient: { member_office: cwc_office_code },
+
+      constituent: {
+        prefix:		fields["$NAME_PREFIX"],
+        first_name:	fields["$NAME_FIRST"],
+        last_name:	fields["$NAME_LAST"],
+        address:	Array(fields["$ADDRESS_STREET"]),
+        city:		fields["$ADDRESS_CITY"],
+        state_abbreviation: fields["$ADDRESS_STATE_POSTAL_ABBREV"],
+        zip:		fields["$ADDRESS_ZIP5"],
+        email:		fields["$EMAIL"]
+      },
+
+      message: {
+        subject: fields["$SUBJECT"],
+        library_of_congress_topics: Array(fields["$TOPIC"]),
+        constituent_message: fields["$MESSAGE"]
+      }
+    )
+
+    cwc_client.deliver(message)
+
+    if RECORD_FILL_STATUSES
+      status_fields = {
+        congress_member: self,
+        status: "success",
+        extra: {}
+      }
+
+      if campaign_tag
+        status_fields.merge!(campaign_tag: campaign_tag)
+      end
+
+      FillStatus.create(status_fields)
+    end
+  end
+
   def self.crop_screenshot_from_coords screenshot_location, x, y, width, height
     img = MiniMagick::Image.open(screenshot_location)
     img.crop width.to_s + 'x' + height.to_s + "+" + x.to_s + "+" + y.to_s

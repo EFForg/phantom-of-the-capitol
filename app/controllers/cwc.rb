@@ -27,47 +27,8 @@ CongressForms::App.controller do
       return { status: "error", message: message }.to_json
     end
 
-    cwc_client = Cwc::Client.new
-    message = cwc_client.create_message(
-      campaign_id: params["campaign_tag"] || SecureRandom.hex(16),
-
-      recipient: { member_office: params["office_code"] },
-
-      constituent: {
-        prefix:		fields["$NAME_PREFIX"],
-        first_name:	fields["$NAME_FIRST"],
-        last_name:	fields["$NAME_LAST"],
-        address:	Array(fields["$ADDRESS_STREET"]),
-        city:		fields["$ADDRESS_CITY"],
-        state_abbreviation: fields["$ADDRESS_STATE_POSTAL_ABBREV"],
-        zip:		fields["$ADDRESS_ZIP5"],
-        email:		fields["$EMAIL"]
-      },
-
-      message: {
-        subject: fields["$SUBJECT"],
-        library_of_congress_topics: Array(fields["$TOPIC"]),
-        constituent_message: fields["$MESSAGE"]
-      }
-    )
-
     begin
-      cwc_client.deliver(message)
-
-      if RECORD_FILL_STATUSES
-        status_fields = {
-          congress_member: cm,
-          status: "success",
-          extra: {}
-        }
-
-        if params["campaign_tag"]
-          status_fields.merge!(campaign_tag: params["campaign_tag"])
-        end
-
-        FillStatus.create(status_fields)
-      end
-
+      cm.message_via_cwc(fields, params["campaign_tag"])
       { status: "success" }.to_json
     rescue Cwc::BadRequest => e
       logger.warn("Cwc::BadRequest:")
