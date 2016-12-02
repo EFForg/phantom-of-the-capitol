@@ -53,6 +53,21 @@ CongressForms::App.controller do
 
     begin
       cwc_client.deliver(message)
+
+      if RECORD_FILL_STATUSES
+        status_fields = {
+          congress_member: cm,
+          status: "success",
+          extra: {}
+        }
+
+        if params["campaign_tag"]
+          status_fields.merge!(campaign_tag: params["campaign_tag"])
+        end
+
+        FillStatus.create(status_fields)
+      end
+
       { status: "success" }.to_json
     rescue Cwc::BadRequest => e
       logger.warn("Cwc::BadRequest:")
