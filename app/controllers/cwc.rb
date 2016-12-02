@@ -3,12 +3,15 @@ require "cwc"
 
 CongressForms::App.controller do
   get "cwc/:office_code/fields" do
-    cm = CongressMember.find_by_cwc_office_code!(params[:office_code])
+    cm = CongressMember.find_by_cwc_office_code(params[:office_code])
     cm.as_cwc_required_json.to_json
   end
 
   post "cwc/:office_code/messages" do
     content_type :json
+
+    cm = CongressMember.find_by_cwc_office_code(params[:office_code])
+    return { status: "error", message: "Congress member with provided bio id not found" }.to_json if cm.nil?
 
     missing_parameters = []
     fields = params["fields"]

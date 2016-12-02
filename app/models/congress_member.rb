@@ -538,12 +538,12 @@ class CongressMember < ActiveRecord::Base
     end
   end
 
-  def self.find_by_cwc_office_code!(code)
+  def self.find_by_cwc_office_code(code)
     office = Cwc::Office.new(code)
     if office.senate?
-      find_by!(state: office.state, senate_class: office.senate_class)
+      find_by(state: office.state, senate_class: office.senate_class)
     else
-      find_by!(state: office.state, house_district: office.house_district)
+      find_by(state: office.state, house_district: office.house_district)
     end
   end
 
