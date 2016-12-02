@@ -53,7 +53,10 @@ MOCK_VALUES = {
   "$ADDRESS_STREET" => "123 Main Street",
   "$ADDRESS_CITY" => "New York",
   "$ADDRESS_ZIP5" => "10112",
+  "$ADDRESS_STATE_POSTAL_ABBREV" => "NY",
   "$EMAIL" => "joe@example.com",
+  "$TOPIC" => "Education",
+  "$SUBJECT" => "Recent legislation",
   "$MESSAGE" => "I have concerns about the proposal....",
   "$NAME_PREFIX" => "4"
 }

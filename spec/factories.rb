@@ -3,6 +3,10 @@ FactoryGirl.define do
     bioguide_id "A000000"
     success_criteria({"headers"=>{"status"=>200}, "body"=>{"contains"=>"Thank you for your feedback!"}})
 
+    state "CA"
+    chamber "house"
+    house_district "12"
+
     factory :congress_member_with_actions_parent do
       after(:create) do |c|
         create :congress_member_action, action: "fill_in", name: 'zip', selector: '#zip', value: "$ADDRESS_ZIP5", required: true, step: 2, congress_member: c    

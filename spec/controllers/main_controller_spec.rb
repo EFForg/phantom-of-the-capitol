@@ -4,6 +4,10 @@ require 'spec_helper'
 require 'thin'
 
 describe "Main controller" do
+  before do
+    allow(Cwc::Client).to receive(:new){ double(:office_supported? => false ) }
+  end
+
   describe "running the Padrino app on an actual server" do
     before do
       Thread.new do
