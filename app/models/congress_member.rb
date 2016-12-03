@@ -420,9 +420,9 @@ class CongressMember < ActiveRecord::Base
     raise
   end
 
-  def message_via_cwc(fields, campaign_tag=nil)
+  def message_via_cwc(fields, campaign_tag: nil, organization: nil)
     cwc_client = Cwc::Client.new
-    message = cwc_client.create_message(
+    params = {
       campaign_id: campaign_tag || SecureRandom.hex(16),
 
       recipient: { member_office: cwc_office_code },
@@ -440,11 +440,18 @@ class CongressMember < ActiveRecord::Base
 
       message: {
         subject: fields["$SUBJECT"],
-        library_of_congress_topics: Array(fields["$TOPIC"]),
-        constituent_message: fields["$MESSAGE"]
+        library_of_congress_topics: Array(fields["$TOPIC"])
       }
-    )
+    }
 
+    if organization
+      params[:organization] = { name: organization }
+      params[:message][:organization_statement] = fields["$MESSAGE"]
+    else
+      params[:message][:constituent_message] = fields["$MESSAGE"]
+    end
+
+    message = cwc_client.create_message(params)
     cwc_client.deliver(message)
 
     if RECORD_FILL_STATUSES

@@ -41,6 +41,26 @@ describe "CWC controller" do
       expect(FillStatus.success.count).to eq(1)
     end
 
+    it "should use <OrganizationStatement> if organization query param is given" do
+      expect(Cwc::Client.new).to receive(:deliver) do |message|
+        expect(message.to_xml).to include("<OrganizationStatement>")
+        expect(message.to_xml).not_to include("<ConstituentMessage>")
+      end
+
+      c = create :congress_member_with_actions
+      post_json "/cwc/#{c.cwc_office_code}/messages", { "fields" => MOCK_VALUES, "organization" => "eff" }.to_json
+    end
+
+    it "should use <ConstituentMessage> if organization query param is not given" do
+      expect(Cwc::Client.new).to receive(:deliver) do |message|
+        expect(message.to_xml).to include("<ConstituentMessage>")
+        expect(message.to_xml).not_to include("<OrganizationStatement>")
+      end
+
+      c = create :congress_member_with_actions
+      post_json "/cwc/#{c.cwc_office_code}/messages", { "fields" => MOCK_VALUES }.to_json
+    end
+
     it "should create a new campaign tag record when sending successfully with a campaign tag specified" do
       expect(RestClient).to receive(:post){ true }
 

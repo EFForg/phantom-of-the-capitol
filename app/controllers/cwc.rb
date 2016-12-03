@@ -28,7 +28,8 @@ CongressForms::App.controller do
     end
 
     begin
-      cm.message_via_cwc(fields, params["campaign_tag"])
+      cm.message_via_cwc(fields, campaign_tag: params["campaign_tag"],
+                         organization: params["organization"])
       { status: "success" }.to_json
     rescue Cwc::BadRequest => e
       logger.warn("Cwc::BadRequest:")
