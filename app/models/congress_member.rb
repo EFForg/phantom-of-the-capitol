@@ -420,7 +420,7 @@ class CongressMember < ActiveRecord::Base
     raise
   end
 
-  def message_via_cwc(fields, campaign_tag: nil, organization: nil)
+  def message_via_cwc(fields, campaign_tag: nil, organization: nil, message_type: :constituent_message)
     cwc_client = Cwc::Client.new
     params = {
       campaign_id: campaign_tag || SecureRandom.hex(16),
@@ -445,11 +445,13 @@ class CongressMember < ActiveRecord::Base
     }
 
     if organization
-      params[:organization] = { name: organization }
-      params[:message][:organization_statement] = fields["$MESSAGE"]
-    else
-      params[:message][:constituent_message] = fields["$MESSAGE"]
+      params[:organization] = organization
     end
+
+    unless [:constituent_message, :organization_statement].include?(message_type)
+      raise ArgumentError.new("message_type must be either constituent_message or organization_statement")
+    end
+    params[:message][message_type] = fields["$MESSAGE"]
 
     message = cwc_client.create_message(params)
     cwc_client.deliver(message)
