@@ -27,26 +27,12 @@ CongressForms::App.controller do
       return { status: "error", message: message }.to_json
     end
 
-    message_type =
-      case params["message_type"]
-      when "constituent_message"
-        :constituent_message
-      when "organization_statement"
-        :organization_statement
-      when nil
-        :constituent_message
-      else
-        return { status: "error", message: "Invalid message_type value" }
-      end
-
     begin
       if params["organization"]
         cm.message_via_cwc(fields, campaign_tag: params["campaign_tag"],
-                           organization: { name: params["organization"] },
-                           message_type: message_type)
+                           organization: { name: params["organization"] })
       else
-        cm.message_via_cwc(fields, campaign_tag: params["campaign_tag"],
-                           message_type: message_type)
+        cm.message_via_cwc(fields, campaign_tag: params["campaign_tag"])
       end
       { status: "success" }.to_json
     rescue Cwc::BadRequest => e

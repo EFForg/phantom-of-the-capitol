@@ -448,10 +448,13 @@ class CongressMember < ActiveRecord::Base
       params[:organization] = organization
     end
 
-    unless [:constituent_message, :organization_statement].include?(message_type)
-      raise ArgumentError.new("message_type must be either constituent_message or organization_statement")
+    if fields["$STATEMENT"]
+      params[:message][:organization_statement] = fields["$STATEMENT"]
     end
-    params[:message][message_type] = fields["$MESSAGE"]
+
+    if fields["$MESSAGE"] && fields["$MESSAGE"] != fields["$STATEMENT"]
+      params[:message][:constituent_message] = fields["$MESSAGE"]
+    end
 
     message = cwc_client.create_message(params)
     cwc_client.deliver(message)
