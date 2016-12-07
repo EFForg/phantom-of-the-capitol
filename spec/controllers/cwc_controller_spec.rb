@@ -53,7 +53,7 @@ describe "CWC controller" do
       }.to_json
     end
 
-    it "should use <ConstituentMessage> if organization message_type param is not given" do
+    it "should use <ConstituentMessage> for messages by default" do
       expect(Cwc::Client.new).to receive(:deliver) do |message|
         expect(message.to_xml).to include("<ConstituentMessage>")
         expect(message.to_xml).not_to include("<OrganizationStatement>")
@@ -63,7 +63,19 @@ describe "CWC controller" do
       post_json "/cwc/#{c.cwc_office_code}/messages", { "fields" => MOCK_VALUES }.to_json
     end
 
-    it "should use <OrganizationStatement> if organization message_type param is organization_statement" do
+    it "should in <OrganizationStatement> if $STATEMENT field is given" do
+      expect(Cwc::Client.new).to receive(:deliver) do |message|
+        expect(message.to_xml).to include("<OrganizationStatement>")
+        expect(message.to_xml).to include("<ConstituentMessage>")
+      end
+
+      c = create :congress_member_with_actions
+      post_json "/cwc/#{c.cwc_office_code}/messages", {
+        "fields" => MOCK_VALUES.merge("$STATEMENT" => "a statement from the organization")
+      }.to_json
+    end
+
+    it "should not send a <ConstituentMessage> which is equal to <OrganizationStatement>" do
       expect(Cwc::Client.new).to receive(:deliver) do |message|
         expect(message.to_xml).to include("<OrganizationStatement>")
         expect(message.to_xml).not_to include("<ConstituentMessage>")
@@ -71,8 +83,7 @@ describe "CWC controller" do
 
       c = create :congress_member_with_actions
       post_json "/cwc/#{c.cwc_office_code}/messages", {
-        "fields" => MOCK_VALUES,
-        "message_type" => "organization_statement"
+        "fields" => MOCK_VALUES.merge("$STATEMENT" => MOCK_VALUES["$MESSAGE"])
       }.to_json
     end
 
