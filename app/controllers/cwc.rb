@@ -15,6 +15,7 @@ CongressForms::App.controller do
 
     missing_parameters = []
     fields = params["fields"] || {}
+    fields["$MESSAGE"] ||= fields["$STATEMENT"]
     cm.as_cwc_required_json[:required_actions].each do |field|
       unless fields.include?(field["value"])
         missing_parameters << field["value"]
