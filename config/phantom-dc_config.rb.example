@@ -14,7 +14,7 @@ SMARTY_STREETS_TOKEN = ENV_PRIME['SMARTY_STREETS_TOKEN'] || ""
 SENTRY_DSN = nil
 
 # Communicating With Congress
-unless ENV["RACK_ENV"] == "test"
+unless ENV["RACK_ENV"] == "test" || ENV_PRIME["CWC_API_KEY"].nil?
   Cwc::Client.configure(
     api_key: ENV_PRIME["CWC_API_KEY"],
     host: ENV_PRIME["CWC_HOST"],
