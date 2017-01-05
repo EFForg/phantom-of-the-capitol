@@ -452,7 +452,7 @@ class CongressMember < ActiveRecord::Base
       params[:message][:organization_statement] = fields["$STATEMENT"]
     end
 
-    if fields["$MESSAGE"] && fields["$MESSAGE"] != fields["$STATEMENT"]
+    if fields["$MESSAGE"]
       params[:message][:constituent_message] = fields["$MESSAGE"]
     end
 
