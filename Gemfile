@@ -50,6 +50,8 @@ gem 'smarty_streets'
 gem 'groupdate'
 gem 'sentry-raven'
 
+gem 'cwc', path: "./cwc"
+
 
 # Or Padrino Edge
 # gem 'padrino', :github => 'padrino/padrino-framework'

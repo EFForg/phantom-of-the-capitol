@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 15) do
+ActiveRecord::Schema.define(version: 16) do
 
   create_table "application_settings", force: :cascade do |t|
     t.string   "key",        limit: 255
@@ -45,6 +45,10 @@ ActiveRecord::Schema.define(version: 15) do
     t.string   "success_criteria", limit: 255
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.string   "state",            limit: 255
+    t.string   "chamber",          limit: 255
+    t.integer  "house_district",   limit: 4
+    t.integer  "senate_class",     limit: 4
   end
 
   add_index "congress_members", ["bioguide_id"], name: "index_congress_members_on_bioguide_id", unique: true, using: :btree

@@ -28,6 +28,7 @@ VOLUME /datasources
 RUN mkdir /opt/phantomdc
 WORKDIR /opt/phantomdc
 ADD Gemfile Gemfile.lock ./
+ADD ./cwc/ ./cwc
 
 RUN bundle install
 
