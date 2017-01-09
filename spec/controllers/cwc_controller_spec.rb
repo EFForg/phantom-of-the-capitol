@@ -75,6 +75,18 @@ describe "CWC controller" do
       }.to_json
     end
 
+    it "should not send a <ConstituentMessage> which is equal to <OrganizationStatement>" do
+      expect(Cwc::Client.new).to receive(:deliver) do |message|
+        expect(message.to_xml).to include("<OrganizationStatement>")
+        expect(message.to_xml).not_to include("<ConstituentMessage>")
+      end
+
+      c = create :congress_member_with_actions
+      post_json "/cwc/#{c.cwc_office_code}/messages", {
+        "fields" => MOCK_VALUES.merge("$STATEMENT" => MOCK_VALUES["$MESSAGE"])
+      }.to_json
+    end
+
     it "should create a new campaign tag record when sending successfully with a campaign tag specified" do
       expect(RestClient).to receive(:post){ true }
 
