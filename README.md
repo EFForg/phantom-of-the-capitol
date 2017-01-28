@@ -195,9 +195,9 @@ $  bundle exec rspec spec
 The [Congress Forms Debugger](https://github.com/efforg/congress-forms-test/) is a useful tool for debugging Phantom DC. To run it locally, in `config/phantom-dc_config.rb` first make sure to set `DEBUG_KEY` to a shared secret and `CORS_ALLOWED_DOMAINS` to add `localhost:8000` if the debugger is going to be run on port `8000`. Then:
 
 ```bash
-$  git clone https://github.com/EFForg/phantom-of-the-capitol &&
+$  git clone https://github.com/EFForg/congress-forms-test &&
    cd congress-forms-test &&
-   vim js/config.js # edit this file so that `CONTACT_CONGRESS_SERVER` points to your own `phantom-of-the-capitol` API root.
+   vim js/config.js # edit this file so that `PHANTOM_DC_SERVER` points to your own `phantom-of-the-capitol` API root.
 
 $  python -m SimpleHTTPServer # or configure apache for this endpoint
 ```
