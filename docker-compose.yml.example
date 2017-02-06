@@ -1,21 +1,15 @@
 app:
   build: .
-  links:
+  restart: always
+  depends_on:
     - db
-  environment:
-    RACK_ENV: production
-    LOAD_CONGRESS: "true" # or "false", depending on whether you want congressional data loaded into your datasource
-    DEBUG_KEY: 'changeme'
+  env_file: .env
   ports:
     - "3001:3001"
-  volumes_from:
-    - db
 
 db:
-  build: ./docker/db
-  environment:
-    MYSQL_ROOT_PASSWORD: 'changeme'
-    MYSQL_APP_PASSWORD: 'changeme'
+  image: mysql:5.7
+  env_file: .env
   volumes:
     - /var/lib/mysql
 
