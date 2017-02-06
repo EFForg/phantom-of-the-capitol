@@ -26,9 +26,9 @@ ActiveRecord::Base.configurations[:test] = {
   :reconnect => true,
   :database  => 'phantom_dc_test',
   :pool      => 100,
-  :username  => ENV['MYSQL_USER'],
-  :password  => ENV['MYSQL_PASSWORD'] || '',
-  :host      => ENV['MYSQL_HOST'] || '127.0.0.1'
+  :username  => ENV['MYSQL_TEST_USER'],
+  :password  => ENV['MYSQL_TEST_PASSWORD'] || '',
+  :host      => ENV['MYSQL_TEST_HOST'] || '127.0.0.1'
 }
 
 # Setup our logger
