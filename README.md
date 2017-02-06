@@ -27,41 +27,36 @@ This API is deployed for public consumption at [congressforms.eff.org](https://c
 
 Docker makes it easy to set up Phantom DC for development, production, and testing.
 
-Here's an example which will get you a quick production instance:
+Here's an example which will get you a quick development instance:
 
 ```bash
-$  docker run -it --name=phantom-dc-db \
-      -v /var/lib/mysql \
-      -e MYSQL_ROOT_PASSWORD=changeme \
-      -e MYSQL_APP_PASSWORD=changeme \
-      electronicfrontierfoundation/phantom-of-the-capitol-db
-```
-...and in another terminal...
-
-```bash
-$  docker run -it --rm --name=phantom-dc \
-      --link=phantom-dc-db:db \
-      -p 3001:3001 \
-      --volumes-from=phantom-dc-db \
-      -e CORS_ALLOWED_DOMAINS='http://example.com' \
-      -e LOAD_CONGRESS=true \
-      -e DEBUG_KEY=changeme \
-      electronicfrontierfoundation/phantom-of-the-capitol
+$  cp docker-compose.yml.example docker-compose.yml
+$  cp .env.example .env
+$  sudo docker-compose up --build
 ```
 
-Take a look at `config/phantom-dc_config.rb.example` to get an idea of what configuration options you can pass on to the `phantom-dc` docker instance with the `-e` flag. In most instances, you'll want to change the AWS config options.
+Take a look at `config/phantom-dc_config.rb.example` to get an idea of what configuration options you can pass on to the `phantom-dc` docker instance using environment variables in `.env`. In most instances, you'll want to change the AWS config options.
 
-To run in development mode, pass in `-e RACK_ENV=development`. If you're actively developing, you'll probably also want to share your host git path with the container by passing in `-v $(pwd):/home/phantomdc/phantom-of-the-capitol`.
+If you're actively developing, you'll probably also want to share your host directories path with the container by adding volumes to the `app` service in `docker-compose.yml`:
 
-To run the tests, run the `phantom-dc-db` instance as above, then run:
+```
+  app:
+    ...
+    volumes:
+      - ./cwc:/opt/phantomdc/cwc
+      - ./app:/opt/phantomdc/app
+      - ./public:/opt/phantomdc/public
+      - ./spec:/opt/phantomdc/spec
+      - ./tasks:/opt/phantomdc/tasks
+      - ./db/migrate:/opt/phantomdc/db/migrate
+      - ./docker/app/entrypoint.sh:/opt/phantomdc/entrypoint.sh
+```
+
+To run the test suite using docker, run:
 
 ```bash
-$  docker run -it --rm --name=phantom-dc
-      --link=phantom-dc-db:db \
-      --volumes-from=phantom-dc-db \
-      -e RACK_ENV=test \
-      electronicfrontierfoundation/phantom-of-the-capitol \
-      bash -l -c 'rspec spec'
+$    sudo docker-compose -f docker-compose.test.yml up
+$    sudo docker-compose -f docker-compose.test.yml run test_app rspec spec
 ```
 
 You may also want to run a cron daemon for your production setup which pulls the latest YAML files from `contact-congress` or your other data sources every so often.  Only run this after giving time (~5min should do it) for the phantom-dc container to initially populate its members of congress upon the first run:
