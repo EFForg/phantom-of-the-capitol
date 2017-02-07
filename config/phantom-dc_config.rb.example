@@ -41,7 +41,7 @@ end
 Padrino.use Rack::Cors do
   allow do
     origins CORS_ALLOWED_DOMAINS
-    resource '*', :headers => :any, :methods => [:post, :options]
+    resource '*', :headers => :any, :methods => [:get, :post, :options]
   end
 end
 
