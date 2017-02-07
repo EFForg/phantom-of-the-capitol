@@ -7,10 +7,6 @@ CongressForms::App.controller do
   end
 
   before do
-    if CORS_ALLOWED_DOMAINS.include? request.env['HTTP_ORIGIN'] or CORS_ALLOWED_DOMAINS.include? "*"
-      response.headers['Access-Control-Allow-Origin'] = request.env['HTTP_ORIGIN']
-      response.headers['Access-Control-Allow-Credentials'] = "true"
-    end
     response.headers['X-Backend-Hostname'] = Socket.gethostname
   end
 
@@ -40,6 +36,9 @@ CongressForms::App.controller do
 
     bio_id = params["bio_id"]
     fields = params["fields"]
+
+    puts "xxx post handler params #{@params}"
+    puts "xxx post handler fields #{fields}"
 
     c = CongressMember.bioguide(bio_id)
     return {status: "error", message: "Congress member with provided bio id not found"}.to_json if c.nil?
