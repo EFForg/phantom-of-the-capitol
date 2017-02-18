@@ -50,6 +50,7 @@ gem 'smarty_streets'
 gem 'groupdate'
 gem 'sentry-raven'
 gem 'dotenv'
+gem 'rack-cors'
 
 gem 'cwc', path: "./cwc"
 
