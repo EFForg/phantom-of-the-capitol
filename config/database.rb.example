@@ -1,12 +1,22 @@
+
+ENV["MYSQL_USER"] ||= "phantom_dc"
+ENV["MYSQL_PASSWORD"] ||= ENV["DB_ENV_MYSQL_APP_PASSWORD"]
+ENV["MYSQL_HOST"] ||= ENV["DB_PORT_3306_TCP_ADDR"]
+
+ENV["MYSQL_TEST_USER"] ||= "phantom_dc"
+ENV["MYSQL_TEST_PASSWORD"] ||= ENV["DB_ENV_MYSQL_APP_PASSWORD"]
+ENV["MYSQL_TEST_HOST"] ||= ENV["DB_PORT_3306_TCP_ADDR"]
+
+
 ActiveRecord::Base.configurations[:development] = {
   :adapter => 'mysql2',
   :encoding  => 'utf8',
   :reconnect => true,
   :database  => 'phantom_dc_development',
   :pool      => 100,
-  :username  => 'phantom_dc',
-  :password  => ENV['DB_ENV_MYSQL_APP_PASSWORD'] || '',
-  :host      => ENV['DB_PORT_3306_TCP_ADDR'] || '127.0.0.1'
+  :username  => ENV['MYSQL_USER'],
+  :password  => ENV['MYSQL_PASSWORD'] || '',
+  :host      => ENV['MYSQL_HOST'] || '127.0.0.1'
 }
 
 ActiveRecord::Base.configurations[:production] = {
@@ -15,9 +25,9 @@ ActiveRecord::Base.configurations[:production] = {
   :reconnect => true,
   :database  => 'phantom_dc_production',
   :pool      => 100,
-  :username  => 'phantom_dc',
-  :password  => ENV['DB_ENV_MYSQL_APP_PASSWORD'] || '',
-  :host      => ENV['DB_PORT_3306_TCP_ADDR'] || '127.0.0.1'
+  :username  => ENV['MYSQL_USER'],
+  :password  => ENV['MYSQL_PASSWORD'] || '',
+  :host      => ENV['MYSQL_HOST'] || '127.0.0.1'
 }
 
 ActiveRecord::Base.configurations[:test] = {
@@ -26,9 +36,9 @@ ActiveRecord::Base.configurations[:test] = {
   :reconnect => true,
   :database  => 'phantom_dc_test',
   :pool      => 100,
-  :username  => 'phantom_dc',
-  :password  => ENV['DB_ENV_MYSQL_APP_PASSWORD'] || '',
-  :host      => ENV['DB_PORT_3306_TCP_ADDR'] || '127.0.0.1'
+  :username  => ENV['MYSQL_TEST_USER'],
+  :password  => ENV['MYSQL_TEST_PASSWORD'] || '',
+  :host      => ENV['MYSQL_TEST_HOST'] || '127.0.0.1'
 }
 
 # Setup our logger

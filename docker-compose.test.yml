@@ -1,0 +1,23 @@
+version: '2'
+services:
+  test_app:
+    build: .
+    command: "true"
+    depends_on:
+      - test_db
+    environment:
+      MYSQL_TEST_HOST: test_db
+      MYSQL_TEST_USER: phantom_dc
+      MYSQL_TEST_PASSWORD: changeme
+
+      RACK_ENV: test
+      DEBUG_KEY: changeme
+      LOAD_CONGRESS: "false"
+
+  test_db:
+    image: mysql:5.7
+    environment:
+      MYSQL_ROOT_PASSWORD: changeme
+      MYSQL_DATABASE: phantom_dc_test
+      MYSQL_USER: phantom_dc
+      MYSQL_PASSWORD: changeme

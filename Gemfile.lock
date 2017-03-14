@@ -51,6 +51,7 @@ GEM
     diff-lcs (1.2.5)
     domain_name (0.5.20161129)
       unf (>= 0.0.5, < 1.0.0)
+    dotenv (2.2.0)
     enumerable-lazy (0.0.1)
     enumerize (1.1.0)
       activesupport (>= 3.2)
@@ -334,6 +335,7 @@ DEPENDENCIES
   cwc!
   database_cleaner
   delayed_job_active_record
+  dotenv
   enumerize
   factory_girl
   fog

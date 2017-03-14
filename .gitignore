@@ -14,3 +14,4 @@ config/phantom-dc_config.rb
 .vagrant
 docker-compose.yml
 private/*
+.env
