@@ -441,18 +441,21 @@ def create_congress_member_from_hash congress_member_details, prefix
     end
     c.success_criteria = congress_member_details["contact_form"]["success"]
 
-    term = congress_member_details["terms"][-1]
-    if term["type"] == "sen"
-      c.chamber = "senate"
-      c.senate_class = term["class"]
-      c.house_district = nil
-    else
-      c.chamber = "house"
-      c.house_district = term["district"]
-      c.senate_class = nil
+    #Git updates shouldn't fail if we can't match a senate/house code from CWC, just let them proceed without it. Very useful for custom forms.
+    begin
+      term = congress_member_details["terms"][-1]
+      if term["type"] == "sen"
+        c.chamber = "senate"
+        c.senate_class = term["class"]
+        c.house_district = nil
+      else
+        c.chamber = "house"
+        c.house_district = term["district"]
+        c.senate_class = nil
+      end
+      c.state = term["state"]
+    rescue
     end
-    c.state = term["state"]
-
     c.updated_at = Time.now
     c.save
   end
@@ -507,5 +510,6 @@ def get_legislator_info(bioguide_id)
       info.merge!(historical_info)
     end
 
-  @legislator_info.fetch(bioguide_id)
+  #defaults to empty so it won't break if it fails to match the member to CWC data
+  @legislator_info.fetch(bioguide_id,{})
 end
