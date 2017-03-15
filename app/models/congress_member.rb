@@ -585,6 +585,8 @@ class CongressMember < ActiveRecord::Base
   end
 
   def cwc_office_code
+    #it should not raise an exception if we can't get a code here, so this return will trigger a fallback to legacy forms
+    return "" if chamber.nil?
     if chamber == "senate"
       sprintf("S%s%02d", state, senate_class-1)
     else
@@ -594,10 +596,11 @@ class CongressMember < ActiveRecord::Base
 
   def self.find_by_cwc_office_code(code)
     office = Cwc::Office.new(code)
+    #We should always load the latest congress member, since there might be more than one as reps change seats.
     if office.senate?
-      find_by(state: office.state, senate_class: office.senate_class)
+      where(state: office.state, senate_class: office.senate_class).order("id desc").first
     else
-      find_by(state: office.state, house_district: office.house_district)
+      where(state: office.state, house_district: office.house_district).order("id desc").first
     end
   end
 
