@@ -66,7 +66,7 @@ class CongressMember < ActiveRecord::Base
       "Technical Sergeant"
     ]
     {
-      required_actions: [
+      "required_actions" => [
         { "value" => "$NAME_PREFIX",	"maxlength" => nil,	"options_hash" => prefixes },
         { "value" => "$NAME_FIRST",	"maxlength" => nil,	"options_hash" => nil },
         { "value" => "$NAME_LAST",	"maxlength" => nil,	"options_hash" => nil },

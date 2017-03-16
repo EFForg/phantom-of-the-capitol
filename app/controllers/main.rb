@@ -32,13 +32,25 @@ CongressForms::App.controller do
   fh = FillHash.new
   post :'fill-out-form' do
     content_type :json
-    return {status: "error", message: "You must provide a bio_id and fields to fill out form."}.to_json unless params.include? "bio_id" and params.include? "fields"
+
+    return {status: "error", message: "You must provide a bio_id."}.to_json unless params.include? "bio_id"
 
     bio_id = params["bio_id"]
-    fields = params["fields"]
-
     c = CongressMember.bioguide(bio_id)
     return {status: "error", message: "Congress member with provided bio id not found"}.to_json if c.nil?
+
+    missing_parameters = []
+    fields = params["fields"] || {}
+    c.as_required_json["required_actions"].each do |field|
+      unless fields.include?(field["value"])
+        missing_parameters << field["value"]
+      end
+    end
+
+    if missing_parameters.any?
+      message = "Error: missing fields (#{missing_parameters.join(', ')})."
+      return { status: "error", message: message }.to_json
+    end
 
     handler = FillHandler.new(c)
     result = handler.fill fields, params["campaign_tag"]

@@ -16,7 +16,7 @@ CongressForms::App.controller do
     missing_parameters = []
     fields = params["fields"] || {}
     fields["$MESSAGE"] ||= fields["$STATEMENT"]
-    cm.as_cwc_required_json[:required_actions].each do |field|
+    cm.as_cwc_required_json["required_actions"].each do |field|
       unless fields.include?(field["value"])
         missing_parameters << field["value"]
       end
@@ -24,7 +24,7 @@ CongressForms::App.controller do
 
     if missing_parameters.any?
       see_other = "/cwc/#{params[:office_code]}/fields"
-      message = "Missing parameters (#{missing_parameters.join(', ')}). See #{see_other} for required parameters."
+      message = "Error: missing fields (#{missing_parameters.join(', ')}). See #{see_other} for required fields."
       return { status: "error", message: message }.to_json
     end
 

@@ -143,8 +143,9 @@ describe "Main controller" do
         "bio_id" => c.bioguide_id
       }.to_json
       last_response_json = JSON.load(last_response.body)
+
       expect(last_response_json["status"]).to eq("error")
-      expect(last_response_json["message"]).not_to be_nil # don't be brittle
+      expect(last_response_json["message"]).to include("missing fields")
     end
 
     it "should return json indicating an error and create a new Delayed Job when trying to fill out form of CongressMember with incorrect success criteria" do
