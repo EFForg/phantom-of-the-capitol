@@ -9,7 +9,7 @@ class PerformFills
     @overrides = overrides
   end
 
-  def execute(args: {})
+  def execute(args={})
     recaptcha_jobs, captcha_jobs, noncaptcha_jobs = filter_jobs
 
     if args[:recaptcha_mode].present?
@@ -79,9 +79,7 @@ class PerformFills
   end
 
   def filter_jobs
-    recaptcha_jobs = []
-    captcha_jobs = []
-    noncaptcha_jobs = []
+    recaptcha_jobs, captcha_jobs, noncaptcha_jobs = [], [], []
 
     jobs.each do |job|
       cm_id, _ = DelayedJobHelper::congress_member_id_and_args_from_handler(job.handler)

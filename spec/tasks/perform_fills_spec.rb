@@ -22,6 +22,43 @@ describe PerformFills do
       task.execute
     end
 
+    it "should process jobs in the right order" do
+      recaptcha_jobs, captcha_jobs, noncaptcha_jobs = double, double, double
+
+      task = PerformFills.new([])
+      expect(task).to receive(:filter_jobs){ [recaptcha_jobs, captcha_jobs, noncaptcha_jobs] }
+
+      expect(recaptcha_jobs).not_to receive(:each)
+      expect(captcha_jobs).to receive(:each).ordered
+      expect(noncaptcha_jobs).to receive(:each).ordered
+      task.execute
+    end
+
+    context "recaptcha_mode: true" do
+      it "should process only recaptcha jobs" do
+        recaptcha_jobs, captcha_jobs, noncaptcha_jobs = double, double, double
+
+        task = PerformFills.new([])
+        expect(task).to receive(:filter_jobs){ [recaptcha_jobs, captcha_jobs, noncaptcha_jobs] }
+
+        expect(recaptcha_jobs).to receive(:each)
+        expect(captcha_jobs).not_to receive(:each)
+        expect(noncaptcha_jobs).not_to receive(:each)
+        task.execute(recaptcha_mode: true)
+      end
+
+      it "should call #run_job with recaptcha: true" do
+        allow(DelayedJobHelper).to receive(:destroy_job_and_dependents)
+
+        recaptcha_job = double
+
+        task = PerformFills.new([])
+        expect(task).to receive(:filter_jobs){ [[recaptcha_job], [], []] }
+        expect(task).to receive(:run_job).with(recaptcha_job, recaptcha: true)
+        task.execute(recaptcha_mode: true)
+      end
+    end
+
     context "regex was given" do
       it "should call #run_job if congress member's bioguide matches the regex" do
         allow(CongressMember).to receive(:retrieve_cached).with(anything, congress_member.id.to_s){ congress_member }
