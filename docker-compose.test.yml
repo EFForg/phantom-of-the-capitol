@@ -16,6 +16,7 @@ services:
     volumes:
       - ./cwc:/opt/phantomdc/cwc
       - ./app:/opt/phantomdc/app
+      - ./config:/opt/phantomdc/config
       - ./public:/opt/phantomdc/public
       - ./spec:/opt/phantomdc/spec
       - ./tasks:/opt/phantomdc/tasks
