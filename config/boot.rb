@@ -60,6 +60,8 @@ end
 #
 Padrino.before_load do
   Padrino.dependency_paths << Padrino.root("app/uploaders/*.rb")
+  Padrino.dependency_paths << Padrino.root("app/tasks/*.rb")
+  Padrino.dependency_paths << Padrino.root("app/helpers/*.rb")
 end
 
 ##
