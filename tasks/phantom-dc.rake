@@ -13,10 +13,12 @@ namespace :'phantom-dc' do
       jobs = retrieve_jobs args
       PerformFills.new(jobs, regex: regex, overrides: overrides).execute(args)
     end
+
     desc "perform recaptcha fills by hand using watir, optionally provide bioguide regex or job id"
     task :perform_recaptcha_fills, :regex, :job_id, :overrides do |t,args|
-      Rake::Task['phantom-dc:delayed_job:perform_fills'].invoke(args[:regex],args[:job_id],args[:overrides],true)
+      Rake::Task['phantom-dc:delayed_job:perform_fills'].invoke(args[:regex], args[:job_id], args[:overrides], true)
     end
+
     desc "override a field on the Delayed::Job error_or_failure queue, optionally provide bioguide regex or job id"
     task :override_field, :regex, :job_id, :overrides, :conditions do |t, args|
       regex = args[:regex].blank? ? nil : Regexp.compile(args[:regex])
@@ -41,6 +43,7 @@ namespace :'phantom-dc' do
         end
       end
     end
+
     desc "destroy all fills on the Delayed::Job error_or_failure queue provided a specific bioguide or job_id"
     task :destroy_fills, :bioguide, :job_id do |t, args|
       cm = CongressMember.bioguide(args[:bioguide])
@@ -55,6 +58,7 @@ namespace :'phantom-dc' do
         end
       end
     end
+
     desc "calculate # of jobs per member on the Delayed::Job error_or_failure queue"
     task :jobs_per_member do |t, args|
       jobs = Delayed::Job.where(queue: "error_or_failure")
@@ -81,6 +85,7 @@ namespace :'phantom-dc' do
       puts "\nTotal members: "+people.length.to_s
       puts "Total captcha'd members: "+captchad_hash.length.to_s
     end
+
     desc "for error_or_failure jobs that have no zip4, look up the zip4, save, and retry"
     task :zip4_retry, :regex do |t, args|
       regex = args[:regex].blank? ? nil : Regexp.compile(args[:regex])
@@ -125,6 +130,7 @@ namespace :'phantom-dc' do
         DelayedJobHelper::destroy_job_and_dependents job
       end
     end
+
     desc "delete jobs that were generated during the fill_out_all rake task"
     task :delete_rake do |t, args|
       jobs = Delayed::Job.where(queue: "error_or_failure")
@@ -133,6 +139,7 @@ namespace :'phantom-dc' do
         DelayedJobHelper::destroy_job_and_dependents(job) if handler.args[1] == "rake"
       end
     end
+
     desc "fix duplicate values of any field: choose the first one"
     task :fix_duplicates, :field, :regex do |t, args|
       regex = args[:regex].blank? ? nil : Regexp.compile(args[:regex])
@@ -161,8 +168,8 @@ namespace :'phantom-dc' do
         job.save
       end
     end
-
   end
+
   desc "Git pull and reload changed CongressMember records into db"
   task :update_git do |t, args|
 
@@ -173,6 +180,7 @@ namespace :'phantom-dc' do
       update_db_with_git_object g, ds
     end
   end
+
   desc "Reload CongressMember record into db given data source and bioguide regex"
   task :update_member, :data_source_name, :regex do |t, args|
     data_source = args[:data_source_name].blank? ? nil : DataSource.find_by_name(args[:data_source_name])
@@ -183,6 +191,7 @@ namespace :'phantom-dc' do
       update_db_member_by_file f, data_source.prefix
     end
   end
+
   desc "Set updated at for congress members"
   task :updated_at, :regex, :time do |t, args|
     time = args[:time].blank? ? Time.now : eval(args[:time])
@@ -193,6 +202,7 @@ namespace :'phantom-dc' do
       c.save
     end
   end
+
   desc "Analyze how common the expected values of fields are"
   task :common_fields do |t, args|
     values_hash = {}
@@ -220,6 +230,7 @@ namespace :'phantom-dc' do
       puts v[0] + " : " + appears_percent.to_s + "% (" + required_percent.to_s + "%)"
     end
   end
+
   desc "Run through filling out of all congress members"
   task :fill_out_all, :regex do |t, args|
     response = Typhoeus.get("https://raw.githubusercontent.com/EFForg/congress-zip-plus-four/master/legislators.json")
