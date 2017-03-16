@@ -11,7 +11,7 @@ SMARTY_STREETS_ID = ENV_PRIME['SMARTY_STREETS_ID'] || ""
 SMARTY_STREETS_TOKEN = ENV_PRIME['SMARTY_STREETS_TOKEN'] || ""
 
 # For the Sentry exception tracking platform.  Leave as nil if unused.
-SENTRY_DSN = nil
+SENTRY_DSN = ENV_PRIME['SENTRY_DSN']
 
 # Communicating With Congress
 unless ENV["RACK_ENV"] == "test" || ENV_PRIME["CWC_API_KEY"].nil?

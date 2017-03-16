@@ -30,6 +30,8 @@ unless SENTRY_DSN.nil?
   Raven.configure do |config|
     config.dsn = SENTRY_DSN
   end
+
+  Padrino.use Raven::Rack
 end
 
 ##
