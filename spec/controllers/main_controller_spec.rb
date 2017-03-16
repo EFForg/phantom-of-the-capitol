@@ -171,6 +171,23 @@ describe "Main controller" do
       expect(FillStatus.success.count).to eq(1)
     end
 
+    it "should all but fill out a form when provided with the required values and test=1" do
+      c = create :congress_member_with_actions
+
+      expect(CongressMember).to receive(:bioguide){ c }.at_least(:once)
+      expect(c).not_to receive(:delay)
+      expect(c).not_to receive(:fill_out_form)
+
+      post_json @route, {
+        "bio_id" => c.bioguide_id,
+        "fields" => MOCK_VALUES,
+        "test" => "1"
+      }.to_json
+
+      expect(last_response.status).to eq(200)
+      expect(JSON.load(last_response.body)["status"]).to eq("success")
+    end
+
     it "should create a new campaign tag record when filling in a form successfully with a campaign tag specified" do
       c = create :congress_member_with_actions
       post_json @route, {

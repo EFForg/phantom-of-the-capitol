@@ -41,6 +41,16 @@ describe "CWC controller" do
       expect(FillStatus.success.count).to eq(1)
     end
 
+    it "should all but send a message when provided with the required values and test=1" do
+      expect(RestClient).not_to receive(:post)
+
+      c = create :congress_member_with_actions
+      post_json "/cwc/#{c.cwc_office_code}/messages", { "fields" => MOCK_VALUES, "test" => "1" }.to_json
+
+      expect(last_response.status).to eq(200)
+      expect(JSON.load(last_response.body)["status"]).to eq("success")
+    end
+
     it "should use <Organization> if organization query param is given" do
       expect(Cwc::Client.new).to receive(:deliver) do |message|
         expect(message.to_xml).to include("<Organization>eff</Organization>")

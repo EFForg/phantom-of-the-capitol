@@ -28,6 +28,10 @@ CongressForms::App.controller do
       return { status: "error", message: message }.to_json
     end
 
+    if params["test"] == "1"
+      return { status: "success" }.to_json
+    end
+
     begin
       if params["organization"]
         cm.message_via_cwc(fields, campaign_tag: params["campaign_tag"],

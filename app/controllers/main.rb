@@ -52,6 +52,10 @@ CongressForms::App.controller do
       return { status: "error", message: message }.to_json
     end
 
+    if params["test"] == "1"
+      return { status: "success" }.to_json
+    end
+
     handler = FillHandler.new(c)
     result = handler.fill fields, params["campaign_tag"]
     result[:uid] = SecureRandom.hex
