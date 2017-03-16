@@ -60,6 +60,11 @@ CongressForms::App.controller do
     result = handler.fill fields, params["campaign_tag"]
     result[:uid] = SecureRandom.hex
     fh[result[:uid]] = handler if result[:status] == "captcha_needed"
+
+    if result[:status] == "error"
+      Raven.capture_message("Form error: #{bio_id}", tags: { "form_error" => "true" })
+    end
+
     result.to_json
   end
 
