@@ -1,6 +1,6 @@
 FactoryGirl.define do
   factory :congress_member do
-    bioguide_id "A000000"
+    sequence(:bioguide_id){ |n| sprintf("A%06d", n) }
     success_criteria({"headers"=>{"status"=>200}, "body"=>{"contains"=>"Thank you for your feedback!"}})
 
     state "CA"

@@ -7,12 +7,11 @@ describe PerformFills do
   let(:congress_member){ create :congress_member_with_actions_and_captcha }
   let(:job){ congress_member.delay(queue: "error_or_failure").fill_out_form fields, campaign_tag }
 
-  before do
-    allow(CongressMember).to receive(:retrieve_cached).with(anything, congress_member.id.to_s){ congress_member }
-  end
-
-
   describe ".execute" do
+    before do
+      allow(CongressMember).to receive(:retrieve_cached).with(anything, congress_member.id.to_s){ congress_member }
+    end
+
     it "should call #run_job for each job's congress member, and destroy the job afterwards" do
       task = PerformFills.new([job])
       expect(task).to receive(:run_job).with(job)
@@ -78,6 +77,10 @@ describe PerformFills do
   end
 
   describe "#run_job" do
+    before do
+      allow(CongressMember).to receive(:retrieve_cached).with(anything, congress_member.id.to_s){ congress_member }
+    end
+
     it "should call #fill_out_form on the congress member, passing args and respecting overrides" do
       expect(congress_member).to receive(:fill_out_form).with(fields.merge(overrides), campaign_tag)
 
@@ -110,6 +113,27 @@ describe PerformFills do
         task = PerformFills.new([job], overrides: overrides)
         task.run_job(job, &block)
       end
+    end
+  end
+
+  describe "#filter_jobs" do
+    it "should partition jobs into recaptcha, captcha, and noncaptcha" do
+      captcha_cm = create :congress_member_with_actions_and_captcha
+      noncaptcha_cm = create :congress_member_with_actions
+      recaptcha_cm = create :congress_member_with_actions_and_captcha
+      recaptcha_cm.actions.where(value: "$CAPTCHA_SOLUTION").update_all(action: "recaptcha", value: nil)
+
+      jobs = [captcha_cm, noncaptcha_cm, recaptcha_cm].map do |cm|
+        cm.actions.reload
+        cm.delay(queue: "error_or_failure").fill_out_form fields, campaign_tag
+      end
+
+      captcha_jobs = [jobs[0]]
+      noncaptcha_jobs = [jobs[1]]
+      recaptcha_jobs = [jobs[2]]
+
+      task = PerformFills.new(jobs)
+      expect(task.filter_jobs).to eq([recaptcha_jobs, captcha_jobs, noncaptcha_jobs])
     end
   end
 end

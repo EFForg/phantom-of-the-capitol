@@ -60,6 +60,7 @@ class PerformFills
         CongressMemberAction.where(value: "$CAPTCHA_SOLUTION").each do |cma|
           hash[cma.congress_member_id] = true
         end
+        hash
       end
   end
 
@@ -70,6 +71,7 @@ class PerformFills
         CongressMemberAction.where(action: "recaptcha").each do |cma|
           hash[cma.congress_member_id] = true
         end
+        hash
       end
   end
 
