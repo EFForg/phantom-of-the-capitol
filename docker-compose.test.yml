@@ -13,6 +13,14 @@ services:
       RACK_ENV: test
       DEBUG_KEY: changeme
       LOAD_CONGRESS: "false"
+    volumes:
+      - ./cwc:/opt/phantomdc/cwc
+      - ./app:/opt/phantomdc/app
+      - ./public:/opt/phantomdc/public
+      - ./spec:/opt/phantomdc/spec
+      - ./tasks:/opt/phantomdc/tasks
+      - ./db/migrate:/opt/phantomdc/db/migrate
+      - ./docker/app/entrypoint.sh:/opt/phantomdc/entrypoint.sh
 
   test_db:
     image: mysql:5.7
