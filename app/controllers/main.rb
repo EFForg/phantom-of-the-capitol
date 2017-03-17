@@ -1,6 +1,7 @@
 require 'securerandom'
 
 CongressForms::App.controller do
+  helpers CwcHelper
 
   get :index do
     render :index

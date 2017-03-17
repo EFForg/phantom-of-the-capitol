@@ -1,6 +1,8 @@
 require "pp"
 
 class PerformFills
+  include CwcHelper
+
   attr_reader :jobs, :regex, :overrides
 
   def initialize(jobs, regex: nil, overrides: {})
@@ -43,6 +45,8 @@ class PerformFills
 
     if recaptcha
       cm.fill_out_form_with_watir cm_args[0].merge(overrides), &block
+    elsif cwc_office_supported?(cm.cwc_office_code)
+      cm.message_via_cwc(cm_args[0].merge(overrides), campaign_tag: cm_args[1])
     else
       cm.fill_out_form cm_args[0].merge(overrides), cm_args[1], &block
     end

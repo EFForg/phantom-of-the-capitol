@@ -104,6 +104,17 @@ describe PerformFills do
       end
     end
 
+    context "congress member is supported by Cwc" do
+      it "should call #message_via_cwc instead" do
+        expect(congress_member).to receive(:message_via_cwc).with(fields.merge(overrides), campaign_tag: campaign_tag)
+
+        task = PerformFills.new([job], overrides: overrides)
+        expect(task).to receive(:cwc_office_supported?).with(congress_member.cwc_office_code){ true }
+
+        task.run_job(job)
+      end
+    end
+
     context "block is given" do
       it "should pass block through to CongressMember#fill_out_form" do
         block = Proc.new{}
