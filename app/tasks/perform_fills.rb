@@ -16,7 +16,7 @@ class PerformFills
 
     if args[:recaptcha_mode].present?
       recaptcha_jobs.each do |job|
-        run_job(job, recaptcha: true)
+        run_job(job)
         DelayedJobHelper::destroy_job_and_dependents job
       end
       return
@@ -36,16 +36,16 @@ class PerformFills
     end
   end
 
-  def run_job(job, recaptcha: false, &block)
+  def run_job(job, &block)
     cm_id, cm_args = DelayedJobHelper::congress_member_id_and_args_from_handler(job.handler)
     cm = CongressMember::retrieve_cached(cm_hash, cm_id)
 
     puts red("Job #" + job.id.to_s + ", bioguide " + cm.bioguide_id)
     pp cm_args
 
-    if recaptcha
+    if recaptcha_member?(cm)
       cm.fill_out_form_with_watir cm_args[0].merge(overrides), &block
-    elsif cwc_office_supported?(cm.cwc_office_code)
+    elsif cwc_member?(cm)
       cm.message_via_cwc(cm_args[0].merge(overrides), campaign_tag: cm_args[1])
     else
       cm.fill_out_form cm_args[0].merge(overrides), cm_args[1], &block
@@ -79,9 +79,21 @@ class PerformFills
       end
   end
 
-  def retrieve_captchad_cached captcha_hash, cm_id
+  def retrieve_captchad_cached(captcha_hash, cm_id)
     return captcha_hash[cm_id] if captcha_hash.include? cm_id
     return false
+  end
+
+  def recaptcha_member?(cm)
+    !!retrieve_captchad_cached(recaptcha_hash, cm.id)
+  end
+
+  def captcha_member?(cm)
+    !!retrieve_captchad_cached(captcha_hash, cm.id)
+  end
+
+  def cwc_member?(cm)
+    cwc_office_supported?(cm.cwc_office_code)
   end
 
   def filter_jobs
@@ -91,14 +103,14 @@ class PerformFills
       cm_id, _ = DelayedJobHelper::congress_member_id_and_args_from_handler(job.handler)
       cm = CongressMember::retrieve_cached(cm_hash, cm_id)
 
-      if regex.nil? or regex.match(cm.bioguide_id)
-        if retrieve_captchad_cached(recaptcha_hash, cm.id)
-          recaptcha_jobs.push job
-        elsif retrieve_captchad_cached(captcha_hash, cm.id)
-          captcha_jobs.push job
-        else
-          noncaptcha_jobs.push job
-        end
+      next unless regex.nil? or regex.match(cm.bioguide_id)
+
+      if recaptcha_member?(cm)
+        recaptcha_jobs.push(job)
+      elsif captcha_member?(cm)
+        captcha_jobs.push(job)
+      else
+        noncaptcha_jobs.push(job)
       end
     end
 
