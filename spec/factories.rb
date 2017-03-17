@@ -38,6 +38,13 @@ FactoryGirl.define do
         end
       end
 
+      factory :congress_member_with_actions_and_recaptcha do
+        after(:create) do |c|
+          create :congress_member_action, action: "visit", value: "http://localhost:3002/with-captcha", step: 1, congress_member: c
+          create :congress_member_action, action: "recaptcha", congress_member: c
+          create :congress_member_action, action: "click_on", selector: 'input[type=submit]', value: "send", step: 15, congress_member: c
+        end
+      end
     end
   end
 

@@ -85,12 +85,7 @@ describe PerformFills do
     end
 
     context "congress member requires recaptcha" do
-      let(:congress_member) do
-        recaptcha_cm = create :congress_member_with_actions_and_captcha
-        recaptcha_cm.actions.where(value: "$CAPTCHA_SOLUTION").update_all(action: "recaptcha", value: nil)
-        recaptcha_cm.actions.reload
-        recaptcha_cm
-      end
+      let(:congress_member){ create :congress_member_with_actions_and_recaptcha }
 
       it "should call #fill_out_form_with_watir instead" do
         expect(congress_member).to receive(:fill_out_form_with_watir).with(fields.merge(overrides))
@@ -127,11 +122,9 @@ describe PerformFills do
     it "should partition jobs into recaptcha, captcha, and noncaptcha" do
       captcha_cm = create :congress_member_with_actions_and_captcha
       noncaptcha_cm = create :congress_member_with_actions
-      recaptcha_cm = create :congress_member_with_actions_and_captcha
-      recaptcha_cm.actions.where(value: "$CAPTCHA_SOLUTION").update_all(action: "recaptcha", value: nil)
+      recaptcha_cm = create :congress_member_with_actions_and_recaptcha
 
       jobs = [captcha_cm, noncaptcha_cm, recaptcha_cm].map do |cm|
-        cm.actions.reload
         cm.delay(queue: "error_or_failure").fill_out_form fields, campaign_tag
       end
 
