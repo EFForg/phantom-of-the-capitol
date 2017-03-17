@@ -56,6 +56,12 @@ class DelayedJobHelper
     job.destroy
   end
 
+  def self.destroy_jobs_and_dependents jobs
+    ids = jobs.map(&:id)
+    FillStatusesJob.where(delayed_job_id: ids).delete_all
+    Delayed::Job.where(id: ids).delete_all
+  end
+
 private
   def self.hash_from_mapping mapping
     children = mapping.children

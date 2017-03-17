@@ -168,6 +168,11 @@ namespace :'phantom-dc' do
         job.save
       end
     end
+
+    desc "deduplicate the job queue by legislator + message fields"
+    task :deduplicate do |t|
+      DeduplicateJobs.new(Delayed::Job.where(queue: "error_or_failure")).execute
+    end
   end
 
   desc "Git pull and reload changed CongressMember records into db"
