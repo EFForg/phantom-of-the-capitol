@@ -25,27 +25,33 @@ describe PerformFills do
     end
 
     it "should process jobs in the right order" do
-      recaptcha_jobs, captcha_jobs, noncaptcha_jobs = double, double, double
+      recaptcha_job = double("recaptcha_job")
+      captcha_job = double("captcha_job")
+      noncaptcha_job = double("noncaptcha_job")
 
       task = PerformFills.new([])
-      expect(task).to receive(:filter_jobs){ [recaptcha_jobs, captcha_jobs, noncaptcha_jobs] }
+      expect(task).to receive(:filter_jobs){ [[recaptcha_job], [captcha_job], [noncaptcha_job]] }
 
-      expect(recaptcha_jobs).not_to receive(:each)
-      expect(captcha_jobs).to receive(:each).ordered
-      expect(noncaptcha_jobs).to receive(:each).ordered
+      expect(task).not_to receive(:run_job).with(recaptcha_job)
+      expect(task).to receive(:run_job).with(captcha_job).ordered
+      expect(task).to receive(:run_job).with(noncaptcha_job).ordered
+      allow(DelayedJobHelper).to receive(:destroy_job_and_dependents)
+
       task.execute
     end
 
     context "recaptcha_mode: true" do
       it "should process only recaptcha jobs" do
-        recaptcha_jobs, captcha_jobs, noncaptcha_jobs = double, double, double
+        recaptcha_job, captcha_job, noncaptcha_job = double, double, double
 
         task = PerformFills.new([])
-        expect(task).to receive(:filter_jobs){ [recaptcha_jobs, captcha_jobs, noncaptcha_jobs] }
+        expect(task).to receive(:filter_jobs){ [[recaptcha_job], [captcha_job], [noncaptcha_job]] }
 
-        expect(recaptcha_jobs).to receive(:each)
-        expect(captcha_jobs).not_to receive(:each)
-        expect(noncaptcha_jobs).not_to receive(:each)
+        expect(task).to receive(:run_job).with(recaptcha_job)
+        expect(task).not_to receive(:run_job).with(captcha_job)
+        expect(task).not_to receive(:run_job).with(noncaptcha_job)
+        allow(DelayedJobHelper).to receive(:destroy_job_and_dependents)
+
         task.execute(recaptcha_mode: true)
       end
     end

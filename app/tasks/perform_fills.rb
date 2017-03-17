@@ -14,24 +14,20 @@ class PerformFills
   def execute(args={})
     recaptcha_jobs, captcha_jobs, noncaptcha_jobs = filter_jobs
 
+    queue = []
+
     if args[:recaptcha_mode].present?
-      recaptcha_jobs.each do |job|
-        run_job(job)
-        DelayedJobHelper::destroy_job_and_dependents job
-      end
-      return
+      queue.concat(recaptcha_jobs)
+    else
+      queue.concat(captcha_jobs)
+      queue.concat(noncaptcha_jobs)
     end
 
-    captcha_jobs.each do |job|
+    queue.each do |job|
       run_job(job) do |img|
         puts img
         STDIN.gets.strip
       end
-      DelayedJobHelper::destroy_job_and_dependents job
-    end
-
-    noncaptcha_jobs.each do |job|
-      run_job(job)
       DelayedJobHelper::destroy_job_and_dependents job
     end
   end
