@@ -186,6 +186,25 @@ namespace :'phantom-dc' do
     end
   end
 
+  desc "Update CWC office codes. Run once after switching to CWC delivery."
+  task :update_cwc_codes do |t, args|
+    CongressMember.all.each do |cm|
+      if term = get_legislator_info(cm.bioguide_id)["terms"].try(:last)
+        if term["type"] == "sen"
+          cm.chamber = "senate"
+          cm.senate_class = term["class"]
+          cm.house_district = nil
+        else
+          cm.chamber = "house"
+          cm.house_district = term["district"]
+          cm.senate_class = nil
+        end
+        cm.state = term["state"]
+        cm.save
+      end
+    end
+  end
+
   desc "Reload CongressMember record into db given data source and bioguide regex"
   task :update_member, :data_source_name, :regex do |t, args|
     data_source = args[:data_source_name].blank? ? nil : DataSource.find_by_name(args[:data_source_name])
@@ -392,9 +411,8 @@ def create_congress_member_from_hash congress_member_details, prefix
     end
     c.success_criteria = congress_member_details["contact_form"]["success"]
 
-    #Git updates shouldn't fail if we can't match a senate/house code from CWC, just let them proceed without it. Very useful for custom forms.
-    begin
-      term = congress_member_details["terms"][-1]
+    # Git updates shouldn't fail if we can't match a senate/house code from CWC, just let them proceed without it. Very useful for custom forms.
+    if term = get_legislator_info(c.bioguide_id)["terms"].try(:last)
       if term["type"] == "sen"
         c.chamber = "senate"
         c.senate_class = term["class"]
@@ -405,7 +423,6 @@ def create_congress_member_from_hash congress_member_details, prefix
         c.senate_class = nil
       end
       c.state = term["state"]
-    rescue
     end
     c.updated_at = Time.now
     c.save
@@ -442,6 +459,6 @@ def get_legislator_info(bioguide_id)
       info.merge!(historical_info)
     end
 
-  #defaults to empty so it won't break if it fails to match the member to CWC data
-  @legislator_info.fetch(bioguide_id,{})
+  # defaults to empty so it won't break if it fails to match the member to CWC data
+  @legislator_info.fetch(bioguide_id, {})
 end
