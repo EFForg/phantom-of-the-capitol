@@ -39,10 +39,21 @@ class PerformFills
     puts red("Job #" + job.id.to_s + ", bioguide " + cm.bioguide_id)
     pp cm_args
 
-    if recaptcha_member?(cm)
+    fields, campaign_tag = cm_args[0].merge(overrides), cm_args[1]
+
+    if cwc_member?(cm)
+      begin
+        fields["$SUBJECT"] ||= fields["$MESSAGE"].truncate_words(13)
+        fields["$ADDRESS_STATE_POSTAL_ABBREV"] ||= state
+
+        cm.message_via_cwc(fields, campaign_tag: campaign_tag)
+      rescue Cwc::BadRequest => e
+        warn("Cwc::BadRequest:")
+        e.errors.each{ |error| warn("  * #{error}") }
+        raise e
+      end
+    elsif recaptcha_member?(cm)
       cm.fill_out_form_with_watir cm_args[0].merge(overrides), &block
-    elsif cwc_member?(cm)
-      cm.message_via_cwc(cm_args[0].merge(overrides), campaign_tag: cm_args[1])
     else
       cm.fill_out_form cm_args[0].merge(overrides), cm_args[1], &block
     end
