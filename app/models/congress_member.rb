@@ -98,43 +98,44 @@ class CongressMember < ActiveRecord::Base
     }
     status_fields[:campaign_tag] = ct unless ct.nil?
 
-    begin
-      begin
-        if REQUIRES_WATIR.include? self.bioguide_id
-          success_hash = fill_out_form_with_watir f, &block
-        elsif REQUIRES_WEBKIT.include? self.bioguide_id
-          success_hash = fill_out_form_with_webkit f, &block
-        else
-          success_hash = fill_out_form_with_poltergeist f, &block
+    if REQUIRES_WATIR.include?(bioguide_id)
+      success_hash = fill_out_form_with_watir f, &block
+    elsif REQUIRES_WEBKIT.include?(bioguide_id)
+      success_hash = fill_out_form_with_webkit f, &block
+    else
+      success_hash = fill_out_form_with_poltergeist f, &block
+    end
+
+    unless success_hash[:success]
+      status_fields[:status] = success_hash[:exception] ? "error" : "failure"
+      status_fields[:extra][:screenshot] = success_hash[:screenshot]
+
+      if success_hash[:exception]
+        message = YAML.load(success_hash[:exception].message)
+
+        if message.is_a?(Hash) and message.include?(:screenshot)
+          status_fields[:extra][:screenshot] = message[:screenshot]
         end
-      rescue Exception => e
-        status_fields[:status] = "error"
-        message = YAML.load(e.message)
-        status_fields[:extra][:screenshot] = message[:screenshot] if message.is_a?(Hash) and message.include? :screenshot
-        raise e, message[:message] if message.is_a?(Hash)
-        raise e, message
       end
 
-      unless success_hash[:success]
-        status_fields[:status] = "failure"
-        status_fields[:extra][:screenshot] = success_hash[:screenshot] if success_hash.include? :screenshot
-        raise FillFailure, "Filling out the remote form was not successful"
-      end
-    rescue Exception => e
       # we need to add the job manually, since DJ doesn't handle yield blocks
       unless ENV['SKIP_DELAY']
-        last_job = DelayedJobHelper.create_job(self, f, ct, e)
-      end
-      raise e
-    ensure
-      if RECORD_FILL_STATUSES
-        fs = FillStatus.create(status_fields)
-        if status_fields[:status] != "success"
-          FillStatusesJob.create(fill_status_id: fs.id, delayed_job_id: last_job.id)
-        end
+        last_job = DelayedJobHelper.create_job(self, f, ct, success_hash[:exception])
       end
     end
-    true
+
+    if RECORD_FILL_STATUSES
+      fs = FillStatus.create(status_fields)
+      if status_fields[:status] != "success"
+        FillStatusesJob.create(fill_status_id: fs.id, delayed_job_id: last_job.id)
+      end
+    end
+
+    success_hash[:success]
+  end
+
+  def fill_out_form!(f={}, ct=nil, &block)
+    fill_out_form(f, ct, &block) or raise FillError.new
   end
 
   # we might want to implement the "wait" option for the "find"
@@ -224,13 +225,13 @@ class CongressMember < ActiveRecord::Base
 
       success = check_success b.text
 
-      success_hash = {success: success}
+      success_hash = { success: success }
       success_hash[:screenshot] = self.class::save_screenshot_and_store_watir(b.driver) if !success
       success_hash
     rescue Exception => e
-      message = {message: e.message}
+      message = {success: false, message: e.message, exception: e}
       message[:screenshot] = self.class::save_screenshot_and_store_watir(b.driver)
-      raise e, YAML.dump(message)
+      message
     ensure
       b.close
     end
@@ -384,9 +385,9 @@ class CongressMember < ActiveRecord::Base
       success_hash[:screenshot] = self.class::save_screenshot_and_store_poltergeist(session) if !success
       success_hash
     rescue Exception => e
-      message = {message: e.message}
+      message = {success: false, message: e.message, exception: e}
       message[:screenshot] = self.class::save_screenshot_and_store_poltergeist(session)
-      raise e, YAML.dump(message)
+      message
     ensure
       case driver
       when :poltergeist

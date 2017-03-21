@@ -50,14 +50,13 @@ class PerformFills
       rescue Cwc::BadRequest => e
         warn("Cwc::BadRequest:")
         e.errors.each{ |error| warn("  * #{error}") }
-        raise e
+        false
       end
     elsif recaptcha_member?(cm) && RACK_ENV != "development"
       cm.fill_out_form_with_watir cm_args[0].merge(overrides), &block
     elsif RACK_ENV != "development"
       cm.fill_out_form cm_args[0].merge(overrides), cm_args[1], &block
     end
-  rescue
   end
 
   def cm_hash

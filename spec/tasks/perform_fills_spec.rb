@@ -74,6 +74,7 @@ describe PerformFills do
   describe "#run_job" do
     before do
       allow(CongressMember).to receive(:retrieve_cached).with(anything, anything){ congress_member }
+      allow_any_instance_of(PerformFills).to receive(:cwc_office_supported?){ false }
     end
 
     it "should call #fill_out_form on the congress member, passing args and respecting overrides" do
@@ -81,13 +82,6 @@ describe PerformFills do
 
       task = PerformFills.new([job], overrides: overrides)
       task.run_job(job)
-    end
-
-    it "should swallow exceptions" do
-      expect(congress_member).to receive(:fill_out_form){ raise ArgumentError.new("oh no") }
-
-      task = PerformFills.new([job], overrides: overrides)
-      expect{ task.run_job(job) }.not_to raise_exception
     end
 
     context "congress member requires recaptcha" do

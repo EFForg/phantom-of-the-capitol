@@ -19,8 +19,6 @@ class FillHandler
             @answer
           end
         end
-      rescue Exception => e
-        @result = false
       end
       ActiveRecord::Base.connection.close
     end
