@@ -91,7 +91,13 @@ class CongressMember < ActiveRecord::Base
   end
 
   def fill_out_form f={}, ct = nil, &block
-    status_fields = {congress_member: self, status: "success", extra: {}}.merge(ct.nil? ? {} : {campaign_tag: ct})
+    status_fields = {
+      congress_member: self,
+      status: "success",
+      extra: {}
+    }
+    status_fields[:campaign_tag] = ct unless ct.nil?
+
     begin
       begin
         if REQUIRES_WATIR.include? self.bioguide_id
@@ -117,12 +123,7 @@ class CongressMember < ActiveRecord::Base
     rescue Exception => e
       # we need to add the job manually, since DJ doesn't handle yield blocks
       unless ENV['SKIP_DELAY']
-        self.delay(queue: "error_or_failure").fill_out_form f, ct
-        last_job = Delayed::Job.last
-        last_job.attempts = 1
-        last_job.run_at = Time.now
-        last_job.last_error = e.message + "\n" + e.backtrace.inspect
-        last_job.save
+        last_job = DelayedJobHelper.create_job(self, f, ct, e)
       end
       raise e
     ensure
