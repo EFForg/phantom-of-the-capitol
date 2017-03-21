@@ -52,9 +52,9 @@ class PerformFills
         e.errors.each{ |error| warn("  * #{error}") }
         raise e
       end
-    elsif recaptcha_member?(cm)
+    elsif recaptcha_member?(cm) && RACK_ENV == "production"
       cm.fill_out_form_with_watir cm_args[0].merge(overrides), &block
-    else
+    elsif && RACK_ENV == "production"
       cm.fill_out_form cm_args[0].merge(overrides), cm_args[1], &block
     end
   rescue
