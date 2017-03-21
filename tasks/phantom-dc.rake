@@ -7,6 +7,8 @@ namespace :'phantom-dc' do
   namespace :'delayed_job' do
     desc "perform all fills on the Delayed::Job error_or_failure queue, captchad fills first, optionally provide bioguide regex, job id or activate recaptcha fills mode"
     task :perform_fills, :regex, :job_id, :overrides, :recaptcha_mode do |t, args|
+      ActiveRecord::Base.logger.level = Logger::WARN
+
       regex = args[:regex].blank? ? nil : Regexp.compile(args[:regex])
       overrides = args[:overrides].blank? ? {} : eval(args[:overrides])
 
