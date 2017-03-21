@@ -54,7 +54,7 @@ class PerformFills
       end
     elsif recaptcha_member?(cm) && RACK_ENV == "production"
       cm.fill_out_form_with_watir cm_args[0].merge(overrides), &block
-    elsif && RACK_ENV == "production"
+    elsif RACK_ENV == "production"
       cm.fill_out_form cm_args[0].merge(overrides), cm_args[1], &block
     end
   rescue
