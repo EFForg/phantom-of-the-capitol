@@ -12,14 +12,20 @@ describe PerformFills do
       allow(CongressMember).to receive(:retrieve_cached).with(anything, congress_member.id.to_s){ congress_member }
     end
 
-    it "should call #run_job for each job's congress member, and destroy the job afterwards" do
+    it "should call #run_job for each job's congress member, and destroy the job afterwards if successful" do
       task = PerformFills.new([job])
-      expect(task).to receive(:run_job).with(job)
+      expect(task).to receive(:run_job).with(job){ true }
 
-      fsj = double
-      expect(FillStatusesJob).to receive(:find_by){ fsj }
-      expect(fsj).to receive(:destroy)
-      expect(job).to receive(:destroy)
+      expect(DelayedJobHelper).to receive(:destroy_job_and_dependents).with(job)
+
+      task.execute
+    end
+
+    it "should call #run_job for each job's congress member, and preserve the job afterwards if it failed" do
+      task = PerformFills.new([job])
+      expect(task).to receive(:run_job).with(job){ false }
+
+      expect(DelayedJobHelper).not_to receive(:destroy_job_and_dependents)
 
       task.execute
     end

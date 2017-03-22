@@ -24,11 +24,14 @@ class PerformFills
     end
 
     queue.each do |job|
-      run_job(job) do |img|
+      success = run_job(job) do |img|
         puts img
         STDIN.gets.strip
       end
-      DelayedJobHelper::destroy_job_and_dependents job
+
+      if success
+        DelayedJobHelper::destroy_job_and_dependents job
+      end
     end
   end
 
