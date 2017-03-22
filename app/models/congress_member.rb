@@ -117,25 +117,17 @@ class CongressMember < ActiveRecord::Base
           status_fields[:extra][:screenshot] = message[:screenshot]
         end
       end
-
-      # we need to add the job manually, since DJ doesn't handle yield blocks
-      unless ENV['SKIP_DELAY']
-        last_job = DelayedJobHelper.create_job(self, f, ct, success_hash[:exception])
-      end
     end
 
     if RECORD_FILL_STATUSES
-      fs = FillStatus.create(status_fields)
-      if status_fields[:status] != "success"
-        FillStatusesJob.create(fill_status_id: fs.id, delayed_job_id: last_job.id)
-      end
+      fill_status = FillStatus.create(status_fields)
     end
 
-    success_hash[:success]
+    [success_hash[:success], fill_status]
   end
 
   def fill_out_form!(f={}, ct=nil, &block)
-    fill_out_form(f, ct, &block) or raise FillError.new
+    fill_out_form(f, ct, &block)[0] or raise FillError.new
   end
 
   # we might want to implement the "wait" option for the "find"

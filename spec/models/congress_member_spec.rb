@@ -102,8 +102,8 @@ describe CongressMember do
       @congress_member = create :congress_member_with_actions, success_criteria: YAML.dump({"headers"=>{"status"=>200}, "body"=>{"contains"=>"Won't get me!"}})
     end
 
-    it "should return false filling out a form via CongressMember.fill_out_form" do
-      expect(@congress_member.fill_out_form(MOCK_VALUES)).to be false
+    it "should return [false, fill_status] filling out a form via CongressMember.fill_out_form" do
+      expect(@congress_member.fill_out_form(MOCK_VALUES)[0]).to be false
     end
 
     it "should add a failure record to the FillStatus table when filling out a form via CongressMember.fill_out_form" do
@@ -123,8 +123,8 @@ describe CongressMember do
       @congress_member.actions.append(create :congress_member_action, action: "fill_in", name: 'middle-name', selector: '#middle-name', value: "$NAME_MIDDLE", required: true, step: 4, congress_member: @congress_member)
     end
 
-    it "should return false filling out a form via CongressMember.fill_out_form" do
-      expect(@congress_member.fill_out_form(MOCK_VALUES.merge({"$NAME_MIDDLE" => "Bart"}))).to be false
+    it "should return [false, fill_status] filling out a form via CongressMember.fill_out_form" do
+      expect(@congress_member.fill_out_form(MOCK_VALUES.merge({"$NAME_MIDDLE" => "Bart"}))[0]).to be false
     end
 
     it "should keep a delayed job that raises an error filling out a form via CongressMember.fill_out_form" do
@@ -139,7 +139,6 @@ describe CongressMember do
     it "should add an error record to the FillStatus table when filling out a form via CongressMember.fill_out_form" do
       @congress_member.fill_out_form(MOCK_VALUES.merge({"$NAME_MIDDLE" => "Bart"}))
       expect(FillStatus.error.count).to eq(1)
-      expect(FillStatus.error.last.delayed_job.id).to eq(1)
     end
 
     it "should include a screenshot in the FillStatus for filling out a form via CongressMember.fill_out_form" do

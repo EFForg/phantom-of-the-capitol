@@ -78,7 +78,7 @@ describe PerformFills do
     end
 
     it "should call #fill_out_form on the congress member, passing args and respecting overrides" do
-      expect(congress_member).to receive(:fill_out_form).with(fields.merge(overrides), campaign_tag)
+      expect(congress_member).to receive(:fill_out_form).with(fields.merge(overrides), campaign_tag){ [true, nil] }
 
       task = PerformFills.new([job], overrides: overrides)
       task.run_job(job)
@@ -88,7 +88,7 @@ describe PerformFills do
       let(:congress_member){ create :congress_member_with_actions_and_recaptcha }
 
       it "should call #fill_out_form_with_watir instead" do
-        expect(congress_member).to receive(:fill_out_form_with_watir).with(fields.merge(overrides))
+        expect(congress_member).to receive(:fill_out_form_with_watir).with(fields.merge(overrides)){ { success: true } }
 
         task = PerformFills.new([job], overrides: overrides)
         task.run_job(job)
@@ -110,7 +110,7 @@ describe PerformFills do
       it "should pass block through to CongressMember#fill_out_form" do
         block = Proc.new{}
 
-        expect(congress_member).to receive(:fill_out_form).with(fields.merge(overrides), campaign_tag, &block)
+        expect(congress_member).to receive(:fill_out_form).with(fields.merge(overrides), campaign_tag, &block).and_return([true, nil])
 
         task = PerformFills.new([job], overrides: overrides)
         task.run_job(job, &block)
