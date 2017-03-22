@@ -27,4 +27,8 @@ class FillStatus < ActiveRecord::Base
     super attrs
     self.campaign_tag = ct
   end
+
+  def success?
+    status == "success"
+  end
 end

@@ -58,7 +58,7 @@ class PerformFills
     elsif recaptcha_member?(cm) && RACK_ENV != "development"
       cm.fill_out_form_with_watir(cm_args[0].merge(overrides), &block)[:success]
     elsif RACK_ENV != "development"
-      cm.fill_out_form(cm_args[0].merge(overrides), cm_args[1], &block)[0]
+      cm.fill_out_form(cm_args[0].merge(overrides), cm_args[1], &block).success?
     end
   end
 

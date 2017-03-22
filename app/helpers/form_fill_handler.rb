@@ -13,11 +13,13 @@ class FillHandler
           @c.delay(queue: "default").fill_out_form fields, campaign_tag
           @result = true
         else
-          @result, @fill_status = @c.fill_out_form fields, campaign_tag do |c|
+          @fill_status = @c.fill_out_form fields, campaign_tag do |c|
             @result = c
             Thread.stop
             @answer
           end
+
+          @result ||= @fill_status.success?
         end
       end
       ActiveRecord::Base.connection.close

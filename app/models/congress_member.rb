@@ -119,11 +119,10 @@ class CongressMember < ActiveRecord::Base
       end
     end
 
-    if RECORD_FILL_STATUSES
-      fill_status = FillStatus.create(status_fields)
-    end
+    fill_status = FillStatus.create(status_fields)
+    fill_status.save if RECORD_FILL_STATUSES
 
-    [success_hash[:success], fill_status]
+    fill_status
   end
 
   def fill_out_form!(f={}, ct=nil, &block)
