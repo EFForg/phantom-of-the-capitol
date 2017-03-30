@@ -131,6 +131,13 @@ module Cwc
       raise BadRequest.new(e)
     end
 
+    def validate(message)
+      RestClient.post action("/v2/validate"), message.to_xml, { content_type: :xml }
+      true
+    rescue RestClient::BadRequest => e
+      raise BadRequest.new(e)
+    end
+
     def offices
       # this method was doing a request to a static JSON file on the CWC server. When their server temporarily went down, it brought down our form requests with it. I just put the parsed JSON here, but I think the JSON should be saved in config and then loaded in this method.
       if options[:host] =~ %r{^https://cwc.house.gov}

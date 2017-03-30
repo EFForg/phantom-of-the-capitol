@@ -54,7 +54,7 @@ CongressForms::App.controller do
     end
 
     if params["test"] == "1"
-      return { status: "success" }.to_json
+      return { status: "success", test: true }.to_json
     end
 
     handler = FillHandler.new(c)

@@ -413,7 +413,8 @@ class CongressMember < ActiveRecord::Base
     raise
   end
 
-  def message_via_cwc(fields, campaign_tag: nil, organization: nil, message_type: :constituent_message)
+  def message_via_cwc(fields, campaign_tag: nil, organization: nil,
+                              message_type: :constituent_message, validate_only: false)
     cwc_client = Cwc::Client.new
     params = {
       campaign_id: campaign_tag || SecureRandom.hex(16),
@@ -450,20 +451,24 @@ class CongressMember < ActiveRecord::Base
     end
 
     message = cwc_client.create_message(params)
-    cwc_client.deliver(message)
 
-    if RECORD_FILL_STATUSES
-      status_fields = {
-        congress_member: self,
-        status: "success",
-        extra: {}
-      }
+    if validate_only
+      cwc_client.validate(message)
+    else
+      cwc_client.deliver(message)
+      if RECORD_FILL_STATUSES
+        status_fields = {
+          congress_member: self,
+          status: "success",
+          extra: {}
+        }
 
-      if campaign_tag
-        status_fields.merge!(campaign_tag: campaign_tag)
+        if campaign_tag
+          status_fields.merge!(campaign_tag: campaign_tag)
+        end
+
+        FillStatus.create(status_fields)
       end
-
-      FillStatus.create(status_fields)
     end
   end
 

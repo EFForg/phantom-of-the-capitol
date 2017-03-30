@@ -28,18 +28,17 @@ CongressForms::App.controller do
       return { status: "error", message: message }.to_json
     end
 
-    if params["test"] == "1"
-      return { status: "success" }.to_json
-    end
+    keywords = { campaign_tag: params["campaign_tag"] }
+    keywords[:organization] = { name: params["organization"] } if params["organization"]
+    keywords[:validate_only] = true if params["test"] == "1"
 
     begin
-      if params["organization"]
-        cm.message_via_cwc(fields, campaign_tag: params["campaign_tag"],
-                           organization: { name: params["organization"] })
+      cm.message_via_cwc(fields, **keywords)
+      if params["test"] == "1"
+        { status: "success", test: true }.to_json
       else
-        cm.message_via_cwc(fields, campaign_tag: params["campaign_tag"])
+        { status: "success" }.to_json
       end
-      { status: "success" }.to_json
     rescue Cwc::BadRequest => e
       logger.warn("Cwc::BadRequest:")
       e.errors.each{ |error| logger.warn("  * #{error}") }
