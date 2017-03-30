@@ -1,8 +1,10 @@
 #!/bin/bash
 set -e
 
-echo "Loading schema..."
-bundle exec rake ar:schema:load > /dev/null
+if ! rake ar:version 2>/dev/null; then
+    echo "Loading schema..."
+    bundle exec rake ar:schema:load > /dev/null
+fi
 
 if [ "$RACK_ENV" != "test" -a "$(echo "$LOAD_CONGRESS" | tr '[:upper:]' '[:lower:]')" = "true" ]; then
     if [ ! -d /datasources/us_congress_members ]; then
