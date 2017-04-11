@@ -331,6 +331,20 @@ namespace :'phantom-dc' do
 
     puts "No congressional defaults found for the following members: " + notfound.inspect
   end
+
+  desc "Enable defunct status of congressmember"
+  task :defunct, :bioguide_id, :contact_url do |t, args|
+    cm = CongressMember.find_by!(bioguide_id: args[:bioguide_id])
+    attrs = { defunct: true }
+    attrs.merge!(contact_url: args[:contact_url]) if args[:contact_url]
+    cm.update!(attrs)
+  end
+
+  desc "Disable defunct status of congressmember"
+  task :undefunct, :bioguide_id do |t, args|
+    cm = CongressMember.find_by!(bioguide_id: args[:bioguide_id])
+    cm.update!(defunct: false)
+  end
 end
 
 def update_db_with_git_object g, data_source
