@@ -24,9 +24,10 @@ CongressForms::App.controller do
       if cwc_office_supported?(c.cwc_office_code)
         response[bio_id] = c.as_cwc_required_json
       else
-        response[bio_id] = c.as_required_json
+        response[bio_id] = c.as_required_json(only: [:defunct, :contact_url])
       end
     end
+
     response.to_json
   end
 
