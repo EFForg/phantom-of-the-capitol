@@ -343,7 +343,7 @@ namespace :'phantom-dc' do
   desc "Disable defunct status of congressmember"
   task :undefunct, :bioguide_id do |t, args|
     cm = CongressMember.find_by!(bioguide_id: args[:bioguide_id])
-    cm.update!(defunct: false)
+    cm.update!(defunct: false, contact_url: nil)
   end
 end
 
