@@ -17,6 +17,10 @@ This project relies on:
 
 [![Build Status](https://travis-ci.org/EFForg/phantom-of-the-capitol.svg)](http://travis-ci.org/EFForg/phantom-of-the-capitol)
 
+# How to Use This API
+
+Documentation is located [here](https://github.com/EFForg/phantom-of-the-capitol/blob/master/app/views/index.md).
+
 # How to Contribute to This Project
 
 ## Dev/ Production Setup with Docker (Recommended)
