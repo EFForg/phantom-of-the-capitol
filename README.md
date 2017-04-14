@@ -17,10 +17,6 @@ This project relies on:
 
 [![Build Status](https://travis-ci.org/EFForg/phantom-of-the-capitol.svg)](http://travis-ci.org/EFForg/phantom-of-the-capitol)
 
-# How to Use This API
-
-This API is deployed for public consumption at [congressforms.eff.org](https://congressforms.eff.org/). Navigate there to see notes on consumption.
-
 # How to Contribute to This Project
 
 ## Dev/ Production Setup with Docker (Recommended)
