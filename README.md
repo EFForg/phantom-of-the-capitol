@@ -55,7 +55,6 @@ If you're actively developing, you'll probably also want to share your host dire
 To run the test suite using docker, run:
 
 ```bash
-$    sudo docker-compose -f docker-compose.test.yml up
 $    sudo docker-compose -f docker-compose.test.yml run test_app rspec spec
 ```
 
