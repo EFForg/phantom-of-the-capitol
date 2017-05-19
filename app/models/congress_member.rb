@@ -252,8 +252,12 @@ class CongressMember < ActiveRecord::Base
       end
     end
 
+    form_fill_log(f, "begin")
+
     begin
       actions.order(:step).each do |a|
+        form_fill_log(f, %(#{a.action}(#{a.selector.inspect+", " if a.selector.present?}#{a.value.inspect})))
+
         case a.action
         when "visit"
           session.visit(a.value)
@@ -371,11 +375,13 @@ class CongressMember < ActiveRecord::Base
       end
 
       success = check_success session.text
+      form_fill_log(f, "done: #{success ? 'passing' : 'failing'} success criteria")
 
       success_hash = {success: success}
       success_hash[:screenshot] = self.class::save_screenshot_and_store_poltergeist(session) if !success
       success_hash
     rescue Exception => e
+      form_fill_log(f, "done: unsuccessful fill (#{e.class})")
       message = {success: false, message: e.message, exception: e}
       message[:screenshot] = self.class::save_screenshot_and_store_poltergeist(session)
       message
@@ -632,6 +638,15 @@ class CongressMember < ActiveRecord::Base
     cms.to_json
   end
 
+  private
+
+  def form_fill_log(fields, message)
+    message = "#{bioguide_id} fill (#{[bioguide_id, fields].hash.to_s(16)}): #{message}"
+    Padrino.logger.info(message)
+
+    Raven.extra_context(fill_log: "") unless Raven.context.extra.key?(:fill_log)
+    Raven.context.extra[:fill_log] << message << "\n"
+  end
 end
 
 
