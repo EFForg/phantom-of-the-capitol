@@ -2,6 +2,10 @@
 require "cwc"
 
 CongressForms::App.controller do
+  before do
+    Raven.tags_context web: true
+  end
+
   get "cwc/:office_code/fields" do
     cm = CongressMember.find_by_cwc_office_code(params[:office_code])
     cm.as_cwc_required_json.to_json
