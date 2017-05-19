@@ -47,7 +47,7 @@ class PerformFills
     if cwc_member?(cm)
       begin
         fields["$SUBJECT"] ||= fields["$MESSAGE"].truncate_words(13)
-        fields["$ADDRESS_STATE_POSTAL_ABBREV"] ||= state
+        fields["$ADDRESS_STATE_POSTAL_ABBREV"] ||= cm.state
 
         cm.message_via_cwc(fields, campaign_tag: campaign_tag)
       rescue Cwc::BadRequest => e
