@@ -500,6 +500,7 @@ class CongressMember < ActiveRecord::Base
     screenshot_location = random_screenshot_location
     driver.save_screenshot(screenshot_location)
     url = store_screenshot_from_location screenshot_location
+    Raven.extra_context(screenshot: url)
     File.unlink screenshot_location
     url
   end
@@ -508,6 +509,7 @@ class CongressMember < ActiveRecord::Base
     screenshot_location = random_screenshot_location
     session.save_screenshot(screenshot_location, full: true)
     url = store_screenshot_from_location screenshot_location
+    Raven.extra_context(screenshot: url)
     File.unlink screenshot_location
     url
   end
