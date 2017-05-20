@@ -56,7 +56,9 @@ class PerformFills
 
         Raven.capture_message("Cwc::BadRequest: #{e.errors.last}",
                               tags: { "rake" => true },
-                              extra: { bioguide: cm.bioguide_id, errors: e.errors })
+                              extra: { bioguide: cm.bioguide_id,
+                                       delayed_job_id: job.id,
+                                       errors: e.errors })
 
         false
       end
@@ -66,7 +68,9 @@ class PerformFills
       status = cm.fill_out_form(cm_args[0].merge(overrides), cm_args[1], &block).success?
 
       unless status
-        Raven.capture_message("Form error: #{cm.bioguide_id}", tags: { "rake" => true, "form_error" => true })
+        Raven.capture_message("Form error: #{cm.bioguide_id}",
+                              tags: { "rake" => true, "form_error" => true },
+                              extra: { delayed_job_id: job.id })
       end
 
       status
