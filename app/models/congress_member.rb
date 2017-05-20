@@ -645,8 +645,8 @@ class CongressMember < ActiveRecord::Base
   private
 
   def form_fill_log(fields, message)
-    message = "#{bioguide_id} fill (#{[bioguide_id, fields].hash.to_s(16)}): #{message}"
-    Padrino.logger.info(message)
+    log_message = "#{bioguide_id} fill (#{[bioguide_id, fields].hash.to_s(16)}): #{message}"
+    Padrino.logger.info(log_message)
 
     Raven.extra_context(fill_log: "") unless Raven.context.extra.key?(:fill_log)
     Raven.context.extra[:fill_log] << message << "\n"
