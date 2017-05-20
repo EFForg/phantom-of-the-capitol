@@ -44,6 +44,8 @@ class PerformFills
 
     fields, campaign_tag = cm_args[0].merge(overrides), cm_args[1]
 
+    Raven::Context.clear!
+
     if cwc_member?(cm)
       begin
         fields["$SUBJECT"] ||= fields["$MESSAGE"].truncate_words(13)
