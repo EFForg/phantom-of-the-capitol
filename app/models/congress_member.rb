@@ -382,6 +382,8 @@ class CongressMember < ActiveRecord::Base
       success_hash
     rescue Exception => e
       form_fill_log(f, "done: unsuccessful fill (#{e.class})")
+      Raven.extra_context(backtrace: e.backtrace)
+
       message = {success: false, message: e.message, exception: e}
       message[:screenshot] = self.class::save_screenshot_and_store_poltergeist(session)
       message
