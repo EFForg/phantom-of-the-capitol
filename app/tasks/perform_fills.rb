@@ -43,12 +43,12 @@ class PerformFills
     pp cm_args
 
     fields, campaign_tag = cm_args[0].merge(overrides), cm_args[1]
+    fields["$SUBJECT"] ||= fields["$MESSAGE"].truncate_words(13)
 
     Raven::Context.clear!
 
     if cwc_member?(cm)
       begin
-        fields["$SUBJECT"] ||= fields["$MESSAGE"].truncate_words(13)
         fields["$ADDRESS_STATE_POSTAL_ABBREV"] ||= cm.state
 
         cm.message_via_cwc(fields, campaign_tag: campaign_tag)
