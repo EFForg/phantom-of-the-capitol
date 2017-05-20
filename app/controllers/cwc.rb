@@ -48,7 +48,7 @@ CongressForms::App.controller do
       e.errors.each{ |error| logger.warn("  * #{error}") }
 
       Raven.capture_message("Cwc::BadRequest: #{e.errors.last}",
-                            extra: { bioguide: cm.bioguide_id, errors: e.errors })
+                            extra: { bioguide: cm.bioguide_id, fields: fields, errors: e.errors })
       { status: "error" }.to_json
     end
   end

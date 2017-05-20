@@ -58,6 +58,7 @@ class PerformFills
                               tags: { "rake" => true },
                               extra: { bioguide: cm.bioguide_id,
                                        delayed_job_id: job.id,
+                                       fields: fields,
                                        errors: e.errors })
 
         false
