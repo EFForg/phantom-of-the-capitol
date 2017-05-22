@@ -68,6 +68,7 @@ CongressForms::App.controller do
     fh[result[:uid]] = handler if result[:status] == "captcha_needed"
 
     if result[:status] == "error"
+      Raven.extra_context(fill_log: c.form_fill_log)
       Raven.capture_message("Form error: #{bio_id}", tags: { "form_error" => true })
 
       job = c.delay(queue: "error_or_failure").fill_out_form(fields, params["campaign_tag"])
