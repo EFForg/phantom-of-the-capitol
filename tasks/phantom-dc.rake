@@ -456,7 +456,7 @@ def retrieve_jobs args
   job_id = args[:job_id].blank? ? nil : args[:job_id].to_i
 
   if job_id.nil?
-    Delayed::Job.where(queue: "error_or_failure")
+    Delayed::Job.where(queue: "error_or_failure").order(created_at: :desc)
   else
     [Delayed::Job.find(job_id)]
   end
