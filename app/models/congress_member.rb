@@ -642,19 +642,14 @@ class CongressMember < ActiveRecord::Base
     cms.to_json
   end
 
-  def form_fill_log(fields=nil, message=nil)
-    if message.nil?
-      @form_fill_log || ""
-    else
-      log_message = "#{bioguide_id} fill (#{[bioguide_id, fields].hash.to_s(16)}): #{message}"
-      Padrino.logger.info(log_message)
+  private
 
-      Raven.extra_context(fill_log: "") unless Raven.context.extra.key?(:fill_log)
-      Raven.context.extra[:fill_log] << message << "\n"
+  def form_fill_log(fields, message)
+    log_message = "#{bioguide_id} fill (#{[bioguide_id, fields].hash.to_s(16)}): #{message}"
+    Padrino.logger.info(log_message)
 
-      @form_fill_log ||= ""
-      @form_fill_log << message << "\n"
-    end
+    Raven.extra_context(fill_log: "") unless Raven.context.extra.key?(:fill_log)
+    Raven.context.extra[:fill_log] << message << "\n"
   end
 end
 
