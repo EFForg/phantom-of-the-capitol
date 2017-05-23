@@ -46,6 +46,16 @@ namespace :'phantom-dc' do
       end
     end
 
+
+    desc "Display the number of queued jobs"
+    task :count do
+      count = Delayed::Job.count
+      today_count = Delayed::Job.where("created_at >= ?", Time.now - 1.day).count
+      message = "#{today_count} #{'job'.pluralize(today_count)} queued today, #{count} total"
+      Raven.capture_message(message, level: "info")
+      puts(count)
+    end
+
     desc "destroy all fills on the Delayed::Job error_or_failure queue provided a specific bioguide or job_id"
     task :destroy_fills, :bioguide, :job_id do |t, args|
       cm = CongressMember.bioguide(args[:bioguide])
