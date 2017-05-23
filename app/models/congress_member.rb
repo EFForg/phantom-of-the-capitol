@@ -319,9 +319,9 @@ class CongressMember < ActiveRecord::Base
                     elem = session.first('option[value="' + a.value.gsub('"', '\"') + '"]')
                   rescue Capybara::ElementNotFound
                     begin
-                      elem = session.find('option', text: Regexp.compile("^" + Regexp.escape(a.value) + "$"))
+                      elem = session.find('option', text: Regexp.compile("^" + Regexp.escape(a.value) + "(\\W|$)"))
                     rescue Capybara::Ambiguous
-                      elem = session.first('option', text: Regexp.compile("^" + Regexp.escape(a.value) + "$"))
+                      elem = session.first('option', text: Regexp.compile("^" + Regexp.escape(a.value) + "(\\W|$)"))
                     end
                   end
                   elem.select_option
@@ -333,9 +333,9 @@ class CongressMember < ActiveRecord::Base
                   elem = session.first('option[value="' + f[a.value].gsub('"', '\"') + '"]')
                 rescue Capybara::ElementNotFound
                   begin
-                    elem = session.find('option', text: Regexp.compile("^" + Regexp.escape(f[a.value]) + "$"))
+                    elem = session.find('option', text: Regexp.compile("^" + Regexp.escape(f[a.value]) + "(\\W|$)"))
                   rescue Capybara::Ambiguous
-                    elem = session.first('option', text: Regexp.compile("^" + Regexp.escape(f[a.value]) + "$"))
+                    elem = session.first('option', text: Regexp.compile("^" + Regexp.escape(f[a.value]) + "(\\W|$)"))
                   end
                 end
                 elem.select_option
