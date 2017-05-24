@@ -66,7 +66,7 @@ class CongressMember < ActiveRecord::Base
       "Technical Sergeant"
     ]
     {
-      required_actions: [
+      "required_actions" => [
         { "value" => "$NAME_PREFIX",	"maxlength" => nil,	"options_hash" => prefixes },
         { "value" => "$NAME_FIRST",	"maxlength" => nil,	"options_hash" => nil },
         { "value" => "$NAME_LAST",	"maxlength" => nil,	"options_hash" => nil },
@@ -91,49 +91,42 @@ class CongressMember < ActiveRecord::Base
   end
 
   def fill_out_form f={}, ct = nil, &block
-    status_fields = {congress_member: self, status: "success", extra: {}}.merge(ct.nil? ? {} : {campaign_tag: ct})
-    begin
-      begin
-        if REQUIRES_WATIR.include? self.bioguide_id
-          success_hash = fill_out_form_with_watir f, &block
-        elsif REQUIRES_WEBKIT.include? self.bioguide_id
-          success_hash = fill_out_form_with_webkit f, &block
-        else
-          success_hash = fill_out_form_with_poltergeist f, &block
-        end
-      rescue Exception => e
-        status_fields[:status] = "error"
-        message = YAML.load(e.message)
-        status_fields[:extra][:screenshot] = message[:screenshot] if message.is_a?(Hash) and message.include? :screenshot
-        raise e, message[:message] if message.is_a?(Hash)
-        raise e, message
-      end
+    status_fields = {
+      congress_member: self,
+      status: "success",
+      extra: {}
+    }
+    status_fields[:campaign_tag] = ct unless ct.nil?
 
-      unless success_hash[:success]
-        status_fields[:status] = "failure"
-        status_fields[:extra][:screenshot] = success_hash[:screenshot] if success_hash.include? :screenshot
-        raise FillFailure, "Filling out the remote form was not successful"
-      end
-    rescue Exception => e
-      # we need to add the job manually, since DJ doesn't handle yield blocks
-      unless ENV['SKIP_DELAY']
-        self.delay(queue: "error_or_failure").fill_out_form f, ct
-        last_job = Delayed::Job.last
-        last_job.attempts = 1
-        last_job.run_at = Time.now
-        last_job.last_error = e.message + "\n" + e.backtrace.inspect
-        last_job.save
-      end
-      raise e
-    ensure
-      if RECORD_FILL_STATUSES
-        fs = FillStatus.create(status_fields)
-        if status_fields[:status] != "success"
-          FillStatusesJob.create(fill_status_id: fs.id, delayed_job_id: last_job.id)
+    if REQUIRES_WATIR.include?(bioguide_id)
+      success_hash = fill_out_form_with_watir f, &block
+    elsif REQUIRES_WEBKIT.include?(bioguide_id)
+      success_hash = fill_out_form_with_webkit f, &block
+    else
+      success_hash = fill_out_form_with_poltergeist f, &block
+    end
+
+    unless success_hash[:success]
+      status_fields[:status] = success_hash[:exception] ? "error" : "failure"
+      status_fields[:extra][:screenshot] = success_hash[:screenshot]
+
+      if success_hash[:exception]
+        message = YAML.load(success_hash[:exception].message)
+
+        if message.is_a?(Hash) and message.include?(:screenshot)
+          status_fields[:extra][:screenshot] = message[:screenshot]
         end
       end
     end
-    true
+
+    fill_status = FillStatus.create(status_fields)
+    fill_status.save if RECORD_FILL_STATUSES
+
+    fill_status
+  end
+
+  def fill_out_form!(f={}, ct=nil, &block)
+    fill_out_form(f, ct, &block)[0] or raise FillError.new
   end
 
   # we might want to implement the "wait" option for the "find"
@@ -223,13 +216,13 @@ class CongressMember < ActiveRecord::Base
 
       success = check_success b.text
 
-      success_hash = {success: success}
+      success_hash = { success: success }
       success_hash[:screenshot] = self.class::save_screenshot_and_store_watir(b.driver) if !success
       success_hash
     rescue Exception => e
-      message = {message: e.message}
+      message = {success: false, message: e.message, exception: e}
       message[:screenshot] = self.class::save_screenshot_and_store_watir(b.driver)
-      raise e, YAML.dump(message)
+      message
     ensure
       b.close
     end
@@ -383,9 +376,9 @@ class CongressMember < ActiveRecord::Base
       success_hash[:screenshot] = self.class::save_screenshot_and_store_poltergeist(session) if !success
       success_hash
     rescue Exception => e
-      message = {message: e.message}
+      message = {success: false, message: e.message, exception: e}
       message[:screenshot] = self.class::save_screenshot_and_store_poltergeist(session)
-      raise e, YAML.dump(message)
+      message
     ensure
       case driver
       when :poltergeist
@@ -420,7 +413,8 @@ class CongressMember < ActiveRecord::Base
     raise
   end
 
-  def message_via_cwc(fields, campaign_tag: nil, organization: nil, message_type: :constituent_message)
+  def message_via_cwc(fields, campaign_tag: nil, organization: nil,
+                              message_type: :constituent_message, validate_only: false)
     cwc_client = Cwc::Client.new
     params = {
       campaign_id: campaign_tag || SecureRandom.hex(16),
@@ -457,20 +451,24 @@ class CongressMember < ActiveRecord::Base
     end
 
     message = cwc_client.create_message(params)
-    cwc_client.deliver(message)
 
-    if RECORD_FILL_STATUSES
-      status_fields = {
-        congress_member: self,
-        status: "success",
-        extra: {}
-      }
+    if validate_only
+      cwc_client.validate(message)
+    else
+      cwc_client.deliver(message)
+      if RECORD_FILL_STATUSES
+        status_fields = {
+          congress_member: self,
+          status: "success",
+          extra: {}
+        }
 
-      if campaign_tag
-        status_fields.merge!(campaign_tag: campaign_tag)
+        if campaign_tag
+          status_fields.merge!(campaign_tag: campaign_tag)
+        end
+
+        FillStatus.create(status_fields)
       end
-
-      FillStatus.create(status_fields)
     end
   end
 

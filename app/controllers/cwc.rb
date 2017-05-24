@@ -16,7 +16,7 @@ CongressForms::App.controller do
     missing_parameters = []
     fields = params["fields"] || {}
     fields["$MESSAGE"] ||= fields["$STATEMENT"]
-    cm.as_cwc_required_json[:required_actions].each do |field|
+    cm.as_cwc_required_json["required_actions"].each do |field|
       unless fields.include?(field["value"])
         missing_parameters << field["value"]
       end
@@ -24,21 +24,26 @@ CongressForms::App.controller do
 
     if missing_parameters.any?
       see_other = "/cwc/#{params[:office_code]}/fields"
-      message = "Missing parameters (#{missing_parameters.join(', ')}). See #{see_other} for required parameters."
+      message = "Error: missing fields (#{missing_parameters.join(', ')}). See #{see_other} for required fields."
       return { status: "error", message: message }.to_json
     end
 
+    keywords = { campaign_tag: params["campaign_tag"] }
+    keywords[:organization] = { name: params["organization"] } if params["organization"]
+    keywords[:validate_only] = true if params["test"] == "1"
+
     begin
-      if params["organization"]
-        cm.message_via_cwc(fields, campaign_tag: params["campaign_tag"],
-                           organization: { name: params["organization"] })
+      cm.message_via_cwc(fields, **keywords)
+      if params["test"] == "1"
+        { status: "success", test: true }.to_json
       else
-        cm.message_via_cwc(fields, campaign_tag: params["campaign_tag"])
+        { status: "success" }.to_json
       end
-      { status: "success" }.to_json
     rescue Cwc::BadRequest => e
       logger.warn("Cwc::BadRequest:")
       e.errors.each{ |error| logger.warn("  * #{error}") }
+
+      Raven.capture_exception(e, extra: { bioguide: cm.bioguide_id, errors: e.errors })
       { status: "error" }.to_json
     end
   end

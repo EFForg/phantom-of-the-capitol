@@ -13,14 +13,14 @@ class FillHandler
           @c.delay(queue: "default").fill_out_form fields, campaign_tag
           @result = true
         else
-          @result = @c.fill_out_form fields, campaign_tag do |c|
+          @fill_status = @c.fill_out_form fields, campaign_tag do |c|
             @result = c
             Thread.stop
             @answer
           end
+
+          @result ||= @fill_status.success?
         end
-      rescue Exception => e
-        @result = false
       end
       ActiveRecord::Base.connection.close
     end
@@ -33,7 +33,7 @@ class FillHandler
       Thread.pass
     end
 
-    FillHandler::check_result @result
+    FillHandler::check_result @result, @fill_status.try(:id)
   end
 
   def finish_workflow
@@ -55,14 +55,14 @@ class FillHandler
     FillHandler::check_result @result
   end
 
-  def self.check_result result
+  def self.check_result result, fill_status_id = nil
     case result
     when true
-      {status: "success"}
+      {status: "success", fill_status_id: fill_status_id}
     when false
-      {status: "error", message: "An error has occurred while filling out the remote form."}
+      {status: "error", message: "An error has occurred while filling out the remote form.", fill_status_id: fill_status_id}
     else
-      {status: "captcha_needed", url: result}
+      {status: "captcha_needed", url: result, fill_status_id: fill_status_id}
     end
   end
 end

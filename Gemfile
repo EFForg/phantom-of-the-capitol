@@ -17,6 +17,11 @@ gem 'rake'
 # Component requirements
 gem 'slim'
 
+# Development requirements
+group :development, :test do
+  gem 'pry', require: true
+end
+
 # Test requirements
 group :test do
   gem 'rspec'

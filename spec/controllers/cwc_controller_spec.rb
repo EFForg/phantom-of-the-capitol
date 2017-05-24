@@ -31,7 +31,7 @@ describe "CWC controller" do
     end
 
     it "should send a message when provided with the required values" do
-      expect(RestClient).to receive(:post){ true }
+      expect_any_instance_of(Cwc::Client).to receive(:deliver){ true }
 
       c = create :congress_member_with_actions
       post_json "/cwc/#{c.cwc_office_code}/messages", { "fields" => MOCK_VALUES }.to_json
@@ -39,6 +39,17 @@ describe "CWC controller" do
       expect(last_response.status).to eq(200)
       expect(JSON.load(last_response.body)["status"]).to eq("success")
       expect(FillStatus.success.count).to eq(1)
+    end
+
+    it "should merely validate a message when provided with the required values and test=1" do
+      expect_any_instance_of(Cwc::Client).to receive(:validate){ true }
+      expect_any_instance_of(Cwc::Client).not_to receive(:deliver)
+
+      c = create :congress_member_with_actions
+      post_json "/cwc/#{c.cwc_office_code}/messages", { "fields" => MOCK_VALUES, "test" => "1" }.to_json
+
+      expect(last_response.status).to eq(200)
+      expect(JSON.load(last_response.body)["status"]).to eq("success")
     end
 
     it "should use <Organization> if organization query param is given" do
@@ -88,7 +99,7 @@ describe "CWC controller" do
     end
 
     it "should create a new campaign tag record when sending successfully with a campaign tag specified" do
-      expect(RestClient).to receive(:post){ true }
+      expect_any_instance_of(Cwc::Client).to receive(:deliver){ true }
 
       campaign_tag = "know your rights"
       c = create :congress_member_with_actions

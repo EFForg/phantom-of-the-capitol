@@ -1,6 +1,6 @@
 FactoryGirl.define do
   factory :congress_member do
-    bioguide_id "A000000"
+    sequence(:bioguide_id){ |n| sprintf("A%06d", n) }
     success_criteria({"headers"=>{"status"=>200}, "body"=>{"contains"=>"Thank you for your feedback!"}})
 
     state "CA"
@@ -38,6 +38,13 @@ FactoryGirl.define do
         end
       end
 
+      factory :congress_member_with_actions_and_recaptcha do
+        after(:create) do |c|
+          create :congress_member_action, action: "visit", value: "http://localhost:3002/with-captcha", step: 1, congress_member: c
+          create :congress_member_action, action: "recaptcha", congress_member: c
+          create :congress_member_action, action: "click_on", selector: 'input[type=submit]', value: "send", step: 15, congress_member: c
+        end
+      end
     end
   end
 

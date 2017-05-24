@@ -102,25 +102,18 @@ describe CongressMember do
       @congress_member = create :congress_member_with_actions, success_criteria: YAML.dump({"headers"=>{"status"=>200}, "body"=>{"contains"=>"Won't get me!"}})
     end
 
-    it "should raise an error filling out a form via CongressMember.fill_out_form" do
-      expect { @congress_member.fill_out_form(MOCK_VALUES) }.to raise_error CongressMember::FillFailure
+    it "should return a failed FilledStatus filling out a form via CongressMember.fill_out_form" do
+      expect(@congress_member.fill_out_form(MOCK_VALUES).success?).to be false
     end
 
     it "should add a failure record to the FillStatus table when filling out a form via CongressMember.fill_out_form" do
-      begin
-        @congress_member.fill_out_form(MOCK_VALUES)
-      rescue
-        expect(FillStatus.failure.count).to eq(1)
-      end
+      @congress_member.fill_out_form(MOCK_VALUES)
+      expect(FillStatus.failure.count).to eq(1)
     end
 
     it "should include a screenshot in the FillStatus for filling out a form via CongressMember.fill_out_form" do
-      begin
-        @congress_member.fill_out_form(MOCK_VALUES)
-      rescue
-      ensure
-        expect(YAML.load(FillStatus.last.extra).include? :screenshot).to eq(true)
-      end
+      @congress_member.fill_out_form(MOCK_VALUES)
+      expect(YAML.load(FillStatus.last.extra).include? :screenshot).to eq(true)
     end
   end
 
@@ -130,34 +123,27 @@ describe CongressMember do
       @congress_member.actions.append(create :congress_member_action, action: "fill_in", name: 'middle-name', selector: '#middle-name', value: "$NAME_MIDDLE", required: true, step: 4, congress_member: @congress_member)
     end
 
-    it "should raise an error filling out a form via CongressMember.fill_out_form" do
-      expect { @congress_member.fill_out_form MOCK_VALUES.merge({"$NAME_MIDDLE" => "Bart"}) }.to raise_error Capybara::ElementNotFound
+    it "should return a failed FillStatus filling out a form via CongressMember.fill_out_form" do
+      expect(@congress_member.fill_out_form(MOCK_VALUES.merge({"$NAME_MIDDLE" => "Bart"})).success?).to be false
     end
 
     it "should keep a delayed job that raises an error filling out a form via CongressMember.fill_out_form" do
-      @congress_member.delay.fill_out_form(MOCK_VALUES.merge({"$NAME_MIDDLE" => "Bart"}))
+      @congress_member.delay.fill_out_form!(MOCK_VALUES.merge({"$NAME_MIDDLE" => "Bart"}))
       last_job = Delayed::Job.last
       result = Delayed::Worker.new.run last_job
-      expect(result).to be_falsey
+
+      expect(result).to be false
       expect { last_job.reload }.not_to raise_error
     end
 
     it "should add an error record to the FillStatus table when filling out a form via CongressMember.fill_out_form" do
-      begin
-        @congress_member.fill_out_form(MOCK_VALUES.merge({"$NAME_MIDDLE" => "Bart"}))
-      rescue
-        expect(FillStatus.error.count).to eq(1)
-        expect(FillStatus.error.last.delayed_job.id).to eq(1)
-      end
+      @congress_member.fill_out_form(MOCK_VALUES.merge({"$NAME_MIDDLE" => "Bart"}))
+      expect(FillStatus.error.count).to eq(1)
     end
 
     it "should include a screenshot in the FillStatus for filling out a form via CongressMember.fill_out_form" do
-      begin
-        @congress_member.fill_out_form(MOCK_VALUES.merge({"$NAME_MIDDLE" => "Bart"}))
-      rescue
-      ensure
-        expect(YAML.load(FillStatus.last.extra).include? :screenshot).to eq(true)
-      end
+      @congress_member.fill_out_form(MOCK_VALUES.merge({"$NAME_MIDDLE" => "Bart"}))
+      expect(YAML.load(FillStatus.last.extra).include? :screenshot).to eq(true)
     end
   end
 

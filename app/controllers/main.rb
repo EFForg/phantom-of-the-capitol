@@ -1,6 +1,7 @@
 require 'securerandom'
 
 CongressForms::App.controller do
+  helpers CwcHelper
 
   get :index do
     render :index
@@ -23,27 +24,56 @@ CongressForms::App.controller do
       if cwc_office_supported?(c.cwc_office_code)
         response[bio_id] = c.as_cwc_required_json
       else
-        response[bio_id] = c.as_required_json
+        response[bio_id] = c.as_required_json(only: [:defunct, :contact_url])
       end
     end
+
     response.to_json
   end
 
   fh = FillHash.new
   post :'fill-out-form' do
     content_type :json
-    return {status: "error", message: "You must provide a bio_id and fields to fill out form."}.to_json unless params.include? "bio_id" and params.include? "fields"
+
+    return {status: "error", message: "You must provide a bio_id."}.to_json unless params.include? "bio_id"
 
     bio_id = params["bio_id"]
-    fields = params["fields"]
-
     c = CongressMember.bioguide(bio_id)
     return {status: "error", message: "Congress member with provided bio id not found"}.to_json if c.nil?
+
+    missing_parameters = []
+    fields = params["fields"] || {}
+    c.as_required_json["required_actions"].each do |field|
+      unless fields.include?(field["value"])
+        missing_parameters << field["value"]
+      end
+    end
+
+    if missing_parameters.any?
+      message = "Error: missing fields (#{missing_parameters.join(', ')})."
+      return { status: "error", message: message }.to_json
+    end
+
+    if params["test"] == "1"
+      return { status: "success", test: true }.to_json
+    end
 
     handler = FillHandler.new(c)
     result = handler.fill fields, params["campaign_tag"]
     result[:uid] = SecureRandom.hex
     fh[result[:uid]] = handler if result[:status] == "captcha_needed"
+
+    if result[:status] == "error"
+      Raven.capture_message("Form error: #{bio_id}", tags: { "form_error" => "true" })
+
+      job = c.delay(queue: "error_or_failure").fill_out_form(fields, params["campaign_tag"])
+
+      if RECORD_FILL_STATUSES
+        fill_status = FillStatus.find(result[:fill_status_id])
+        FillStatusesJob.create(fill_status_id: fill_status.id, delayed_job_id: job.id)
+      end
+    end
+
     result.to_json
   end
 

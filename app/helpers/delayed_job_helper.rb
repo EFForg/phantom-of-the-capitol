@@ -15,12 +15,12 @@ class DelayedJobHelper
     parser.parse(handler)
 
     root_mapping = parser.handler.root.children[0].children[0]
-    root_hash = self.hash_from_mapping(root_mapping)
+    root_hash = hash_from_mapping(root_mapping)
 
     object_mapping = root_hash["object"]
-    object_hash = self.hash_from_mapping(object_mapping)
+    object_hash = hash_from_mapping(object_mapping)
     attributes_mapping = object_hash.include?("raw_attributes") ? object_hash["raw_attributes"] : object_hash["attributes"]
-    id_scalar = self.hash_from_mapping(attributes_mapping)["id"]
+    id_scalar = hash_from_mapping(attributes_mapping)["id"]
     id = id_scalar.value
 
     args = root_hash["args"].to_ruby
@@ -31,7 +31,7 @@ class DelayedJobHelper
   def self.tabulate_jobs_by_member jobs, cm_hash
     people = {}
     jobs.each do |job|
-      cm_id, cm_args = self.congress_member_id_and_args_from_handler(job.handler)
+      cm_id, cm_args = congress_member_id_and_args_from_handler(job.handler)
       unless cm_args[1] == "rake"
         cm = CongressMember::retrieve_cached(cm_hash, cm_id)
         if people.keys.include? cm.bioguide_id
@@ -46,17 +46,28 @@ class DelayedJobHelper
 
   def self.filter_jobs_by_member jobs, cm
     jobs.select do |job|
-      cm_id, cm_args = self.congress_member_id_and_args_from_handler(job.handler)
+      cm_id, cm_args = congress_member_id_and_args_from_handler(job.handler)
       cm_id.to_i == cm.id && cm_args[1] != "rake"
     end
   end
 
   def self.destroy_job_and_dependents job
-    begin
-      FillStatusesJob.find_by(delayed_job_id: job.id).destroy
-    rescue NoMethodError
-    end
+    FillStatusesJob.find_by(delayed_job_id: job.id).try(:destroy)
     job.destroy
+  end
+
+  def self.destroy_jobs_and_dependents jobs
+    ids = jobs.map(&:id)
+    FillStatusesJob.where(delayed_job_id: ids).delete_all
+    Delayed::Job.where(id: ids).delete_all
+  end
+
+  def self.create_job(congress_member, fields, campaign_tag, e)
+    job = congress_member.delay(queue: "error_or_failure").fill_out_form fields, campaign_tag
+    job.attempts = 1
+    job.run_at = Time.now
+    job.last_error = e.message + "\n" + e.backtrace.inspect if e
+    job.tap(&:save)
   end
 
 private

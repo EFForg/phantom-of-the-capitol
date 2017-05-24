@@ -7,81 +7,20 @@ namespace :'phantom-dc' do
   namespace :'delayed_job' do
     desc "perform all fills on the Delayed::Job error_or_failure queue, captchad fills first, optionally provide bioguide regex, job id or activate recaptcha fills mode"
     task :perform_fills, :regex, :job_id, :overrides, :recaptcha_mode do |t, args|
-      require 'pp'
+      ActiveRecord::Base.logger.level = Logger::WARN
 
       regex = args[:regex].blank? ? nil : Regexp.compile(args[:regex])
       overrides = args[:overrides].blank? ? {} : eval(args[:overrides])
 
       jobs = retrieve_jobs args
-
-      recaptcha_jobs = []
-      captcha_jobs = []
-      noncaptcha_jobs = []
-
-      cm_hash = CongressMember::to_hash CongressMember.all
-      captcha_hash,recaptcha_hash = build_captcha_hash
-
-      jobs.each do |job|
-        cm_id, cm_args = DelayedJobHelper::congress_member_id_and_args_from_handler(job.handler)
-        unless cm_args[1] == "rake" and args[:job_id].nil?
-          cm = CongressMember::retrieve_cached(cm_hash, cm_id)
-
-          if regex.nil? or regex.match(cm.bioguide_id)
-            if retrieve_captchad_cached(recaptcha_hash, cm.id)
-              recaptcha_jobs.push job
-            elsif retrieve_captchad_cached(captcha_hash, cm.id)
-              captcha_jobs.push job
-            else
-              noncaptcha_jobs.push job
-            end
-          end
-        end
-      end
-
-      if args[:recaptcha_mode].present?
-        recaptcha_jobs.each do |job|
-          begin
-            cm_id, cm_args = DelayedJobHelper::congress_member_id_and_args_from_handler(job.handler)
-            cm = CongressMember::retrieve_cached(cm_hash, cm_id)
-            puts red("Job #" + job.id.to_s + ", bioguide " + cm.bioguide_id)
-            pp cm_args
-            result = cm.fill_out_form_with_watir cm_args[0].merge(overrides)
-          rescue
-          end
-          DelayedJobHelper::destroy_job_and_dependents job
-        end
-        exit
-      end
-      captcha_jobs.each do |job|
-        begin
-          cm_id, cm_args = DelayedJobHelper::congress_member_id_and_args_from_handler(job.handler)
-          cm = CongressMember::retrieve_cached(cm_hash, cm_id)
-          puts red("Job #" + job.id.to_s + ", bioguide " + cm.bioguide_id)
-          pp cm_args
-          result = cm.fill_out_form cm_args[0].merge(overrides), cm_args[1] do |img|
-            puts img
-            STDIN.gets.strip
-          end
-        rescue
-        end
-        DelayedJobHelper::destroy_job_and_dependents job
-      end
-      noncaptcha_jobs.each do |job|
-        begin
-          cm_id, cm_args = DelayedJobHelper::congress_member_id_and_args_from_handler(job.handler)
-          cm = CongressMember::retrieve_cached(cm_hash, cm_id)
-          puts red("Job #" + job.id.to_s + ", bioguide " + cm.bioguide_id)
-          pp cm_args
-          result = cm.fill_out_form cm_args[0].merge(overrides), cm_args[1]
-        rescue
-        end
-        DelayedJobHelper::destroy_job_and_dependents job
-      end
+      PerformFills.new(jobs, regex: regex, overrides: overrides).execute(args)
     end
+
     desc "perform recaptcha fills by hand using watir, optionally provide bioguide regex or job id"
     task :perform_recaptcha_fills, :regex, :job_id, :overrides do |t,args|
-      Rake::Task['phantom-dc:delayed_job:perform_fills'].invoke(args[:regex],args[:job_id],args[:overrides],true)
+      Rake::Task['phantom-dc:delayed_job:perform_fills'].invoke(args[:regex], args[:job_id], args[:overrides], true)
     end
+
     desc "override a field on the Delayed::Job error_or_failure queue, optionally provide bioguide regex or job id"
     task :override_field, :regex, :job_id, :overrides, :conditions do |t, args|
       regex = args[:regex].blank? ? nil : Regexp.compile(args[:regex])
@@ -106,6 +45,7 @@ namespace :'phantom-dc' do
         end
       end
     end
+
     desc "destroy all fills on the Delayed::Job error_or_failure queue provided a specific bioguide or job_id"
     task :destroy_fills, :bioguide, :job_id do |t, args|
       cm = CongressMember.bioguide(args[:bioguide])
@@ -120,6 +60,7 @@ namespace :'phantom-dc' do
         end
       end
     end
+
     desc "calculate # of jobs per member on the Delayed::Job error_or_failure queue"
     task :jobs_per_member do |t, args|
       jobs = Delayed::Job.where(queue: "error_or_failure")
@@ -146,6 +87,7 @@ namespace :'phantom-dc' do
       puts "\nTotal members: "+people.length.to_s
       puts "Total captcha'd members: "+captchad_hash.length.to_s
     end
+
     desc "for error_or_failure jobs that have no zip4, look up the zip4, save, and retry"
     task :zip4_retry, :regex do |t, args|
       regex = args[:regex].blank? ? nil : Regexp.compile(args[:regex])
@@ -190,6 +132,7 @@ namespace :'phantom-dc' do
         DelayedJobHelper::destroy_job_and_dependents job
       end
     end
+
     desc "delete jobs that were generated during the fill_out_all rake task"
     task :delete_rake do |t, args|
       jobs = Delayed::Job.where(queue: "error_or_failure")
@@ -198,6 +141,7 @@ namespace :'phantom-dc' do
         DelayedJobHelper::destroy_job_and_dependents(job) if handler.args[1] == "rake"
       end
     end
+
     desc "fix duplicate values of any field: choose the first one"
     task :fix_duplicates, :field, :regex do |t, args|
       regex = args[:regex].blank? ? nil : Regexp.compile(args[:regex])
@@ -227,7 +171,12 @@ namespace :'phantom-dc' do
       end
     end
 
+    desc "deduplicate the job queue by legislator + message fields"
+    task :deduplicate do |t|
+      DeduplicateJobs.new(Delayed::Job.where(queue: "error_or_failure")).execute
+    end
   end
+
   desc "Git pull and reload changed CongressMember records into db"
   task :update_git do |t, args|
 
@@ -238,6 +187,26 @@ namespace :'phantom-dc' do
       update_db_with_git_object g, ds
     end
   end
+
+  desc "Update CWC office codes. Run once after switching to CWC delivery."
+  task :update_cwc_codes do |t, args|
+    CongressMember.all.each do |cm|
+      if term = get_legislator_info(cm.bioguide_id)["terms"].try(:last)
+        if term["type"] == "sen"
+          cm.chamber = "senate"
+          cm.senate_class = term["class"]
+          cm.house_district = nil
+        else
+          cm.chamber = "house"
+          cm.house_district = term["district"]
+          cm.senate_class = nil
+        end
+        cm.state = term["state"]
+        cm.save
+      end
+    end
+  end
+
   desc "Reload CongressMember record into db given data source and bioguide regex"
   task :update_member, :data_source_name, :regex do |t, args|
     data_source = args[:data_source_name].blank? ? nil : DataSource.find_by_name(args[:data_source_name])
@@ -248,6 +217,7 @@ namespace :'phantom-dc' do
       update_db_member_by_file f, data_source.prefix
     end
   end
+
   desc "Set updated at for congress members"
   task :updated_at, :regex, :time do |t, args|
     time = args[:time].blank? ? Time.now : eval(args[:time])
@@ -258,6 +228,7 @@ namespace :'phantom-dc' do
       c.save
     end
   end
+
   desc "Analyze how common the expected values of fields are"
   task :common_fields do |t, args|
     values_hash = {}
@@ -285,6 +256,7 @@ namespace :'phantom-dc' do
       puts v[0] + " : " + appears_percent.to_s + "% (" + required_percent.to_s + "%)"
     end
   end
+
   desc "Run through filling out of all congress members"
   task :fill_out_all, :regex do |t, args|
     response = Typhoeus.get("https://raw.githubusercontent.com/EFForg/congress-zip-plus-four/master/legislators.json")
@@ -358,6 +330,20 @@ namespace :'phantom-dc' do
     end
 
     puts "No congressional defaults found for the following members: " + notfound.inspect
+  end
+
+  desc "Enable defunct status of congressmember"
+  task :defunct, :bioguide_id, :contact_url do |t, args|
+    cm = CongressMember.find_by!(bioguide_id: args[:bioguide_id])
+    attrs = { defunct: true }
+    attrs.merge!(contact_url: args[:contact_url]) if args[:contact_url]
+    cm.update!(attrs)
+  end
+
+  desc "Disable defunct status of congressmember"
+  task :undefunct, :bioguide_id do |t, args|
+    cm = CongressMember.find_by!(bioguide_id: args[:bioguide_id])
+    cm.update!(defunct: false, contact_url: nil)
   end
 end
 
@@ -441,9 +427,8 @@ def create_congress_member_from_hash congress_member_details, prefix
     end
     c.success_criteria = congress_member_details["contact_form"]["success"]
 
-    #Git updates shouldn't fail if we can't match a senate/house code from CWC, just let them proceed without it. Very useful for custom forms.
-    begin
-      term = congress_member_details["terms"][-1]
+    # Git updates shouldn't fail if we can't match a senate/house code from CWC, just let them proceed without it. Very useful for custom forms.
+    if term = get_legislator_info(c.bioguide_id)["terms"].try(:last)
       if term["type"] == "sen"
         c.chamber = "senate"
         c.senate_class = term["class"]
@@ -454,7 +439,6 @@ def create_congress_member_from_hash congress_member_details, prefix
         c.senate_class = nil
       end
       c.state = term["state"]
-    rescue
     end
     c.updated_at = Time.now
     c.save
@@ -466,25 +450,6 @@ def create_action_add_to_member action, step, member
   yield cmf
   cmf.congress_member = member
   cmf.save
-end
-
-def retrieve_captchad_cached captcha_hash, cm_id
-  return captcha_hash[cm_id] if captcha_hash.include? cm_id
-  return false
-  #captcha_hash[cm_id] = CongressMember.find(cm_id).has_captcha?
-end
-
-def build_captcha_hash
-  captcha_hash = {}
-  CongressMemberAction.where(value: "$CAPTCHA_SOLUTION").each do |cma|
-    captcha_hash[cma.congress_member_id] = true
-  end
-
-  recaptcha_hash = {}
-  CongressMemberAction.where(action: "recaptcha").each do |cma|
-    recaptcha_hash[cma.congress_member_id] = true
-  end
-  [captcha_hash,recaptcha_hash]
 end
 
 def retrieve_jobs args
@@ -510,6 +475,6 @@ def get_legislator_info(bioguide_id)
       info.merge!(historical_info)
     end
 
-  #defaults to empty so it won't break if it fails to match the member to CWC data
-  @legislator_info.fetch(bioguide_id,{})
+  # defaults to empty so it won't break if it fails to match the member to CWC data
+  @legislator_info.fetch(bioguide_id, {})
 end

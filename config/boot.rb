@@ -30,6 +30,8 @@ unless SENTRY_DSN.nil?
   Raven.configure do |config|
     config.dsn = SENTRY_DSN
   end
+
+  Padrino.use Raven::Rack
 end
 
 ##
@@ -60,6 +62,8 @@ end
 #
 Padrino.before_load do
   Padrino.dependency_paths << Padrino.root("app/uploaders/*.rb")
+  Padrino.dependency_paths << Padrino.root("app/tasks/*.rb")
+  Padrino.dependency_paths << Padrino.root("app/helpers/*.rb")
 end
 
 ##
