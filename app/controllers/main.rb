@@ -118,7 +118,7 @@ CongressForms::App.controller do
       blue = 0
 
       color_hex = sprintf("%02X%02X%02X", red, green, blue)
-      redirect to(CongressMember::RECENT_FILL_IMAGE_BASE + 'success-' + (success_rate * 100).to_i.to_s + '%-' + color_hex + CongressMember::RECENT_FILL_IMAGE_EXT), 302
+      redirect to(CongressMember::RECENT_FILL_IMAGE_BASE + 'success-' + (success_rate * 100).to_i.to_s + '%25-' + color_hex + CongressMember::RECENT_FILL_IMAGE_EXT), 302
     end
   end
 
