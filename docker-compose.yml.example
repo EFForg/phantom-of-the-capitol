@@ -29,6 +29,5 @@ services:
   #  env_file: .env
   #  volumes:
   #    - ./docker/cron/update_git:/opt/phantomdc/cron/update_git
-  #    - ./docker/cron/report_queued_jobs:/opt/phantomdc/cron/report_queued_jobs
   #  command: bash -c "env | sed 's@^@export @' >/etc/profile.d/env.sh; cp ./cron/* /etc/cron.d; cron -f"
 
