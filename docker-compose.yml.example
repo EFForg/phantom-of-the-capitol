@@ -22,8 +22,12 @@ services:
   # manually update them via `rake phantom-dc:update_git` within the container.
   #
   #cron:
-  #  image: docker
+  #  build: .
+  #  restart: always
+  #  depends_on:
+  #    - db
+  #  env_file: .env
   #  volumes:
-  #    - /var/run/docker.sock:/var/run/docker.sock
-  #    - ./docker/cron/crontab:/etc/crontabs/root
-  #  command: crond -f
+  #    - ./docker/cron/update_git:/opt/phantomdc/cron/update_git
+  #  command: bash -c "env | sed 's@^@export @' >/etc/profile.d/env.sh; cp ./cron/* /etc/cron.d; cron -f"
+
