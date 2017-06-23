@@ -1,1 +1,0 @@
-*/15 * * * * docker exec phantomdc_phantomdc_1 bash -l -c 'rake phantom-dc:update_git'

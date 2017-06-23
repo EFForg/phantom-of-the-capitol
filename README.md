@@ -19,7 +19,7 @@ This project relies on:
 
 # How to Use This API
 
-This API is deployed for public consumption at [congressforms.eff.org](https://congressforms.eff.org/). Navigate there to see notes on consumption.
+Documentation is located [here](https://github.com/EFForg/phantom-of-the-capitol/blob/master/app/views/index.md).
 
 # How to Contribute to This Project
 
@@ -55,7 +55,6 @@ If you're actively developing, you'll probably also want to share your host dire
 To run the test suite using docker, run:
 
 ```bash
-$    sudo docker-compose -f docker-compose.test.yml up
 $    sudo docker-compose -f docker-compose.test.yml run test_app rspec spec
 ```
 
