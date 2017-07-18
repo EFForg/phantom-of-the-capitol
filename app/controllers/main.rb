@@ -128,6 +128,10 @@ CongressForms::App.controller do
 
 
   before :'fill-out-form' do
+    if respond_to?(:preprocess_message) && !preprocess_message(request, params["bio_id"], params["fields"])
+      halt 403, {}, "Access Denied"
+    end
+
     if params["bio_id"] && (cm = CongressMember.bioguide(params["bio_id"]))
       if cwc_office_supported?(cm.cwc_office_code)
         status, headers, body = call env.merge("PATH_INFO" => "/cwc/#{cm.cwc_office_code}/messages")

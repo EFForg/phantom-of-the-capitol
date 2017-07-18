@@ -47,6 +47,10 @@ class PerformFills
 
     Raven::Context.clear!
 
+    if respond_to?(:preprocess_job) && !preprocess_job(cm.bioguide_id, fields)
+      return true
+    end
+
     if cwc_member?(cm)
       begin
         fields["$ADDRESS_STATE_POSTAL_ABBREV"] ||= cm.state
