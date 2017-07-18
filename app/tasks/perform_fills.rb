@@ -82,6 +82,10 @@ class PerformFills
 
       status
     end
+  rescue => e
+    Raven.capture_exception(e, tags: { "rake" => true },
+                            extra: { delayed_job_id: job.id })
+    return false
   end
 
   def cm_hash
