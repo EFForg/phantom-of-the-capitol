@@ -47,7 +47,7 @@ class PerformFills
 
     Raven::Context.clear!
 
-    if respond_to?(:preprocess_job) && !preprocess_job(cm.bioguide_id, fields)
+    if respond_to?(:preprocess_job) && preprocess_job(cm.bioguide_id, fields) == false
       return true
     end
 
