@@ -2,6 +2,10 @@
 require "cwc"
 
 CongressForms::App.controller do
+  before do
+    Raven.tags_context web: true
+  end
+
   get "cwc/:office_code/fields" do
     cm = CongressMember.find_by_cwc_office_code(params[:office_code])
     cm.as_cwc_required_json.to_json
@@ -43,7 +47,8 @@ CongressForms::App.controller do
       logger.warn("Cwc::BadRequest:")
       e.errors.each{ |error| logger.warn("  * #{error}") }
 
-      Raven.capture_exception(e, extra: { bioguide: cm.bioguide_id, errors: e.errors })
+      Raven.capture_message("Cwc::BadRequest: #{e.errors.last}",
+                            extra: { bioguide: cm.bioguide_id, fields: fields, errors: e.errors })
       { status: "error" }.to_json
     end
   end

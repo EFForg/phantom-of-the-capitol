@@ -238,8 +238,8 @@ class CongressMember < ActiveRecord::Base
     fill_out_form_with_capybara f, :webkit, &block
   end
 
-  def fill_out_form_with_capybara f={}, driver
-    session = Capybara::Session.new(driver)
+  def fill_out_form_with_capybara f, driver, session=nil
+    session ||= Capybara::Session.new(driver)
     session.driver.options[:js_errors] = false if driver == :poltergeist
     session.driver.options[:phantomjs_options] = ['--ssl-protocol=TLSv1'] if driver == :poltergeist
     if has_google_recaptcha?
@@ -252,8 +252,12 @@ class CongressMember < ActiveRecord::Base
       end
     end
 
+    form_fill_log(f, "begin")
+
     begin
       actions.order(:step).each do |a|
+        form_fill_log(f, %(#{a.action}(#{a.selector.inspect+", " if a.selector.present?}#{a.value.inspect})))
+
         case a.action
         when "visit"
           session.visit(a.value)
@@ -315,9 +319,9 @@ class CongressMember < ActiveRecord::Base
                     elem = session.first('option[value="' + a.value.gsub('"', '\"') + '"]')
                   rescue Capybara::ElementNotFound
                     begin
-                      elem = session.find('option', text: Regexp.compile("^" + Regexp.escape(a.value) + "$"))
+                      elem = session.find('option', text: Regexp.compile("^" + Regexp.escape(a.value) + "(\\W|$)"))
                     rescue Capybara::Ambiguous
-                      elem = session.first('option', text: Regexp.compile("^" + Regexp.escape(a.value) + "$"))
+                      elem = session.first('option', text: Regexp.compile("^" + Regexp.escape(a.value) + "(\\W|$)"))
                     end
                   end
                   elem.select_option
@@ -329,9 +333,9 @@ class CongressMember < ActiveRecord::Base
                   elem = session.first('option[value="' + f[a.value].gsub('"', '\"') + '"]')
                 rescue Capybara::ElementNotFound
                   begin
-                    elem = session.find('option', text: Regexp.compile("^" + Regexp.escape(f[a.value]) + "$"))
+                    elem = session.find('option', text: Regexp.compile("^" + Regexp.escape(f[a.value]) + "(\\W|$)"))
                   rescue Capybara::Ambiguous
-                    elem = session.first('option', text: Regexp.compile("^" + Regexp.escape(f[a.value]) + "$"))
+                    elem = session.first('option', text: Regexp.compile("^" + Regexp.escape(f[a.value]) + "(\\W|$)"))
                   end
                 end
                 elem.select_option
@@ -371,11 +375,15 @@ class CongressMember < ActiveRecord::Base
       end
 
       success = check_success session.text
+      form_fill_log(f, "done: #{success ? 'passing' : 'failing'} success criteria")
 
       success_hash = {success: success}
       success_hash[:screenshot] = self.class::save_screenshot_and_store_poltergeist(session) if !success
       success_hash
     rescue Exception => e
+      form_fill_log(f, "done: unsuccessful fill (#{e.class})")
+      Raven.extra_context(backtrace: e.backtrace)
+
       message = {success: false, message: e.message, exception: e}
       message[:screenshot] = self.class::save_screenshot_and_store_poltergeist(session)
       message
@@ -494,6 +502,7 @@ class CongressMember < ActiveRecord::Base
     screenshot_location = random_screenshot_location
     driver.save_screenshot(screenshot_location)
     url = store_screenshot_from_location screenshot_location
+    Raven.extra_context(screenshot: url)
     File.unlink screenshot_location
     url
   end
@@ -502,6 +511,7 @@ class CongressMember < ActiveRecord::Base
     screenshot_location = random_screenshot_location
     session.save_screenshot(screenshot_location, full: true)
     url = store_screenshot_from_location screenshot_location
+    Raven.extra_context(screenshot: url)
     File.unlink screenshot_location
     url
   end
@@ -632,6 +642,15 @@ class CongressMember < ActiveRecord::Base
     cms.to_json
   end
 
+  private
+
+  def form_fill_log(fields, message)
+    log_message = "#{bioguide_id} fill (#{[bioguide_id, fields].hash.to_s(16)}): #{message}"
+    Padrino.logger.info(log_message)
+
+    Raven.extra_context(fill_log: "") unless Raven.context.extra.key?(:fill_log)
+    Raven.context.extra[:fill_log] << message << "\n"
+  end
 end
 
 

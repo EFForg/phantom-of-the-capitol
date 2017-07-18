@@ -7,7 +7,10 @@ class FillHandler
   end
 
   def create_thread fields={}, campaign_tag
+    sentry_context = Raven::Context.current
     @thread = Thread.new do
+      Thread.current[:sentry_context] = sentry_context
+
       begin
         if DELAY_ALL_NONCAPTCHA_FILLS and not @c.has_captcha? and not @debug
           @c.delay(queue: "default").fill_out_form fields, campaign_tag

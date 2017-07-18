@@ -43,22 +43,40 @@ class PerformFills
     pp cm_args
 
     fields, campaign_tag = cm_args[0].merge(overrides), cm_args[1]
+    fields["$SUBJECT"] ||= fields["$MESSAGE"].truncate_words(13)
+
+    Raven::Context.clear!
 
     if cwc_member?(cm)
       begin
-        fields["$SUBJECT"] ||= fields["$MESSAGE"].truncate_words(13)
         fields["$ADDRESS_STATE_POSTAL_ABBREV"] ||= cm.state
 
         cm.message_via_cwc(fields, campaign_tag: campaign_tag)
       rescue Cwc::BadRequest => e
         warn("Cwc::BadRequest:")
         e.errors.each{ |error| warn("  * #{error}") }
+
+        Raven.capture_message("Cwc::BadRequest: #{e.errors.last}",
+                              tags: { "rake" => true },
+                              extra: { bioguide: cm.bioguide_id,
+                                       delayed_job_id: job.id,
+                                       fields: fields,
+                                       errors: e.errors })
+
         false
       end
     elsif recaptcha_member?(cm) && RACK_ENV != "development"
       cm.fill_out_form_with_watir(cm_args[0].merge(overrides), &block)[:success]
     elsif RACK_ENV != "development"
-      cm.fill_out_form(cm_args[0].merge(overrides), cm_args[1], &block).success?
+      status = cm.fill_out_form(cm_args[0].merge(overrides), cm_args[1], &block).success?
+
+      unless status
+        Raven.capture_message("Form error: #{cm.bioguide_id}",
+                              tags: { "rake" => true, "form_error" => true },
+                              extra: { delayed_job_id: job.id })
+      end
+
+      status
     end
   end
 
