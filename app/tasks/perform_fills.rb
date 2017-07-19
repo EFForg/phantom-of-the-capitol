@@ -49,7 +49,7 @@ class PerformFills
     end
 
     puts red("Job #" + job.id.to_s + ", bioguide " + cm.bioguide_id)
-    pp cm_args
+    pp [fields, campaign_tag]
 
     if cwc_member?(cm)
       begin
