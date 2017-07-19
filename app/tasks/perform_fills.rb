@@ -39,9 +39,6 @@ class PerformFills
     cm_id, cm_args = DelayedJobHelper::congress_member_id_and_args_from_handler(job.handler)
     cm = CongressMember::retrieve_cached(cm_hash, cm_id)
 
-    puts red("Job #" + job.id.to_s + ", bioguide " + cm.bioguide_id)
-    pp cm_args
-
     fields, campaign_tag = cm_args[0].merge(overrides), cm_args[1]
     fields["$SUBJECT"] ||= fields["$MESSAGE"].truncate_words(13)
 
@@ -50,6 +47,9 @@ class PerformFills
     if respond_to?(:preprocess_job) && preprocess_job(job, cm.bioguide_id, fields) == false
       return true
     end
+
+    puts red("Job #" + job.id.to_s + ", bioguide " + cm.bioguide_id)
+    pp cm_args
 
     if cwc_member?(cm)
       begin
