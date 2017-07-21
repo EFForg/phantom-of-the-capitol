@@ -70,9 +70,9 @@ class PerformFills
         false
       end
     elsif recaptcha_member?(cm) && RACK_ENV != "development"
-      cm.fill_out_form_with_watir(cm_args[0].merge(overrides), &block)[:success]
+      cm.fill_out_form_with_watir(fields, &block)[:success]
     elsif RACK_ENV != "development"
-      status = cm.fill_out_form(cm_args[0].merge(overrides), cm_args[1], &block).success?
+      status = cm.fill_out_form(fields, cm_args[1], &block).success?
 
       unless status
         Raven.capture_message("Form error: #{cm.bioguide_id}",
