@@ -24,6 +24,8 @@ class PerformFills
     end
 
     queue.each do |job|
+      Raven::Context.clear!
+
       success = run_job(job) do |img|
         puts img
         STDIN.gets.strip
@@ -41,8 +43,6 @@ class PerformFills
 
     fields, campaign_tag = cm_args[0].merge(overrides), cm_args[1]
     fields["$SUBJECT"] ||= fields["$MESSAGE"].truncate_words(13)
-
-    Raven::Context.clear!
 
     if respond_to?(:preprocess_job) && preprocess_job(job, cm.bioguide_id, fields) == false
       return true
