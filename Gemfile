@@ -1,5 +1,4 @@
 source 'https://rubygems.org'
-ruby "2.2.0"
 
 # Distribute your app as a gem
 # gemspec
@@ -50,7 +49,7 @@ gem 'carrierwave'
 gem 'fog'
 gem 'headless'
 gem 'typhoeus'
-gem 'watir-webdriver'
+gem 'watir'
 gem 'smarty_streets'
 gem 'groupdate'
 gem 'sentry-raven'
