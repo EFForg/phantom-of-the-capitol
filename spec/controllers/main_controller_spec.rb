@@ -201,6 +201,19 @@ describe "Main controller" do
       expect(CampaignTag.last.name).to eq(@campaign_tag)
     end
 
+    it "should 403 Forbidden when #preprocess_message is defined and returns false" do
+      expect_any_instance_of(CongressForms::App).to receive(:preprocess_message){ false }
+
+      c = create :congress_member_with_actions
+      post_json @route, {
+        "bio_id" => c.bioguide_id,
+        "fields" => MOCK_VALUES,
+        "campaign_tag" => @campaign_tag
+      }.to_json
+
+      expect(last_response.status).to eq(403)
+    end
+
     describe "with a captcha" do
       before do
         c = create :congress_member_with_actions_and_captcha

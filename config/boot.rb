@@ -6,8 +6,11 @@ PADRINO_ROOT = File.expand_path('../..', __FILE__) unless defined?(PADRINO_ROOT)
 require 'rubygems' unless defined?(Gem)
 require 'bundler/setup'
 Bundler.require(:default, RACK_ENV)
+
+require "dotenv/load"
 require "#{Padrino.root}/config/env.rb"
 require "#{Padrino.root}/config/phantom-dc_config.rb"
+
 if File.exists?(file = "#{Padrino.root}/config/constants.rb")
   require file
 end

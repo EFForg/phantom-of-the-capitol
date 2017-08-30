@@ -24,6 +24,8 @@ class PerformFills
     end
 
     queue.each do |job|
+      Raven::Context.clear!
+
       success = run_job(job) do |img|
         puts img
         STDIN.gets.strip
@@ -39,13 +41,15 @@ class PerformFills
     cm_id, cm_args = DelayedJobHelper::congress_member_id_and_args_from_handler(job.handler)
     cm = CongressMember::retrieve_cached(cm_hash, cm_id)
 
-    puts red("Job #" + job.id.to_s + ", bioguide " + cm.bioguide_id)
-    pp cm_args
-
     fields, campaign_tag = cm_args[0].merge(overrides), cm_args[1]
     fields["$SUBJECT"] ||= fields["$MESSAGE"].truncate_words(13)
 
-    Raven::Context.clear!
+    if respond_to?(:preprocess_job) && preprocess_job(job, cm.bioguide_id, fields) == false
+      return true
+    end
+
+    puts red("Job #" + job.id.to_s + ", bioguide " + cm.bioguide_id)
+    pp [fields, campaign_tag]
 
     if cwc_member?(cm)
       begin
@@ -66,9 +70,9 @@ class PerformFills
         false
       end
     elsif recaptcha_member?(cm) && RACK_ENV != "development"
-      cm.fill_out_form_with_watir(cm_args[0].merge(overrides), &block)[:success]
+      cm.fill_out_form_with_watir(fields, &block)[:success]
     elsif RACK_ENV != "development"
-      status = cm.fill_out_form(cm_args[0].merge(overrides), cm_args[1], &block).success?
+      status = cm.fill_out_form(fields, cm_args[1], &block).success?
 
       unless status
         Raven.capture_message("Form error: #{cm.bioguide_id}",
@@ -78,6 +82,10 @@ class PerformFills
 
       status
     end
+  rescue => e
+    Raven.capture_exception(e, tags: { "rake" => true },
+                            extra: { delayed_job_id: job.id })
+    return false
   end
 
   def cm_hash

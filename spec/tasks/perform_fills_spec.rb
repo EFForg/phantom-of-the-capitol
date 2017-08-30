@@ -91,6 +91,16 @@ describe PerformFills do
       task.run_job(job)
     end
 
+    it "should call #preprocess_job if defined and not proceed if false" do
+      task = PerformFills.new([job], overrides: overrides)
+
+      expect(task).to receive(:preprocess_job){ false }
+      expect_any_instance_of(CongressMember).not_to receive(:message_via_cwc)
+      expect_any_instance_of(CongressMember).not_to receive(:fill_out_form)
+
+      task.run_job(job)
+    end
+
     context "congress member requires recaptcha" do
       let(:congress_member){ create :congress_member_with_actions_and_recaptcha }
 
