@@ -1,4 +1,7 @@
 class CongressMember < ActiveRecord::Base
+  require_dependency "app/helpers/message_fields_helper"
+  include MessageFieldsHelper
+
   validates_presence_of :bioguide_id
 
   has_many :actions, :class_name => 'CongressMemberAction', :dependent => :destroy
@@ -91,6 +94,8 @@ class CongressMember < ActiveRecord::Base
   end
 
   def fill_out_form f={}, ct = nil, &block
+    preprocess_message_fields(bioguide_id, f)
+
     status_fields = {
       congress_member: self,
       status: "success",
