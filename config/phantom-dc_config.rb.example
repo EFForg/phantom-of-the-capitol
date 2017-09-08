@@ -17,7 +17,8 @@ SMTP_SETTINGS = {
   address: ENV_PRIME["SMTP_ADDRESS"],
   port: ENV_PRIME["SMTP_PORT"],
   user_name: ENV_PRIME["SMTP_USER"],
-  password: ENV_PRIME["SMTP_PASS"]
+  password: ENV_PRIME["SMTP_PASS"],
+  from: ENV_PRIME["SMTP_FROM"]
 }.compact
 
 # Communicating With Congress
