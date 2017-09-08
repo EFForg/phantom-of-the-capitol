@@ -41,7 +41,7 @@ class NotifySender
       @contact_url = this.contact_url
       @congress_member = this.congress_member.bioguide_id
 
-      from SMTP_SETTINGS.fetch(:user_name)
+      from SMTP_SETTINGS.fetch(:from)
       to this.sender_email
       subject "Your recent message to Congress #{rand}"
 
