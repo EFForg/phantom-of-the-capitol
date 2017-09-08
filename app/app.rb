@@ -8,6 +8,10 @@ module CongressForms
 
     enable :sessions
 
+    if SMTP_SETTINGS.present?
+      set :delivery_method, smtp: SMTP_SETTINGS.merge(authentication: :plain, enable_starttls_auto: true)
+    end
+
     ##
     # Caching support.
     #

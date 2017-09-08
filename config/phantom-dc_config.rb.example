@@ -13,6 +13,13 @@ SMARTY_STREETS_TOKEN = ENV_PRIME['SMARTY_STREETS_TOKEN'] || ""
 # For the Sentry exception tracking platform.  Leave as nil if unused.
 SENTRY_DSN = ENV_PRIME['SENTRY_DSN']
 
+SMTP_SETTINGS = {
+  address: ENV_PRIME["SMTP_ADDRESS"],
+  port: ENV_PRIME["SMTP_PORT"],
+  user_name: ENV_PRIME["SMTP_USER"],
+  password: ENV_PRIME["SMTP_PASS"]
+}.compact
+
 # Communicating With Congress
 unless ENV["RACK_ENV"] == "test" || ENV_PRIME["CWC_API_KEY"].nil?
   Cwc::Client.configure(
