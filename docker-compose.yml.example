@@ -2,7 +2,7 @@ version: '2'
 services:
   app:
     build: .
-    restart: always
+    restart: unless-stopped
     depends_on:
       - db
     env_file: .env
