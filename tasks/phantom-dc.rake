@@ -450,6 +450,7 @@ def create_congress_member_from_hash congress_member_details, prefix
       end
       c.state = term["state"]
     end
+    c.name = congress_member_details.dig("name", "last")
     c.updated_at = Time.now
     c.save
   end
