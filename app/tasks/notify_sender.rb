@@ -1,12 +1,13 @@
 class NotifySender
-  attr_reader :delayed_job
+  attr_reader :congress_member, :sender_fields
 
-  def initialize(delayed_job)
-    @delayed_job = delayed_job
+  def initialize(congress_member, fields)
+    @congress_member = congress_member
+    @sender_fields = fields
   end
 
   def contact_url
-    congress_member.actions.find_by!(action: "visit").value
+    congress_member.contact_url || congress_member.actions.find_by!(action: "visit").value
   end
 
   def sender_email
@@ -18,19 +19,11 @@ class NotifySender
   end
 
   def sender_name
-    sender_fields["$NAME_FIRST"]
-  end
-
-  def sender_fields
-    handler.args[0]
-  end
-
-  def congress_member
-    handler.object.reload
-  end
-
-  def handler
-    @handler ||= YAML.load(delayed_job.handler)
+    if sender_fields["$NAME_PREFIX"].present?
+      %(#{sender_fields["$NAME_PREFIX"]} #{sender_fields["$NAME_SUFFIX"]})
+    else
+      %(#{sender_fields["$NAME_FIRST"]} #{sender_fields["$NAME_LAST"]})
+    end.strip
   end
 
   def execute
@@ -39,11 +32,16 @@ class NotifySender
       @name = this.sender_name
       @message = this.sender_message
       @contact_url = this.contact_url
-      @congress_member = this.congress_member.bioguide_id
+
+      if this.congress_member.chamber == "house"
+        @congress_member = "Representative #{this.congress_member.name}"
+      else
+        @congress_member = "Senator #{this.congress_member.name}"
+      end
 
       from SMTP_SETTINGS.fetch(:from)
       to this.sender_email
-      subject "Your recent message to Congress #{rand}"
+      subject "Your message to #{@congress_member} could not be delivered"
 
       content_type :html
       body render("undeliverable_notification")

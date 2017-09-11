@@ -1,8 +1,8 @@
-<p>Hello <%= @name %>,</p>
+<p>Dear <%= @name %>,</p>
 
 <p>We were unable to deliver your message to <%= @congress_member %> automatically.
 
-Possible reasons this could have occurred are:</p>
+This might have occurred because:</p>
 
 <ul>
   <li>The message contains forbidden characters or is too long</li>
@@ -11,7 +11,7 @@ Possible reasons this could have occurred are:</p>
   <li>Other technical difficulties were encountered while interacting with the contact form</li>
 </ul>
 
-<p>We apologize for being unable to deliver your message. To write to your senator directly, please visit <a href="<%= @contact_url %>"><%= @contact_url %></a>.</p>
+<p>We apologize for being unable to deliver your message. To write to <%= @congress_member %> directly, please visit <a href="<%= @contact_url %>"><%= @contact_url %></a>.</p>
 
 <p>The text of your message was:</p>
 
