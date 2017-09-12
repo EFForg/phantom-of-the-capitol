@@ -1,2 +1,2 @@
-*/15 * * * * bash -l -c 'cd /opt/phantomdc && bundle exec rake phantom-dc:update_git'
+*/15 * * * * root bash -l -c 'cd /opt/phantomdc && bundle exec rake phantom-dc:update_git'
 
