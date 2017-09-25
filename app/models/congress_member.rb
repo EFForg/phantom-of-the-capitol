@@ -90,7 +90,10 @@ class CongressMember < ActiveRecord::Base
     }.merge(o)
   end
 
-  def fill_out_form f={}, ct = nil, &block
+  attr_accessor :persist_session
+  alias_method :persist_session?, :persist_session
+
+  def fill_out_form f={}, ct = nil, session: nil, &block
     status_fields = {
       congress_member: self,
       status: "success",
@@ -98,7 +101,7 @@ class CongressMember < ActiveRecord::Base
     }
     status_fields[:campaign_tag] = ct unless ct.nil?
 
-    success_hash = fill_out_form_with_capybara f, &block
+    success_hash = fill_out_form_with_capybara f, session, &block
 
     unless success_hash[:success]
       status_fields[:status] = success_hash[:exception] ? "error" : "failure"
@@ -151,7 +154,7 @@ class CongressMember < ActiveRecord::Base
               if a.options and a.options["google_recaptcha"]
                 begin
                   url = self.class::save_google_recaptcha_and_store_poltergeist(session,a.captcha_selector)
-                  captcha_value = yield url
+                  captcha_value = yield(url, session, a)
                   if captcha_value == false
                     break # finish_workflow has been called
                   end
@@ -172,7 +175,7 @@ class CongressMember < ActiveRecord::Base
                 location = CAPTCHA_LOCATIONS.keys.include?(bioguide_id) ? CAPTCHA_LOCATIONS[bioguide_id] : session.driver.evaluate_script('document.querySelector("' + a.captcha_selector.gsub('"', '\"') + '").getBoundingClientRect();')
                 url = self.class::save_captcha_and_store_poltergeist session, location["left"], location["top"], location["width"], location["height"]
 
-                captcha_value = yield url
+                captcha_value = yield(url, session, a)
                 if captcha_value == false
                   break # finish_workflow has been called
                 end
@@ -270,7 +273,7 @@ class CongressMember < ActiveRecord::Base
       message[:screenshot] = self.class::save_screenshot_and_store_poltergeist(session)
       message
     ensure
-      session.driver.quit
+      session.driver.quit unless persist_session?
     end
   end
 

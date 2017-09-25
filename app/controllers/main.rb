@@ -62,8 +62,8 @@ CongressForms::App.controller do
       return { status: "success", test: true }.to_json
     end
 
-    handler = FillHandler.new(c)
-    result = handler.fill fields, params["campaign_tag"]
+    handler = FillHandler.new(c, fields, params["campaign_tag"])
+    result = handler.fill
     result[:uid] = SecureRandom.hex
     fh[result[:uid]] = handler if result[:status] == "captcha_needed"
 
