@@ -11,11 +11,6 @@ RSpec.configure do |conf|
     allow_any_instance_of(CaptchaUploader).to receive(:'store!')
     allow_any_instance_of(ScreenshotUploader).to receive(:'store!')
   end
-
-  conf.before(:suite) do
-    LocalhostServer.new(TESTSERVER.new, 3002)
-  end
-
 end
 
 # You can use this method to custom specify a Rack app
