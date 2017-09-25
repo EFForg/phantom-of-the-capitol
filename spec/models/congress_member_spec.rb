@@ -57,11 +57,6 @@ describe CongressMember do
       expect(after_of).to be < (before_of + @of_iterations)
     end
 
-    it "should add a success record to the FillStatus table when successfully filling in a form via CongressMember.fill_out_form" do
-      @congress_member.fill_out_form(MOCK_VALUES)
-      expect(FillStatus.success.count).to eq(1)
-    end
-
     it "should successfully fill form for a congress member and create a new tag when one is provided via CongressMember.fill_out_form" do
       @campaign_tag = "some campaign"
       expect(@congress_member.fill_out_form(MOCK_VALUES, @campaign_tag)).to be_truthy
