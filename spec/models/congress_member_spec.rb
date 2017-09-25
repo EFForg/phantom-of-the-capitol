@@ -45,7 +45,11 @@ describe CongressMember do
     end
 
     it "should successfully fill form for a congress member via CongressMember.fill_out_form" do
-      expect(@congress_member.fill_out_form(MOCK_VALUES)).to be_truthy
+      v = MOCK_VALUES
+      cm = @congress_member
+      r = cm.fill_out_form(v)
+      exp = expect(r)
+      exp.to be_truthy
     end
 
     it "should successfully fill form for a congress member via CongressMember.fill_out_form_with_capybara" do
