@@ -1,10 +1,3 @@
-PATH
-  remote: cwc
-  specs:
-    cwc (0.0.1)
-      nokogiri
-      rest-client
-
 GEM
   remote: https://rubygems.org/
   specs:
@@ -324,7 +317,6 @@ DEPENDENCIES
   activerecord
   capybara
   carrierwave
-  cwc!
   database_cleaner
   delayed_job_active_record
   dotenv
@@ -345,6 +337,7 @@ DEPENDENCIES
   rack-test
   rake
   redcarpet
+  rest-client
   rspec
   sentry-raven
   slim
