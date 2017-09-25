@@ -55,8 +55,7 @@ gem 'groupdate'
 gem 'sentry-raven'
 gem 'dotenv'
 gem 'rack-cors'
-
-gem 'cwc', path: "./cwc"
+gem 'rest-client'
 
 
 # Or Padrino Edge
