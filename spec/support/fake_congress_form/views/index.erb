@@ -1,0 +1,76 @@
+<html>
+  <head>
+    <script src="/jquery-1.10.2.min.js" type="text/javascript"></script>
+    <script src="/ui.js" type="text/javascript"></script>
+  </head>
+  <body>
+    <h1>CongressCritter Mickey Mouse</h1>
+    <form action='/contact-result' method='POST'>
+      <div class='contact-row'>
+        <label for='zip'>Zip:</label>
+        <input name='zip' id='zip' required></input>
+      </div>
+      <div class='contact-row'>
+        <label for='prefix'>Prefix:</label>
+        <select name='prefix' id='prefix' required>
+          <option value='1'>Mr.</option>
+          <option value='2'>Mrs.</option>
+          <option value='3'>Ms.</option>
+          <option value='4'>Grand Moff</option>
+        </select>
+      </div>
+      <div class='contact-row'>
+        <label for='first-name'>First Name:</label>
+        <input name='first-name' id='first-name' required></input>
+      </div>
+      <div class='contact-row'>
+        <label for='last-name'>Last Name:</label>
+        <input name='last-name' id='last-name' required></input>
+      </div>
+      <div class='contact-row'>
+        <label for='address'>Address:</label>
+        <input name='address' id='address' required></input>
+      </div>
+      <div class='contact-row'>
+        <label for='city'>City:</label>
+        <input name='city' id='city' required></input>
+      </div>
+      <div class='contact-row'>
+        <label for='phone'>Phone:</label>
+        <input name='phone' id='phone'></input>
+      </div>
+      <div class='contact-row'>
+        <label for='email'>Email:</label>
+        <input name='email' id='email' required></input>
+      </div>
+      <div class='contact-row'>
+        <label for='email-opt-in'>I want to be subscribed to the CongressCritter e-list</label>
+        <input type='checkbox' name='email-opt-in' id='email-opt-in'>
+      </div>
+      <div class='contact-row'>
+        <label for='email-opt-out'>I want a reply from the CongressCritter</label>
+        <input type='checkbox' name='email-opt-out' id='email-opt-out' checked>
+      </div>
+      <div class='contact-row'>
+        <label for='favorite-color'>My favorite color is</label>
+        <input type='radio' value='blue' name='favorite-color'>Blue
+        <input type='radio' value='red' name='favorite-color'>Red
+        <input type='radio' value='green' name='favorite-color'>Green
+      </div>
+      <% if @captcha %>
+        <div class='contact-row'>
+          <img id='captcha-image' src='/images/captcha.png'>
+          <label for='captcha'>Captcha Text:</label>
+          <input name='captcha' id='captcha'>
+        </div>
+      <% end %>
+      <div class='contact-row'>
+        <label for='message'>Message:</label>
+        <textarea name='message' id='message' required></textarea>
+      </div>
+      <div class='contact-row'>
+        <input type='submit' value='send'>
+      </div>
+    </form>
+  </body>
+</html>
