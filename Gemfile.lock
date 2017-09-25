@@ -29,9 +29,6 @@ GEM
       rack (>= 1.0.0)
       rack-test (>= 0.5.4)
       xpath (~> 2.0)
-    capybara-webkit (1.7.1)
-      capybara (>= 2.3.0, < 2.6.0)
-      json
     carrierwave (0.10.0)
       activemodel (>= 3.2.0)
       activesupport (>= 3.2.0)
@@ -326,7 +323,6 @@ PLATFORMS
 DEPENDENCIES
   activerecord
   capybara
-  capybara-webkit
   carrierwave
   cwc!
   database_cleaner

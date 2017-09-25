@@ -98,13 +98,7 @@ class CongressMember < ActiveRecord::Base
     }
     status_fields[:campaign_tag] = ct unless ct.nil?
 
-    if REQUIRES_WATIR.include?(bioguide_id)
-      success_hash = fill_out_form_with_watir f, &block
-    elsif REQUIRES_WEBKIT.include?(bioguide_id)
-      success_hash = fill_out_form_with_webkit f, &block
-    else
-      success_hash = fill_out_form_with_poltergeist f, &block
-    end
+    success_hash = fill_out_form_with_capybara f, &block
 
     unless success_hash[:success]
       status_fields[:status] = success_hash[:exception] ? "error" : "failure"
@@ -129,127 +123,15 @@ class CongressMember < ActiveRecord::Base
     fill_out_form(f, ct, &block)[0] or raise FillError.new
   end
 
-  # we might want to implement the "wait" option for the "find"
-  # directive (see fill_out_form_with_poltergeist)
-  def fill_out_form_with_watir f={}
-    b = Watir::Browser.new
-    begin
-      actions.order(:step).each do |a|
-        case a.action
-        when "visit"
-          b.goto a.value
-        when "wait"
-          sleep a.value.to_i
-        when "fill_in"
-          if a.value.starts_with?("$")
-            if a.value == "$CAPTCHA_SOLUTION"
-              location = b.element(:css => a.captcha_selector).wd.location
-
-              captcha_elem = b.element(:css => a.captcha_selector)
-              width = captcha_elem.style("width").delete("px")
-              height = captcha_elem.style("height").delete("px")
-
-              url = self.class::save_captcha_and_store_watir b.driver, location.x, location.y, width, height
-
-              captcha_value = yield url
-              b.element(:css => a.selector).to_subtype.set(captcha_value)
-            else
-              if a.options
-                options = YAML.load a.options
-                if options.include? "max_length"
-                  f[a.value] = f[a.value][0...(0.95 * options["max_length"]).floor]
-                end
-              end
-              b.element(:css => a.selector).to_subtype.set(f[a.value].gsub("\t","    ")) unless f[a.value].nil?
-            end
-          else
-            b.element(:css => a.selector).to_subtype.set(a.value) unless a.value.nil?
-          end
-        when "select"
-          begin
-            if f[a.value].nil?
-              unless PLACEHOLDER_VALUES.include? a.value
-                elem = b.element(:css => a.selector).to_subtype
-                begin
-                  elem.select_value(a.value)
-                rescue Watir::Exception::NoValueFoundException
-                  elem.select(a.value)
-                end
-              end
-            else
-              elem = b.element(:css => a.selector).to_subtype
-              begin
-                elem.select_value(f[a.value])
-              rescue Watir::Exception::NoValueFoundException
-                elem.select(f[a.value])
-              end
-            end
-          rescue Watir::Exception::NoValueFoundException => e
-            raise e, e.message unless a.options == "DEPENDENT"
-          end
-        when "click_on"
-          b.element(:css => a.selector).to_subtype.click
-        when "find"
-          if a.value.nil?
-            b.element(:css => a.selector).wait_until_present
-          else
-            b.element(:css => a.selector).wait_until_present
-            b.element(:css => a.selector).parent.wait_until_present
-            b.element(:css => a.selector).parent.element(:text => Regexp.compile(a.value)).wait_until_present
-          end
-        when "check"
-          b.element(:css => a.selector).to_subtype.set
-        when "uncheck"
-          b.element(:css => a.selector).to_subtype.clear
-        when "choose"
-          if a.options.nil?
-            b.element(:css => a.selector).to_subtype.set
-          else
-            b.element(:css => a.selector + '[value="' + f[a.value].gsub('"', '\"') + '"]').to_subtype.set
-          end
-        when "javascript"
-          b.execute_script(a.value)
-        when "recaptcha"
-          sleep 100
-        end
-      end
-
-      success = check_success b.text
-
-      success_hash = { success: success }
-      success_hash[:screenshot] = self.class::save_screenshot_and_store_watir(b.driver) if !success
-      success_hash
-    rescue Exception => e
-      message = {success: false, message: e.message, exception: e}
-      message[:screenshot] = self.class::save_screenshot_and_store_watir(b.driver)
-      message
-    ensure
-      b.close
-    end
-  end
-
   DEFAULT_FIND_WAIT_TIME = 5  
 
-  def fill_out_form_with_poltergeist f={}, &block
-    fill_out_form_with_capybara f, :poltergeist, &block
-  end
-
-  def fill_out_form_with_webkit f={}, &block
-    fill_out_form_with_capybara f, :webkit, &block
-  end
-
-  def fill_out_form_with_capybara f, driver, session=nil
-    session ||= Capybara::Session.new(driver)
-    session.driver.options[:js_errors] = false if driver == :poltergeist
-    session.driver.options[:phantomjs_options] = ['--ssl-protocol=TLSv1'] if driver == :poltergeist
+  def fill_out_form_with_capybara f, session=nil
+    session ||= Capybara::Session.new(:poltergeist)
+    session.driver.options[:js_errors] = false
+    session.driver.options[:phantomjs_options] = ['--ssl-protocol=TLSv1']
     if has_google_recaptcha?
-      case driver
-      when :poltergeist
-        session.driver.headers = { 'User-Agent' => "Lynx/2.8.8dev.3 libwww-FM/2.14 SSL-MM/1.4.1"}
-        session.driver.timeout = 4 # needed in case some iframes don't respond
-      when :webkit
-        session.driver.header 'User-Agent' , "Lynx/2.8.8dev.3 libwww-FM/2.14 SSL-MM/1.4.1"
-      end
+      session.driver.headers = { 'User-Agent' => "Lynx/2.8.8dev.3 libwww-FM/2.14 SSL-MM/1.4.1"}
+      session.driver.timeout = 4 # needed in case some iframes don't respond
     end
 
     form_fill_log(f, "begin")
@@ -388,23 +270,7 @@ class CongressMember < ActiveRecord::Base
       message[:screenshot] = self.class::save_screenshot_and_store_poltergeist(session)
       message
     ensure
-      case driver
-      when :poltergeist
-        session.driver.quit
-      when :webkit
-        # ugly, but it works
-        pid = session.driver.instance_variable_get("@browser").instance_variable_get("@connection").instance_variable_get("@pid")
-        stdin = session.driver.instance_variable_get("@browser").instance_variable_get("@connection").instance_variable_get("@pipe_stdin")
-        stdout = session.driver.instance_variable_get("@browser").instance_variable_get("@connection").instance_variable_get("@pipe_stdout")
-        stderr = session.driver.instance_variable_get("@browser").instance_variable_get("@connection").instance_variable_get("@pipe_stderr")
-        socket = session.driver.instance_variable_get("@browser").instance_variable_get("@connection").instance_variable_get("@socket")
-
-        stdin.close
-        stdout.close
-        stderr.close
-        socket.close
-        Process.kill(3, pid)
-      end
+      session.driver.quit
     end
   end
 
@@ -498,29 +364,11 @@ class CongressMember < ActiveRecord::Base
     s.url
   end
 
-  def self.save_screenshot_and_store_watir driver
-    screenshot_location = random_screenshot_location
-    driver.save_screenshot(screenshot_location)
-    url = store_screenshot_from_location screenshot_location
-    Raven.extra_context(screenshot: url)
-    File.unlink screenshot_location
-    url
-  end
-
   def self.save_screenshot_and_store_poltergeist session
     screenshot_location = random_screenshot_location
     session.save_screenshot(screenshot_location, full: true)
     url = store_screenshot_from_location screenshot_location
     Raven.extra_context(screenshot: url)
-    File.unlink screenshot_location
-    url
-  end
-
-  def self.save_captcha_and_store_watir driver, x, y, width, height 
-    screenshot_location = random_captcha_location
-    driver.save_screenshot(screenshot_location)
-    crop_screenshot_from_coords screenshot_location, x, y, width, height
-    url = store_captcha_from_location screenshot_location
     File.unlink screenshot_location
     url
   end

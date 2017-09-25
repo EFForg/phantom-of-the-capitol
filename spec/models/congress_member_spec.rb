@@ -48,27 +48,14 @@ describe CongressMember do
       expect(@congress_member.fill_out_form(MOCK_VALUES)).to be_truthy
     end
 
-    it "should successfully fill form for a congress member via CongressMember.fill_out_form_with_poltergeist" do
-      expect(@congress_member.fill_out_form_with_poltergeist(MOCK_VALUES)[:success]).to be_truthy
+    it "should successfully fill form for a congress member via CongressMember.fill_out_form_with_capybara" do
+      expect(@congress_member.fill_out_form_with_capybara(MOCK_VALUES)[:success]).to be_truthy
     end
 
-    it "should successfully fill form for a congress member via CongressMember.fill_out_form_with_webkit" do
-      expect(@congress_member.fill_out_form_with_webkit(MOCK_VALUES)[:success]).to be_truthy
-    end
-
-    it "should not increase the number of open files drastically after calls to CongressMember.fill_out_form_with_poltergeist" do
+    it "should not increase the number of open files drastically after calls to CongressMember.fill_out_form_with_capybara" do
       before_of = %x(lsof -p #{Process.pid} | wc -l).strip.to_i
       @of_iterations.times do
-        @congress_member.fill_out_form_with_poltergeist(MOCK_VALUES)
-      end
-      after_of = %x(lsof -p #{Process.pid} | wc -l).strip.to_i
-      expect(after_of).to be < (before_of + @of_iterations)
-    end
-
-    it "should not increase the number of open files drastically after calls to CongressMember.fill_out_form_with_webkit" do
-      before_of = %x(lsof -p #{Process.pid} | wc -l).strip.to_i
-      @of_iterations.times do
-        @congress_member.fill_out_form_with_webkit(MOCK_VALUES)
+        @congress_member.fill_out_form_with_capybara(MOCK_VALUES)
       end
       after_of = %x(lsof -p #{Process.pid} | wc -l).strip.to_i
       expect(after_of).to be < (before_of + @of_iterations)
@@ -194,7 +181,7 @@ describe CongressMember do
       before { congress_member.actions << action }
       it "should " do
         expect(session).to receive(:visit).with(action.value)
-        congress_member.fill_out_form_with_capybara(fields, :poltergeist, session)
+        congress_member.fill_out_form_with_capybara(fields, session)
       end
     end
 
@@ -203,7 +190,7 @@ describe CongressMember do
       before { congress_member.actions << action }
       it "should " do
         expect(congress_member).to receive(:sleep).with(action.value.to_i)
-        congress_member.fill_out_form_with_capybara(fields, :poltergeist, session)
+        congress_member.fill_out_form_with_capybara(fields, session)
       end
     end
 
@@ -218,7 +205,7 @@ describe CongressMember do
           html_node = double
           expect(session).to receive(:find).with(action.selector){ html_node }
           expect(html_node).to receive(:set).with(fields["$NAME_FIRST"])
-          congress_member.fill_out_form_with_capybara(fields, :poltergeist, session)
+          congress_member.fill_out_form_with_capybara(fields, session)
         end
 
         pending "should respect max_length options"
@@ -230,7 +217,7 @@ describe CongressMember do
           html_node = double
           expect(session).to receive(:find).with(action.selector){ html_node }
           expect(html_node).to receive(:set).with(action.value)
-          congress_member.fill_out_form_with_capybara(fields, :poltergeist, session)
+          congress_member.fill_out_form_with_capybara(fields, session)
         end
       end
     end
@@ -253,7 +240,7 @@ describe CongressMember do
           html_node = double
           expect(session).to receive(:find).with(%(option[value="#{action.value}"])){ html_node }
           expect(html_node).to receive(:select_option)
-          congress_member.fill_out_form_with_capybara(fields, :poltergeist, session)
+          congress_member.fill_out_form_with_capybara(fields, session)
         end
 
         pending "multiple options with the given value exist"
@@ -266,7 +253,7 @@ describe CongressMember do
           html_node = double
           expect(session).to receive(:find).with(%(option[value="#{fields[action.value]}"])){ html_node }
           expect(html_node).to receive(:select_option)
-          congress_member.fill_out_form_with_capybara(fields, :poltergeist, session)
+          congress_member.fill_out_form_with_capybara(fields, session)
         end
 
         pending "multiple options with the given user provided value exist"
@@ -285,7 +272,7 @@ describe CongressMember do
         html_node = double
         expect(session).to receive(:find).with(action.selector){ html_node }
         expect(html_node).to receive(:click)
-        congress_member.fill_out_form_with_capybara(fields, :poltergeist, session)
+        congress_member.fill_out_form_with_capybara(fields, session)
       end
     end
 
@@ -296,7 +283,7 @@ describe CongressMember do
       context "action value is nil" do
         it "should find an element using the action's selector" do
           expect(session).to receive(:find).with(action.selector, wait: CongressMember::DEFAULT_FIND_WAIT_TIME)
-          congress_member.fill_out_form_with_capybara(fields, :poltergeist, session)
+          congress_member.fill_out_form_with_capybara(fields, session)
         end
       end
 
@@ -308,7 +295,7 @@ describe CongressMember do
           expect(session).to receive(:find).with(action.selector,
                                                  text: regexp,
                                                  wait: CongressMember::DEFAULT_FIND_WAIT_TIME)
-          congress_member.fill_out_form_with_capybara(fields, :poltergeist, session)
+          congress_member.fill_out_form_with_capybara(fields, session)
         end
       end
 
@@ -322,7 +309,7 @@ describe CongressMember do
         html_node = double
         expect(session).to receive(:find).with(action.selector){ html_node }
         expect(html_node).to receive(:set).with(true)
-        congress_member.fill_out_form_with_capybara(fields, :poltergeist, session)
+        congress_member.fill_out_form_with_capybara(fields, session)
       end
     end
 
@@ -333,7 +320,7 @@ describe CongressMember do
         html_node = double
         expect(session).to receive(:find).with(action.selector){ html_node }
         expect(html_node).to receive(:set).with(false)
-        congress_member.fill_out_form_with_capybara(fields, :poltergeist, session)
+        congress_member.fill_out_form_with_capybara(fields, session)
       end
     end
 
@@ -346,7 +333,7 @@ describe CongressMember do
           html_node = double
           expect(session).to receive(:find).with(action.selector){ html_node }
           expect(html_node).to receive(:set).with(true)
-          congress_member.fill_out_form_with_capybara(fields, :poltergeist, session)
+          congress_member.fill_out_form_with_capybara(fields, session)
         end
       end
 
@@ -357,7 +344,7 @@ describe CongressMember do
           selector = %(#{action.selector}[value="#{fields[action.value]}"])
           expect(session).to receive(:find).with(selector){ html_node }
           expect(html_node).to receive(:set).with(true)
-          congress_member.fill_out_form_with_capybara(fields, :poltergeist, session)
+          congress_member.fill_out_form_with_capybara(fields, session)
         end
       end
     end
@@ -368,17 +355,7 @@ describe CongressMember do
       before { congress_member.actions << action }
       it "should evaluate the action's value as javascript" do
         expect(session.driver).to receive(:evaluate_script).with(action.value)
-        congress_member.fill_out_form_with_capybara(fields, :poltergeist, session)
-      end
-    end
-
-    context "has action: recaptcha" do
-      let(:action) { CongressMemberAction.new(action: "recaptcha") }
-      before { congress_member.actions << action }
-
-      it "should result result in { success: false }" do
-        status = congress_member.fill_out_form_with_capybara(fields, :poltergeist, session)
-        expect(status[:success]).to eq(false)
+        congress_member.fill_out_form_with_capybara(fields, session)
       end
     end
   end
