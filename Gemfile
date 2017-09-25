@@ -56,8 +56,6 @@ gem 'sentry-raven'
 gem 'dotenv'
 gem 'rack-cors'
 
-gem 'cwc', path: "./cwc"
-
 
 # Or Padrino Edge
 # gem 'padrino', :github => 'padrino/padrino-framework'
