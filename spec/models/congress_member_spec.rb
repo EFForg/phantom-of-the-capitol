@@ -44,10 +44,6 @@ describe CongressMember do
       @of_iterations = 10
     end
 
-    it "should successfully fill form for a congress member via CongressMember.fill_out_form" do
-      expect(@congress_member.fill_out_form(MOCK_VALUES)).to be_truthy
-    end
-
     it "should successfully fill form for a congress member via CongressMember.fill_out_form_with_capybara" do
       expect(@congress_member.fill_out_form_with_capybara(MOCK_VALUES)[:success]).to be_truthy
     end
