@@ -55,6 +55,7 @@ gem 'groupdate'
 gem 'sentry-raven'
 gem 'dotenv'
 gem 'rack-cors'
+gem 'rest-client'
 
 
 # Or Padrino Edge
