@@ -264,7 +264,7 @@ describe "Main controller" do
       end
 
       it "should destroy the thread after a time interval" do
-        sleep(5)
+        sleep(6)
         post_json '/fill-out-captcha', {
           "uid" => @uid,
           "answer" => "placeholder"
