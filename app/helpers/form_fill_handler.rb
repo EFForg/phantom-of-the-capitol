@@ -20,17 +20,14 @@ class FillHandler
           @session = session
           @saved_action = action
           @c.persist_session = true
-          return {
-            status: "captcha_needed",
-            url: url
-          }
+          return self.class.check_result(url)
         end
       end
 
       result = fill_status.success?
     end
 
-    FillHandler::check_result result, fill_status.try(:id)
+    self.class.check_result result, fill_status.try(:id)
   end
 
   def finish_workflow
@@ -48,6 +45,8 @@ class FillHandler
       {status: "success", fill_status_id: fill_status_id}
     when false
       {status: "error", message: "An error has occurred while filling out the remote form.", fill_status_id: fill_status_id}
+    else
+      {status: "captcha_needed", url: result, fill_status_id: fill_status_id}
     end
   end
 end
