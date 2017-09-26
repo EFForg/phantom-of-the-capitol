@@ -12,11 +12,16 @@ class PerformFills
   end
 
   def execute(args={})
-    captcha_jobs, noncaptcha_jobs = filter_jobs
+    recaptcha_jobs, captcha_jobs, noncaptcha_jobs = filter_jobs
 
     queue = []
-    queue.concat(captcha_jobs)
-    queue.concat(noncaptcha_jobs)
+
+    if args[:recaptcha_mode].present?
+      queue.concat(recaptcha_jobs)
+    else
+      queue.concat(captcha_jobs)
+      queue.concat(noncaptcha_jobs)
+    end
 
     queue.each do |job|
       Raven::Context.clear!
@@ -64,6 +69,8 @@ class PerformFills
 
         false
       end
+    elsif recaptcha_member?(cm) && RACK_ENV != "development"
+      cm.fill_out_form_with_watir(fields, &block)[:success]
     elsif RACK_ENV != "development"
       status = cm.fill_out_form(fields, cm_args[1], &block).success?
 
@@ -96,9 +103,24 @@ class PerformFills
       end
   end
 
+  def recaptcha_hash
+    @recaptcha_hash ||=
+      begin
+        hash = {}
+        CongressMemberAction.where(action: "recaptcha").each do |cma|
+          hash[cma.congress_member_id] = true
+        end
+        hash
+      end
+  end
+
   def retrieve_captchad_cached(captcha_hash, cm_id)
     return captcha_hash[cm_id] if captcha_hash.include? cm_id
     return false
+  end
+
+  def recaptcha_member?(cm)
+    !!retrieve_captchad_cached(recaptcha_hash, cm.id)
   end
 
   def captcha_member?(cm)
@@ -110,7 +132,7 @@ class PerformFills
   end
 
   def filter_jobs
-    captcha_jobs, noncaptcha_jobs = [], []
+    recaptcha_jobs, captcha_jobs, noncaptcha_jobs = [], [], []
 
     jobs.each do |job|
       cm_id, _ = DelayedJobHelper::congress_member_id_and_args_from_handler(job.handler)
@@ -118,13 +140,15 @@ class PerformFills
 
       next unless regex.nil? or regex.match(cm.bioguide_id)
 
-      if captcha_member?(cm)
+      if recaptcha_member?(cm)
+        recaptcha_jobs.push(job)
+      elsif captcha_member?(cm)
         captcha_jobs.push(job)
       else
         noncaptcha_jobs.push(job)
       end
     end
 
-    [captcha_jobs, noncaptcha_jobs]
+    [recaptcha_jobs, captcha_jobs, noncaptcha_jobs]
   end
 end
