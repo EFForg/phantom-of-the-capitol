@@ -189,7 +189,7 @@ describe CongressMember do
       let(:action) { CongressMemberAction.new(action: "wait", value: "123") }
       before { congress_member.actions << action }
       it "should " do
-        expect(congress_member).to receive(:sleep).with(action.value.to_i)
+        expect_any_instance_of(CongressMemberAction).to receive(:sleep).with(action.value.to_i)
         congress_member.fill_out_form_with_capybara(fields, session)
       end
     end
@@ -282,7 +282,7 @@ describe CongressMember do
 
       context "action value is nil" do
         it "should find an element using the action's selector" do
-          expect(session).to receive(:find).with(action.selector, wait: CongressMember::DEFAULT_FIND_WAIT_TIME)
+          expect(session).to receive(:find).with(action.selector, wait: CongressMemberAction::DEFAULT_FIND_WAIT_TIME)
           congress_member.fill_out_form_with_capybara(fields, session)
         end
       end
@@ -294,7 +294,7 @@ describe CongressMember do
           expect(Regexp).to receive(:compile).with(action.value){ regexp }
           expect(session).to receive(:find).with(action.selector,
                                                  text: regexp,
-                                                 wait: CongressMember::DEFAULT_FIND_WAIT_TIME)
+                                                 wait: CongressMemberAction::DEFAULT_FIND_WAIT_TIME)
           congress_member.fill_out_form_with_capybara(fields, session)
         end
       end

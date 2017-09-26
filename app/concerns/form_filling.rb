@@ -40,9 +40,7 @@ module FormFilling
     fill_out_form(f, ct, &block)[0] or raise FillError.new
   end
 
-  DEFAULT_FIND_WAIT_TIME = 5  
-
-  def fill_out_form_with_capybara f, session=nil, starting_action: nil
+  def fill_out_form_with_capybara f, session=nil, starting_action: nil, &block
     session ||= Capybara::Session.new(:poltergeist)
     session.driver.options[:js_errors] = false
     session.driver.options[:phantomjs_options] = ['--ssl-protocol=TLSv1']
@@ -58,93 +56,7 @@ module FormFilling
       actions.each do |a|
         form_fill_log(f, %(#{a.action}(#{a.selector.inspect+", " if a.selector.present?}#{a.value.inspect})))
 
-        case a.action
-        when "visit"
-          session.visit(a.value)
-        when "wait"
-          sleep a.value.to_i
-        when "fill_in"
-          if a.value.starts_with?("$")
-            if a.value == "$CAPTCHA_SOLUTION"
-              location = CAPTCHA_LOCATIONS.keys.include?(bioguide_id) ? CAPTCHA_LOCATIONS[bioguide_id] : session.driver.evaluate_script('document.querySelector("' + a.captcha_selector.gsub('"', '\"') + '").getBoundingClientRect();')
-              url = self.class::save_captcha_and_store_poltergeist session, location["left"], location["top"], location["width"], location["height"]
-
-              yield(url, session, a) unless f["$CAPTCHA_SOLUTION"]
-              session.find(a.selector).set(f["$CAPTCHA_SOLUTION"])
-            else
-              if a.options
-                options = YAML.load a.options
-                if options.include? "max_length"
-                  f[a.value] = f[a.value][0...(0.95 * options["max_length"]).floor] unless f[a.value].nil?
-                end
-              end
-              session.find(a.selector).set(f[a.value].gsub("\t","    ")) unless f[a.value].nil?
-            end
-          else
-            session.find(a.selector).set(a.value) unless a.value.nil?
-          end
-        when "select"
-          begin
-            session.within a.selector do
-              if f[a.value].nil?
-                unless PLACEHOLDER_VALUES.include? a.value
-                  begin
-                    elem = session.find('option[value="' + a.value.gsub('"', '\"') + '"]')
-                  rescue Capybara::Ambiguous
-                    elem = session.first('option[value="' + a.value.gsub('"', '\"') + '"]')
-                  rescue Capybara::ElementNotFound
-                    begin
-                      elem = session.find('option', text: Regexp.compile("^" + Regexp.escape(a.value) + "(\\W|$)"))
-                    rescue Capybara::Ambiguous
-                      elem = session.first('option', text: Regexp.compile("^" + Regexp.escape(a.value) + "(\\W|$)"))
-                    end
-                  end
-                  elem.select_option
-                end
-              else
-                begin
-                  elem = session.find('option[value="' + f[a.value].gsub('"', '\"') + '"]')
-                rescue Capybara::Ambiguous
-                  elem = session.first('option[value="' + f[a.value].gsub('"', '\"') + '"]')
-                rescue Capybara::ElementNotFound
-                  begin
-                    elem = session.find('option', text: Regexp.compile("^" + Regexp.escape(f[a.value]) + "(\\W|$)"))
-                  rescue Capybara::Ambiguous
-                    elem = session.first('option', text: Regexp.compile("^" + Regexp.escape(f[a.value]) + "(\\W|$)"))
-                  end
-                end
-                elem.select_option
-              end
-            end
-          rescue Capybara::ElementNotFound => e
-            raise e, e.message unless a.options == "DEPENDENT"
-          end
-        when "click_on"
-          session.find(a.selector).click
-        when "find"
-          wait_val = DEFAULT_FIND_WAIT_TIME
-          if a.options
-            options_hash = YAML.load a.options
-            wait_val = options_hash['wait'] || DEFAULT_FIND_WAIT_TIME
-          end
-          if a.value.nil?
-            session.find(a.selector, wait: wait_val)
-          else
-            session.find(a.selector, text: Regexp.compile(a.value), wait: wait_val)
-          end
-        when "check"
-          session.find(a.selector).set(true)
-        when "uncheck"
-          session.find(a.selector).set(false)
-        when "choose"
-          if a.options.nil?
-            session.find(a.selector).set(true)
-          else
-            session.find(a.selector + '[value="' + f[a.value].gsub('"', '\"') + '"]').set(true)
-          end
-        when "javascript"
-          session.driver.evaluate_script(a.value)
-        end
+        a.execute(session, self, f, &block)
       end
 
       success = check_success session.text
