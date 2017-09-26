@@ -11,7 +11,7 @@ class FillHandler
   def fill(session=nil, action=nil)
     if DELAY_ALL_NONCAPTCHA_FILLS and not @c.has_captcha? and not @debug
       @c.delay(queue: "default").fill_out_form fields, campaign_tag
-      return self.class.check_result(true)
+      return check_result(true)
     end
 
     fill_status = @c.fill_out_form(fields, campaign_tag, session: session) do |url, session, action|
@@ -21,11 +21,11 @@ class FillHandler
         @session = session
         @saved_action = action
         @c.persist_session = true
-        return self.class.check_result(url)
+        return check_result(url)
       end
     end
 
-    self.class.check_result(fill_status.success?, fill_status.try(:id))
+    check_result(fill_status.success?, fill_status.try(:id))
   end
 
   def finish_workflow
@@ -37,7 +37,9 @@ class FillHandler
     fill(session, saved_action)
   end
 
-  def self.check_result result, fill_status_id = nil
+  private
+
+  def check_result result, fill_status_id = nil
     case result
     when true
       {status: "success", fill_status_id: fill_status_id}
