@@ -160,11 +160,8 @@ class CongressMember < ActiveRecord::Base
               location = CAPTCHA_LOCATIONS.keys.include?(bioguide_id) ? CAPTCHA_LOCATIONS[bioguide_id] : session.driver.evaluate_script('document.querySelector("' + a.captcha_selector.gsub('"', '\"') + '").getBoundingClientRect();')
               url = self.class::save_captcha_and_store_poltergeist session, location["left"], location["top"], location["width"], location["height"]
 
-              captcha_value = yield(url, session, a)
-              if captcha_value == false
-                break # finish_workflow has been called
-              end
-              session.find(a.selector).set(captcha_value)
+              yield(url, session, a) unless f["$CAPTCHA_SOLUTION"]
+              session.find(a.selector).set(f["$CAPTCHA_SOLUTION"])
             else
               if a.options
                 options = YAML.load a.options
