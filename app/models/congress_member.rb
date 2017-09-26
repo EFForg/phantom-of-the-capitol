@@ -157,36 +157,14 @@ class CongressMember < ActiveRecord::Base
         when "fill_in"
           if a.value.starts_with?("$")
             if a.value == "$CAPTCHA_SOLUTION"
-              if a.options and a.options["google_recaptcha"]
-                begin
-                  url = self.class::save_google_recaptcha_and_store_poltergeist(session,a.captcha_selector)
-                  captcha_value = yield(url, session, a)
-                  if captcha_value == false
-                    break # finish_workflow has been called
-                  end
-                  # We can not directly reference the captcha id due to problem stated in https://github.com/EFForg/phantom-of-the-capitol/pull/74#issuecomment-139127811
-                  session.within_frame(recaptcha_frame_index(session)) do
-                    for i in captcha_value.split(",")
-                      session.execute_script("document.querySelector('.fbc-imageselect-checkbox-#{i}').checked=true")
-                    end
-                    sleep 0.5
-                    session.find(".fbc-button-verify input").trigger('click')
-                    @recaptcha_value = session.find("textarea").value
-                  end
-                  session.fill_in(a.name,with:@recaptcha_value)
-                rescue Exception => e
-                  retry
-                end
-              else
-                location = CAPTCHA_LOCATIONS.keys.include?(bioguide_id) ? CAPTCHA_LOCATIONS[bioguide_id] : session.driver.evaluate_script('document.querySelector("' + a.captcha_selector.gsub('"', '\"') + '").getBoundingClientRect();')
-                url = self.class::save_captcha_and_store_poltergeist session, location["left"], location["top"], location["width"], location["height"]
+              location = CAPTCHA_LOCATIONS.keys.include?(bioguide_id) ? CAPTCHA_LOCATIONS[bioguide_id] : session.driver.evaluate_script('document.querySelector("' + a.captcha_selector.gsub('"', '\"') + '").getBoundingClientRect();')
+              url = self.class::save_captcha_and_store_poltergeist session, location["left"], location["top"], location["width"], location["height"]
 
-                captcha_value = yield(url, session, a)
-                if captcha_value == false
-                  break # finish_workflow has been called
-                end
-                session.find(a.selector).set(captcha_value)
+              captcha_value = yield(url, session, a)
+              if captcha_value == false
+                break # finish_workflow has been called
               end
+              session.find(a.selector).set(captcha_value)
             else
               if a.options
                 options = YAML.load a.options
