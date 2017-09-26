@@ -66,6 +66,7 @@ end
 # Add your before (RE)load hooks here
 #
 Padrino.before_load do
+  Padrino.dependency_paths.unshift Padrino.root("app/concerns/*.rb")
   Padrino.dependency_paths << Padrino.root("app/uploaders/*.rb")
   Padrino.dependency_paths << Padrino.root("app/tasks/*.rb")
   Padrino.dependency_paths << Padrino.root("app/helpers/*.rb")
