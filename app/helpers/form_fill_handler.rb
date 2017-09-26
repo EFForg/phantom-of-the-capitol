@@ -14,13 +14,11 @@ class FillHandler
       return check_result(true)
     end
 
-    fill_status = @c.fill_out_form(fields, campaign_tag, session: session) do |url, session, action|
+    fill_status = @c.fill_out_form(fields, campaign_tag, session: session, action: action) do |url, session, action|
       if fields["$CAPTCHA_SOLUTION"]
         fields["$CAPTCHA_SOLUTION"]
       else
-        @session = session
-        @saved_action = action
-        @c.persist_session = true
+        save_session(session, action)
         return check_result(url)
       end
     end
@@ -38,6 +36,12 @@ class FillHandler
   end
 
   private
+
+  def save_session(session, action)
+    @session = session
+    @saved_action = action
+    @c.persist_session = true
+  end
 
   def check_result result, fill_status_id = nil
     case result

@@ -93,7 +93,7 @@ class CongressMember < ActiveRecord::Base
   attr_accessor :persist_session
   alias_method :persist_session?, :persist_session
 
-  def fill_out_form f={}, ct = nil, session: nil, &block
+  def fill_out_form f={}, ct = nil, session: nil, action: nil, &block
     status_fields = {
       congress_member: self,
       status: "success",
@@ -101,7 +101,7 @@ class CongressMember < ActiveRecord::Base
     }
     status_fields[:campaign_tag] = ct unless ct.nil?
 
-    success_hash = fill_out_form_with_capybara f, session, &block
+    success_hash = fill_out_form_with_capybara f, session, starting_action: action, &block
 
     unless success_hash[:success]
       status_fields[:status] = success_hash[:exception] ? "error" : "failure"
@@ -128,7 +128,7 @@ class CongressMember < ActiveRecord::Base
 
   DEFAULT_FIND_WAIT_TIME = 5  
 
-  def fill_out_form_with_capybara f, session=nil
+  def fill_out_form_with_capybara f, session=nil, starting_action: nil
     session ||= Capybara::Session.new(:poltergeist)
     session.driver.options[:js_errors] = false
     session.driver.options[:phantomjs_options] = ['--ssl-protocol=TLSv1']
@@ -140,7 +140,13 @@ class CongressMember < ActiveRecord::Base
     form_fill_log(f, "begin")
 
     begin
-      actions.order(:step).each do |a|
+      actions = self.actions.order(:step)
+
+      if starting_action
+        actions = actions.drop_while{ |a| a.id != starting_action.id }
+      end
+
+      actions.each do |a|
         form_fill_log(f, %(#{a.action}(#{a.selector.inspect+", " if a.selector.present?}#{a.value.inspect})))
 
         case a.action
