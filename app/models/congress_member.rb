@@ -132,11 +132,6 @@ class CongressMember < ActiveRecord::Base
     session ||= Capybara::Session.new(:poltergeist)
     session.driver.options[:js_errors] = false
     session.driver.options[:phantomjs_options] = ['--ssl-protocol=TLSv1']
-    if has_google_recaptcha?
-      session.driver.headers = { 'User-Agent' => "Lynx/2.8.8dev.3 libwww-FM/2.14 SSL-MM/1.4.1"}
-      session.driver.timeout = 4 # needed in case some iframes don't respond
-    end
-
     form_fill_log(f, "begin")
 
     begin
@@ -235,8 +230,6 @@ class CongressMember < ActiveRecord::Base
           end
         when "javascript"
           session.driver.evaluate_script(a.value)
-        when "recaptcha"
-          raise
         end
       end
 
@@ -256,19 +249,6 @@ class CongressMember < ActiveRecord::Base
     ensure
       session.driver.quit unless persist_session?
     end
-  end
-
-  def recaptcha_frame_index(session)
-    num_frames = session.evaluate_script("window.frames.length")
-    (0...num_frames).each do |frame_index|
-      begin
-        if session.within_frame(frame_index){session.current_url} =~ /recaptcha/
-          return frame_index
-        end
-      rescue
-      end
-    end
-    raise
   end
 
   def message_via_cwc(fields, campaign_tag: nil, organization: nil,
@@ -366,14 +346,6 @@ class CongressMember < ActiveRecord::Base
     url
   end
 
-  def self.save_google_recaptcha_and_store_poltergeist session,selector
-    screenshot_location = random_captcha_location
-    session.save_screenshot(screenshot_location,selector:selector)
-    url = store_captcha_from_location screenshot_location
-    File.unlink screenshot_location
-    url
-  end
-
   def self.random_captcha_location
     Padrino.root + "/public/captchas/" + SecureRandom.hex(13) + ".png"
   end
@@ -384,10 +356,6 @@ class CongressMember < ActiveRecord::Base
 
   def has_captcha?
     !actions.find_by_value("$CAPTCHA_SOLUTION").nil?
-  end
-
-  def has_google_recaptcha?
-    !actions.select{|action|action.action and action.action == "recaptcha"}.empty?
   end
 
   def check_success body_text
