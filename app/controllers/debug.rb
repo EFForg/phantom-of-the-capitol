@@ -207,11 +207,11 @@ CongressForms::App.controller do
 
     id, args = DelayedJobHelper::congress_member_id_and_args_from_handler @job.handler
     cm = CongressMember.find(id)
-    fill_handler = FillHandler.new(cm, true)
+    fill_handler = FillHandler.new(cm, args[0], args[1], true)
 
     DelayedJobHelper::destroy_job_and_dependents @job
 
-    result = fill_handler.fill(*args)
+    result = fill_handler.fill
     result[:uid] = SecureRandom.hex
     debug_fh[result[:uid]] = fill_handler if result[:status] == "captcha_needed"
     result.to_json

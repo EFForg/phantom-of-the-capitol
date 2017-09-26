@@ -31,35 +31,17 @@ describe PerformFills do
     end
 
     it "should process jobs in the right order" do
-      recaptcha_job = double("recaptcha_job")
       captcha_job = double("captcha_job")
       noncaptcha_job = double("noncaptcha_job")
 
       task = PerformFills.new([])
-      expect(task).to receive(:filter_jobs){ [[recaptcha_job], [captcha_job], [noncaptcha_job]] }
+      expect(task).to receive(:filter_jobs){ [[captcha_job], [noncaptcha_job]] }
 
-      expect(task).not_to receive(:run_job).with(recaptcha_job)
       expect(task).to receive(:run_job).with(captcha_job).ordered
       expect(task).to receive(:run_job).with(noncaptcha_job).ordered
       allow(DelayedJobHelper).to receive(:destroy_job_and_dependents)
 
       task.execute
-    end
-
-    context "recaptcha_mode: true" do
-      it "should process only recaptcha jobs" do
-        recaptcha_job, captcha_job, noncaptcha_job = double, double, double
-
-        task = PerformFills.new([])
-        expect(task).to receive(:filter_jobs){ [[recaptcha_job], [captcha_job], [noncaptcha_job]] }
-
-        expect(task).to receive(:run_job).with(recaptcha_job)
-        expect(task).not_to receive(:run_job).with(captcha_job)
-        expect(task).not_to receive(:run_job).with(noncaptcha_job)
-        allow(DelayedJobHelper).to receive(:destroy_job_and_dependents)
-
-        task.execute(recaptcha_mode: true)
-      end
     end
 
     context "regex was given" do
@@ -101,17 +83,6 @@ describe PerformFills do
       task.run_job(job)
     end
 
-    context "congress member requires recaptcha" do
-      let(:congress_member){ create :congress_member_with_actions_and_recaptcha }
-
-      it "should call #fill_out_form_with_watir instead" do
-        expect(congress_member).to receive(:fill_out_form_with_watir).with(fields.merge(overrides)){ { success: true } }
-
-        task = PerformFills.new([job], overrides: overrides)
-        task.run_job(job)
-      end
-    end
-
     context "congress member is supported by Cwc" do
       it "should call #message_via_cwc instead" do
         expect(congress_member).to receive(:message_via_cwc).with(fields.merge(overrides), campaign_tag: campaign_tag)
@@ -137,21 +108,19 @@ describe PerformFills do
   end
 
   describe "#filter_jobs" do
-    it "should partition jobs into recaptcha, captcha, and noncaptcha" do
+    it "should partition jobs into captcha, and noncaptcha" do
       captcha_cm = create :congress_member_with_actions_and_captcha
       noncaptcha_cm = create :congress_member_with_actions
-      recaptcha_cm = create :congress_member_with_actions_and_recaptcha
 
-      jobs = [captcha_cm, noncaptcha_cm, recaptcha_cm].map do |cm|
+      jobs = [captcha_cm, noncaptcha_cm].map do |cm|
         cm.delay(queue: "error_or_failure").fill_out_form fields, campaign_tag
       end
 
       captcha_jobs = [jobs[0]]
       noncaptcha_jobs = [jobs[1]]
-      recaptcha_jobs = [jobs[2]]
 
       task = PerformFills.new(jobs)
-      expect(task.filter_jobs).to eq([recaptcha_jobs, captcha_jobs, noncaptcha_jobs])
+      expect(task.filter_jobs).to eq([captcha_jobs, noncaptcha_jobs])
     end
   end
 end
