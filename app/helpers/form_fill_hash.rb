@@ -3,6 +3,16 @@ require "thread"
 class FillHash
   attr_accessor :timeout
 
+  cattr_accessor :instance
+
+  def self.new
+    if instance
+      instance
+    else
+      self.instance = super
+    end
+  end
+
   def initialize
     @fh = {}
     @ts = {}
