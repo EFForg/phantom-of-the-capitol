@@ -13,6 +13,7 @@ RUN apt-get update && \
     qt5-default \
     xvfb \
     lsof \
+    imagemagick \
     cron && \
   apt-get clean && \
   rm -rf /var/lib/apt/lists/* \
