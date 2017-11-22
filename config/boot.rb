@@ -3,6 +3,7 @@ RACK_ENV = ENV['RACK_ENV'] ||= 'development'  unless defined?(RACK_ENV)
 PADRINO_ROOT = File.expand_path('../..', __FILE__) unless defined?(PADRINO_ROOT)
 
 $LOAD_PATH << File.expand_path("#{PADRINO_ROOT}/cwc/lib")
+require "cwc" if RACK_ENV == "production"
 
 # Load our dependencies
 require 'rubygems' unless defined?(Gem)
