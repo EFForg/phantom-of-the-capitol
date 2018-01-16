@@ -10,6 +10,8 @@ describe PerformFills do
   describe ".execute" do
     before do
       allow(CongressMember).to receive(:retrieve_cached).with(anything, congress_member.id.to_s){ congress_member }
+
+      allow_any_instance_of(Object).to receive(:to_i){ 0 }
     end
 
     it "should call #run_job for each job's congress member, and destroy the job afterwards if successful" do

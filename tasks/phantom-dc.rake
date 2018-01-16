@@ -449,7 +449,10 @@ def create_congress_member_from_hash congress_member_details, prefix
         c.senate_class = nil
       end
       c.state = term["state"]
+      c.contact_url ||= term["contact_form"]
+      c.contact_url ||= term["url"]
     end
+    c.name = congress_member_details.dig("name", "last")
     c.updated_at = Time.now
     c.save
   end

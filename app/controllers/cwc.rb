@@ -49,6 +49,9 @@ CongressForms::App.controller do
 
       Raven.capture_message("Cwc::BadRequest: #{e.errors.last}",
                             extra: { bioguide: cm.bioguide_id, fields: fields, errors: e.errors })
+
+      NotifySender.new(cm, fields).delay(queue: "notifications").execute if SMTP_SETTINGS.present?
+
       { status: "error" }.to_json
     end
   end

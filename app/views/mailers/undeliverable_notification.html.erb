@@ -1,0 +1,22 @@
+<p>Hi <%= @name %>,</p>
+
+<p>We weren't able to deliver your message to <%= @congress_member %>.
+
+This might have happened because:</p>
+
+<ul>
+  <li>The message contains forbidden characters or is too long</li>
+  <li>The phone number or address details you provided were not accepted</li>
+  <li>The office's contact form has been updated recently and requires you to provide additional information</li>
+  <li>Other technical difficulties were encountered while interacting with the contact form</li>
+</ul>
+
+<p>We apologize for being unable to deliver your message. To write to <%= @congress_member %> directly, please visit <a href="<%= @contact_url %>"><%= @contact_url %></a>.</p>
+
+<p>The text of your message was:</p>
+
+<blockquote>
+  <% @message.lines.select(&:present?).each do |line| %>
+    <p><%= line.chomp %></p>
+  <% end %>
+</blockquote>

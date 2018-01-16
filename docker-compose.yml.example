@@ -2,7 +2,7 @@ version: '2'
 services:
   app:
     build: .
-    restart: always
+    restart: unless-stopped
     depends_on:
       - db
     env_file: .env
@@ -16,6 +16,19 @@ services:
     env_file: .env
     volumes:
       - /var/lib/mysql
+
+  delayed_jobs_worker:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      - db
+    env_file: .env
+    environment:
+      RACK_ENV: development
+      LOAD_CONGRESS: "false"
+
+    command: sh -c 'QUEUES=notifications bundle exec rake jobs:work'
+
 
   # Uncomment the following lines if you'd like the members of congress to be
   # updated from the YAML files every 15 minutes.  Otherwise you'll have to
