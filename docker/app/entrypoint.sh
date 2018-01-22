@@ -2,7 +2,8 @@
 set -e
 
 if [ ! -z "$LOAD_SCHEMA_IF_MISSING" -a "$LOAD_SCHEMA_IF_MISSING" == "true" ]; then
-   if ! rake ar:version 2>/dev/null; then
+   dbversion="$(rake ar:version)"
+   if [ $? -ne 0 ] || grep "Current version: 0" <<<"$dbversion"; then
        echo "Loading schema..."
        bundle exec rake ar:create ar:schema:load > /dev/null
    fi
