@@ -1,6 +1,9 @@
 #!/bin/bash
 set -e
 
+# Kill requests to a senate.gov subdomain that hangs forever
+echo "127.0.0.1 sdc1.senate.gov" >>/etc/hosts
+
 if [ ! -z "$LOAD_SCHEMA_IF_MISSING" -a "$LOAD_SCHEMA_IF_MISSING" == "true" ]; then
    if ! rake ar:version 2>/dev/null; then
        echo "Loading schema..."

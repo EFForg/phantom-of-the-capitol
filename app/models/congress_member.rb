@@ -387,6 +387,7 @@ class CongressMember < ActiveRecord::Base
       success_hash
     rescue Exception => e
       form_fill_log(f, "done: unsuccessful fill (#{e.class})")
+      form_fill_log(f, e.message)
       Raven.extra_context(backtrace: e.backtrace)
 
       message = {success: false, message: e.message, exception: e}
