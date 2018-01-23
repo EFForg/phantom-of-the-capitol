@@ -31,7 +31,7 @@ ActiveRecord::Schema.define(version: 18) do
     t.string  "action",              limit: 255
     t.string  "name",                limit: 255
     t.string  "selector",            limit: 255
-    t.string  "value",               limit: 255
+    t.string  "value",               limit: 511
     t.boolean "required",                          default: false
     t.integer "maxlength",           limit: 4
     t.string  "captcha_selector",    limit: 255
