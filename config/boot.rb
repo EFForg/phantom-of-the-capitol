@@ -25,6 +25,16 @@ require 'capybara/poltergeist'
 Capybara.run_server = false
 Capybara.default_max_wait_time = 5
 
+Capybara.register_driver :poltergeist do |app|
+  options = {
+    js_errors: false,
+    phantomjs_options: ['--ssl-protocol=TLSv1'],
+    url_blacklist: ENV.fetch('URL_BLACKLIST'){ '' }.split(',')
+  }
+
+  Capybara::Poltergeist::Driver.new(app, options)
+end
+
 
 SmartyStreets.configure do |c|
   c.auth_id = SMARTY_STREETS_ID
