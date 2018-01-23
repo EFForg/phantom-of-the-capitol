@@ -245,8 +245,7 @@ class CongressMember < ActiveRecord::Base
 
   def fill_out_form_with_capybara f, driver, session=nil
     session ||= Capybara::Session.new(driver)
-    session.driver.options[:js_errors] = false if driver == :poltergeist
-    session.driver.options[:phantomjs_options] = ['--ssl-protocol=TLSv1'] if driver == :poltergeist
+
     if has_google_recaptcha?
       case driver
       when :poltergeist
