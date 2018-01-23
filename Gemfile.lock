@@ -331,6 +331,7 @@ DEPENDENCIES
   headless
   mini_magick
   mysql2
+  nokogiri (>= 1.8.1)
   padrino (>= 0.12.5)
   pg
   poltergeist
