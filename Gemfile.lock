@@ -169,7 +169,7 @@ GEM
       fog-core
       nokogiri (~> 1.5, >= 1.5.11)
     formatador (0.2.5)
-    git (1.2.9.1)
+    git (1.3.0)
     groupdate (2.5.0)
       activesupport (>= 3)
     headless (2.2.0)
