@@ -9,7 +9,6 @@ RUN apt-get update && \
     default-libmysqlclient-dev \
     libpq-dev \
     git \
-    libqt5webkit5-dev \
     qt5-default \
     xvfb \
     lsof \

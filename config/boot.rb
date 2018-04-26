@@ -10,6 +10,8 @@ require 'rubygems' unless defined?(Gem)
 require 'bundler/setup'
 Bundler.require(:default, RACK_ENV)
 
+require "cwc"
+
 require "dotenv/load"
 require "#{Padrino.root}/config/env.rb"
 require "#{Padrino.root}/config/phantom-dc_config.rb"
@@ -77,10 +79,10 @@ end
 # Add your before (RE)load hooks here
 #
 Padrino.before_load do
+  Padrino.dependency_paths.unshift Padrino.root("app/concerns/*.rb")
   Padrino.dependency_paths << Padrino.root("app/uploaders/*.rb")
   Padrino.dependency_paths << Padrino.root("app/tasks/*.rb")
   Padrino.dependency_paths << Padrino.root("app/helpers/*.rb")
-  Padrino.dependency_paths << Padrino.root("cwc/lib/*.rb")
 end
 
 ##

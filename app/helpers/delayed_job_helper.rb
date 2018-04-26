@@ -62,14 +62,6 @@ class DelayedJobHelper
     Delayed::Job.where(id: ids).delete_all
   end
 
-  def self.create_job(congress_member, fields, campaign_tag, e)
-    job = congress_member.delay(queue: "error_or_failure").fill_out_form fields, campaign_tag
-    job.attempts = 1
-    job.run_at = Time.now
-    job.last_error = e.message + "\n" + e.backtrace.inspect if e
-    job.tap(&:save)
-  end
-
 private
   def self.hash_from_mapping mapping
     children = mapping.children
