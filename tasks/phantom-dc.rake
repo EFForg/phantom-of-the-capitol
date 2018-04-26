@@ -16,11 +16,6 @@ namespace :'phantom-dc' do
       PerformFills.new(jobs, regex: regex, overrides: overrides).execute(args)
     end
 
-    desc "perform recaptcha fills by hand using watir, optionally provide bioguide regex or job id"
-    task :perform_recaptcha_fills, :regex, :job_id, :overrides do |t,args|
-      Rake::Task['phantom-dc:delayed_job:perform_fills'].invoke(args[:regex], args[:job_id], args[:overrides], true)
-    end
-
     desc "override a field on the Delayed::Job error_or_failure queue, optionally provide bioguide regex or job id"
     task :override_field, :regex, :job_id, :overrides, :conditions do |t, args|
       regex = args[:regex].blank? ? nil : Regexp.compile(args[:regex])
