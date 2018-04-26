@@ -40,7 +40,7 @@ gem 'pg'
 gem 'enumerize'
 gem 'mini_magick'
 gem 'delayed_job_active_record'
-gem 'nokogiri', '>= 1.8.1'
+gem 'nokogiri', '>= 1.8.2'
 gem 'capybara'
 gem 'poltergeist'
 gem 'git'
@@ -56,6 +56,7 @@ gem 'sentry-raven'
 gem 'dotenv'
 gem 'rack-cors'
 gem 'rest-client'
+gem 'rack-protection', '~> 1.5.5'
 
 
 # Or Padrino Edge

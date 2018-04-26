@@ -193,7 +193,7 @@ GEM
       enumerable-lazy
     mysql2 (0.4.2)
     netrc (0.11.0)
-    nokogiri (1.8.1)
+    nokogiri (1.8.2)
       mini_portile2 (~> 2.3.0)
     padrino (0.14.1.1)
       padrino-admin (= 0.14.1.1)
@@ -237,11 +237,11 @@ GEM
       coderay (~> 1.1.0)
       method_source (~> 0.8.1)
       slop (~> 3.4)
-    rack (1.6.8)
+    rack (1.6.10)
     rack-cors (0.4.1)
     rack-parser (0.6.1)
       rack
-    rack-protection (1.5.3)
+    rack-protection (1.5.5)
       rack
     rack-test (0.8.2)
       rack (>= 1.0, < 3)
@@ -327,13 +327,14 @@ DEPENDENCIES
   headless
   mini_magick
   mysql2
-  nokogiri (>= 1.8.1)
+  nokogiri (>= 1.8.2)
   padrino (>= 0.12.5)
   pg
   poltergeist
   pry
   rack-cors
   rack-parser
+  rack-protection (~> 1.5.5)
   rack-test
   rake
   redcarpet

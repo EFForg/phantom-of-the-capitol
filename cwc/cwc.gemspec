@@ -8,7 +8,7 @@ Gem::Specification.new do |s|
   s.email       = "peterw@eff.org"
   s.files       = `find lib -type f`.lines.map(&:chomp)
 
-  s.add_runtime_dependency "nokogiri"
+  s.add_runtime_dependency "nokogiri", ">= 1.8.2"
   s.add_runtime_dependency "rest-client"
 
   s.add_development_dependency "pry"
