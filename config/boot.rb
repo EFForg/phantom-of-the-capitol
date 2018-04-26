@@ -3,6 +3,7 @@ RACK_ENV = ENV['RACK_ENV'] ||= 'development'  unless defined?(RACK_ENV)
 PADRINO_ROOT = File.expand_path('../..', __FILE__) unless defined?(PADRINO_ROOT)
 
 $LOAD_PATH << File.expand_path("#{PADRINO_ROOT}/cwc/lib")
+require "cwc" if RACK_ENV == "production"
 
 # Load our dependencies
 require 'rubygems' unless defined?(Gem)
@@ -25,6 +26,16 @@ HEADLESS.start
 require 'capybara/poltergeist'
 Capybara.run_server = false
 Capybara.default_max_wait_time = 5
+
+Capybara.register_driver :poltergeist do |app|
+  options = {
+    js_errors: false,
+    phantomjs_options: ['--ssl-protocol=TLSv1'],
+    url_blacklist: ENV.fetch('URL_BLACKLIST'){ '' }.split(',')
+  }
+
+  Capybara::Poltergeist::Driver.new(app, options)
+end
 
 
 SmartyStreets.configure do |c|

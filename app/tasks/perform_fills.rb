@@ -28,6 +28,9 @@ class PerformFills
 
       if success
         DelayedJobHelper::destroy_job_and_dependents job
+      else
+        Delayed::Job.increment_counter(:attempts, job)
+        yield(job.reload) if block_given?
       end
     end
   end

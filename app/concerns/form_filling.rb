@@ -8,6 +8,8 @@ module FormFilling
 
 
   def fill_out_form f={}, ct = nil, session: nil, action: nil, &block
+    preprocess_message_fields(bioguide_id, f)
+
     status_fields = {
       congress_member: self,
       status: "success",

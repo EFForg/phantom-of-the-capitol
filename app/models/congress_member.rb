@@ -1,4 +1,6 @@
 class CongressMember < ActiveRecord::Base
+  require_dependency "app/helpers/message_fields_helper"
+  include MessageFieldsHelper
   include FormFilling
   include CwcMessaging
 
