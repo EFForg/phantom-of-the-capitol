@@ -22,10 +22,10 @@ module Cwc
       def default_client_configuration
         @default_client_configuration ||= {}
       end
-    end
 
-    def self.configure(options)
-      self.default_client_configuration = options
+      def configure(options)
+        self.default_client_configuration = options
+      end
     end
 
     # Required options keys
