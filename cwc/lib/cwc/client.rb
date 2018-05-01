@@ -7,20 +7,9 @@ require "rest-client"
 require "cwc/office"
 require "cwc/message"
 require "cwc/topic_codes"
+require "cwc/bad_request"
 
 module Cwc
-  class BadRequest < Exception
-    attr_reader :original_exception, :errors
-
-    def initialize(e)
-      @original_exception = e
-      @errors = Nokogiri::XML(e.response.body).xpath("//Error").map(&:content)
-      if @errors.empty?
-        @errors << e.response.body
-      end
-    end
-  end
-
   class Client
     attr_accessor :options
 
