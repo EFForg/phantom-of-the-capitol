@@ -8,7 +8,7 @@ CongressForms::App.controller do
 
   get "cwc/:office_code/fields" do
     cm = CongressMember.find_by_cwc_office_code(params[:office_code])
-    cm.as_cwc_required_json.to_json
+    Cwc::RequiredJson.to_json
   end
 
   post "cwc/:office_code/messages" do
@@ -20,7 +20,7 @@ CongressForms::App.controller do
     missing_parameters = []
     fields = params["fields"] || {}
     fields["$MESSAGE"] ||= fields["$STATEMENT"]
-    cm.as_cwc_required_json["required_actions"].each do |field|
+    Cwc::RequiredJson["required_actions"].each do |field|
       unless fields.include?(field["value"])
         missing_parameters << field["value"]
       end

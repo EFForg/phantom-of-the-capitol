@@ -1,56 +1,10 @@
+require_dependency 'cwc/fixtures'
+
 module CwcMessaging
   extend ActiveSupport::Concern
-  
+
   def as_cwc_required_json o={}
-    prefixes = [
-      "Mr.",
-      "Mrs.",
-      "Ms.",
-      "Mr. and Mrs.",
-      "Miss",
-      "Dr.",
-      "Dr. and Mrs.",
-      "Dr. and Mr.",
-      "Admiral",
-      "Captain",
-      "Chief Master Sergeant",
-      "Colonel",
-      "Commander",
-      "Corporal",
-      "Father",
-      "Lieutenant",
-      "Lieutenant Colonel",
-      "Master Sergeant",
-      "Reverend",
-      "Sergeant",
-      "Second Lieutenant",
-      "Sergeant Major",
-      "Sister",
-      "Technical Sergeant"
-    ]
-    {
-      "required_actions" => [
-        { "value" => "$NAME_PREFIX",	"maxlength" => nil,	"options_hash" => prefixes },
-        { "value" => "$NAME_FIRST",	"maxlength" => nil,	"options_hash" => nil },
-        { "value" => "$NAME_LAST",	"maxlength" => nil,	"options_hash" => nil },
-        { "value" => "$ADDRESS_STREET",	"maxlength" => nil,	"options_hash" => nil },
-        { "value" => "$ADDRESS_CITY",	"maxlength" => nil,	"options_hash" => nil },
-        { "value" => "$ADDRESS_ZIP5",	"maxlength" => nil,	"options_hash" => nil },
-        { "value" => "$EMAIL",		"maxlength" => nil,	"options_hash" => nil },
-        { "value" => "$SUBJECT",	"maxlength" => nil,	"options_hash" => nil },
-        { "value" => "$MESSAGE",	"maxlength" => nil,	"options_hash" => nil },
-        {
-          "value" => "$ADDRESS_STATE_POSTAL_ABBREV", "maxlength" => nil, "options_hash" => [
-            "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "DC", "FL", "GA",
-            "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD", "MA",
-            "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM", "NY",
-            "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX",
-            "UT", "VT", "VA", "WA", "WV", "WI", "WY"
-          ]
-        },
-        { "value" => "$TOPIC", "maxlength" => nil, "options_hash" => Cwc::TopicCodes}
-      ]
-    }.merge(o)
+    Cwc::RequiredJson.merge(o)
   end
 
   def message_via_cwc(fields, campaign_tag: nil, organization: nil,
