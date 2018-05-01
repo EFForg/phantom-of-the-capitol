@@ -126,7 +126,6 @@ CongressForms::App.controller do
     end
   end
 
-
   before :'fill-out-form' do
     if respond_to?(:preprocess_message) && preprocess_message(request, params["bio_id"], params["fields"]) == false
       halt 403, {}, "Access Denied"

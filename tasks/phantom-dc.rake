@@ -46,7 +46,6 @@ namespace :'phantom-dc' do
       end
     end
 
-
     desc "Display the number of queued jobs"
     task :count do
       count = Delayed::Job.count

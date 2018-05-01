@@ -6,7 +6,6 @@ module FormFilling
     alias_method :persist_session?, :persist_session
   end
 
-
   def fill_out_form f={}, ct = nil, session: nil, action: nil, &block
     preprocess_message_fields(bioguide_id, f)
 
@@ -110,7 +109,6 @@ module FormFilling
       :include => {:required_actions => CongressMemberAction::REQUIRED_JSON}
     }.merge o)
   end
-
 
   private
 

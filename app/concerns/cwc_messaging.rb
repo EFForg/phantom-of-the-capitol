@@ -1,6 +1,6 @@
 module CwcMessaging
   extend ActiveSupport::Concern
-  
+
   def as_cwc_required_json o={}
     prefixes = [
       "Mr.",
