@@ -28,9 +28,9 @@ class DelayedJobHelper
     [id, args]
   end
 
-  def self.tabulate_jobs_by_member jobs, cm_hash
+  def self.tabulate_jobs_by_member cm_hash
     people = {}
-    jobs.each do |job|
+    Delayed::Job.where(queue: "error_or_failure").each do |job|
       cm_id, cm_args = congress_member_id_and_args_from_handler(job.handler)
       unless cm_args[1] == "rake"
         cm = CongressMember::retrieve_cached(cm_hash, cm_id)

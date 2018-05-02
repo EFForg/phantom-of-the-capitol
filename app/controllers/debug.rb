@@ -52,7 +52,17 @@ CongressForms::App.controller do
   end
 
   get :'list-congress-members' do
-    CongressMember::list_with_job_count CongressMember.all
+    reps_ordered = CongressMember.order(:bioguide_id)
+    jobs_by_rep = DelayedJobHelper::tabulate_jobs_by_member(
+      CongressMember.to_hash(reps_ordered)
+    )
+
+    reps_ordered.map do |rep|
+      hash = { "bioguide_id" => rep.bioguide_id }
+      jobs_count = jobs_by_rep.find { |id, count| id == rep.bioguide_id }.try(:last)
+      hash["jobs"] = jobs_count if jobs_count
+      hash
+    end.to_json
   end
 
   get :'successful-fills-by-date', map: %r{/successful-fills-by-date/([\w]*)} do

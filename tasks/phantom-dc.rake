@@ -67,9 +67,8 @@ namespace :'phantom-dc' do
 
     desc "calculate # of jobs per member on the Delayed::Job error_or_failure queue"
     task :jobs_per_member do |t, args|
-      jobs = Delayed::Job.where(queue: "error_or_failure")
       cm_hash = CongressMember::to_hash CongressMember.all
-      people = DelayedJobHelper::tabulate_jobs_by_member jobs, cm_hash
+      people = DelayedJobHelper::tabulate_jobs_by_member cm_hash
 
       captchad_hash = {}
       total_captchad_jobs = 0

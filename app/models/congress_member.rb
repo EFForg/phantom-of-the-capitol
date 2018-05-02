@@ -6,11 +6,12 @@ class CongressMember < ActiveRecord::Base
 
   validates_presence_of :bioguide_id
 
-  has_many :actions, :class_name => 'CongressMemberAction', :dependent => :destroy
-  has_many :required_actions, -> (object) { where "required = true AND SUBSTRING(value, 1, 1) = '$'" }, :class_name => 'CongressMemberAction'
-  has_many :fill_statuses, :class_name => 'FillStatus', :dependent => :destroy
-  has_many :recent_fill_statuses, -> (object) { where("created_at > ?", object.updated_at) }, :class_name => 'FillStatus'
-  #has_one :captcha_action, :class_name => 'CongressMemberAction', :condition => "value = '$CAPTCHA_SOLUTION'"
+  has_many :actions, :class_name => 'CongressMemberAction', dependent: :destroy
+  has_many :required_actions, -> (object) { where "required = true AND SUBSTRING(value, 1, 1) = '$'" },
+    class_name: 'CongressMemberAction'
+  has_many :fill_statuses, class_name: 'FillStatus', dependent: :destroy
+  has_many :recent_fill_statuses, -> (object) { where("created_at > ?", object.updated_at) },
+    class_name: 'FillStatus'
 
   serialize :success_criteria, LegacySerializer
 
@@ -30,35 +31,18 @@ class CongressMember < ActiveRecord::Base
     }
   end
 
-  def self.to_hash cm_array
-    cm_hash = {}
-    cm_array.each do |cm|
-      cm_hash[cm.id.to_s] = cm
-    end
-    cm_hash
-  end
-
-  def self.retrieve_cached cm_hash, cm_id
-    return cm_hash[cm_id] if cm_hash.include? cm_id
-    cm_hash[cm_id] = self.find(cm_id)
-  end
-
-  def self.list_with_job_count cm_array
-    members_ordered = cm_array.order(:bioguide_id)
-    cms = members_ordered.as_json(only: :bioguide_id)
-
-    jobs = Delayed::Job.where(queue: "error_or_failure")
-
-    cm_hash = self.to_hash members_ordered
-    people = DelayedJobHelper::tabulate_jobs_by_member jobs, cm_hash
-
-    people.each do |bioguide, jobs_count|
-      cms.select{ |cm| cm["bioguide_id"] == bioguide }.each do |cm|
-        cm["jobs"] = jobs_count
+  class << self
+    def to_hash cm_array
+      cm_hash = {}
+      cm_array.each do |cm|
+        cm_hash[cm.id.to_s] = cm
       end
+      cm_hash
     end
-    cms.to_json
+
+    def retrieve_cached cm_hash, cm_id
+      return cm_hash[cm_id] if cm_hash.include? cm_id
+      cm_hash[cm_id] = self.find(cm_id)
+    end
   end
 end
-
-
