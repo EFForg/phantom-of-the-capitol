@@ -171,21 +171,59 @@ describe "Main controller" do
       expect(FillStatus.success.count).to eq(1)
     end
 
-    it "should all but fill out a form when provided with the required values and test=1" do
-      c = create :congress_member_with_actions
+    context "in test mode" do
+      let(:rep) { create :congress_member_with_actions }
+      let(:bioguide_id) { rep.bioguide_id }
+      let(:values) { MOCK_VALUES }
+      let(:action) do
+        post_json @route, { test: "1", bio_id: bioguide_id, fields: values }.to_json
+      end
 
-      expect(CongressMember).to receive(:bioguide){ c }.at_least(:once)
-      expect(c).not_to receive(:delay)
-      expect(c).not_to receive(:fill_out_form)
+      it "should return success" do
+        action
+        expect(last_response.status).to eq(200)
+        expect(JSON.load(last_response.body)["status"]).to eq("success")
+        expect(JSON.load(last_response.body)["test"]).to eq(true)
+      end
 
-      post_json @route, {
-        "bio_id" => c.bioguide_id,
-        "fields" => MOCK_VALUES,
-        "test" => "1"
-      }.to_json
+      it "should not fill out the form" do
+        expect(rep).not_to receive(:fill_out_form)
+        expect(FillHandler).not_to receive(:new)
+        action
+      end
 
-      expect(last_response.status).to eq(200)
-      expect(JSON.load(last_response.body)["status"]).to eq("success")
+      context "when missing bio_id" do
+        let(:action) { post_json @route, { test: "1",fields: values }.to_json }
+
+        it "returns a helpful error" do
+          action
+          expect(JSON.load(last_response.body)["status"]).to eq("error")
+          expect(JSON.load(last_response.body)["message"])
+            .to include("You must provide a bio_id")
+        end
+      end
+
+      context "when bioguide_id is wrong" do
+        before { allow(CongressMember).to receive(:find_by).and_return(nil) }
+
+        it "returns a helpful error" do
+          action
+          expect(JSON.load(last_response.body)["status"]).to eq("error")
+          expect(JSON.load(last_response.body)["message"])
+            .to include("not found")
+        end
+      end
+
+      context "with missing params" do
+        let(:values) { {} }
+
+        it "returns a helpful error" do
+          action
+          expect(JSON.load(last_response.body)["status"]).to eq("error")
+          expect(JSON.load(last_response.body)["message"])
+            .to include("Error: missing fields")
+        end
+      end
     end
 
     it "should create a new campaign tag record when filling in a form successfully with a campaign tag specified" do

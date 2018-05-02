@@ -8,7 +8,7 @@ CongressForms::App.helpers do
 
     bio_id = params["bio_id"]
 
-    @c = CongressMember.bioguide(bio_id)
+    @c = CongressMember.find_by(bioguide_id: bio_id)
     halt 200, {status: "error", message: "Congress member with provided bio id not found"}.to_json if @c.nil?
   end
 

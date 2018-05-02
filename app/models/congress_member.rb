@@ -17,22 +17,6 @@ class CongressMember < ActiveRecord::Base
   RECENT_FILL_IMAGE_BASE = 'https://img.shields.io/badge/'
   RECENT_FILL_IMAGE_EXT = '.svg'
 
-  def self.bioguide bioguide_id
-    find_by_bioguide_id bioguide_id
-  end
-
-  def self.with_existing_bioguide bioguide_id
-    yield find_by_bioguide_id bioguide_id
-  end
-
-  def self.with_new_bioguide bioguide_id
-    yield self.create :bioguide_id => bioguide_id
-  end
-
-  def self.with_new_or_existing_bioguide bioguide_id
-    yield self.find_or_create_by bioguide_id: bioguide_id
-  end
-
   def has_captcha?
     !actions.find_by_value("$CAPTCHA_SOLUTION").nil?
   end
