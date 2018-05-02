@@ -174,8 +174,8 @@ If you haven't set up the test db, create it, using `config/database.rb`
 Then you'll need to create and prepare the test database:
 
 ```bash
-$  PADRINO_ENV=test bundle exec rake ar:create;
-   PADRINO_ENV=test bundle exec rake ar:schema:load
+$  RACK_ENV=test bundle exec rake ar:create;
+   RACK_ENV=test bundle exec rake ar:schema:load
 ```
 
 And run
