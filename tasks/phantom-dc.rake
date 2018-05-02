@@ -52,7 +52,7 @@ namespace :'phantom-dc' do
 
     desc "destroy all fills on the Delayed::Job error_or_failure queue provided a specific bioguide or job_id"
     task :destroy_fills, :bioguide, :job_id do |t, args|
-      cm = CongressMember.bioguide(args[:bioguide])
+      cm = CongressMember.find_by(bioguide_id: args[:bioguide])
 
       jobs = retrieve_jobs args
 
@@ -75,7 +75,7 @@ namespace :'phantom-dc' do
       total_captchad_jobs = 0
       total_jobs = 0
       people.each do |k, v|
-        if CongressMember.bioguide(k).has_captcha?
+        if CongressMember.find_by(bioguide_id: k).has_captcha?
           captchad_hash[k] = true
           total_captchad_jobs += v
         end
@@ -406,50 +406,50 @@ def create_congress_member_exception_wrapper file_path
   end
 end
 
-
 def create_congress_member_from_hash congress_member_details, prefix
-  CongressMember.with_new_or_existing_bioguide(prefix + congress_member_details["bioguide"]) do |c|
-    step_increment = 0
-    congress_member_details["contact_form"]["steps"].each do |s|
-      action, value = s.first
-      case action
-      when "visit"
-        create_action_add_to_member(action, step_increment += 1, c) do |cmf|
-          cmf.value = value
-        end
-      when "fill_in", "select", "click_on", "find", "check", "uncheck", "choose", "wait", "javascript", "recaptcha"
-        value.each do |field|
-          create_action_add_to_member(action, step_increment += 1, c) do |cmf|
-            field.each do |attribute|
-              if cmf.attributes.keys.include? attribute[0]
-                cmf.assign_attributes(attribute[0] => attribute[1])
-              end
+  bioguide_id = "#{prefix}#{congress_member_details["bioguide"]}"
+  rep = CongressMember.find_or_create_by(bioguide_id: bioguide_id)
+  step_increment = 0
+  congress_member_details["contact_form"]["steps"].each do |s|
+    action, value = s.first
+    case action
+    when "visit"
+      create_action_add_to_member(action, step_increment += 1, rep) do |cmf|
+        cmf.value = value
+      end
+    when "fill_in", "select", "click_on", "find", "check", "uncheck", "choose", "wait", "javascript", "recaptcha"
+      value.each do |field|
+        create_action_add_to_member(action, step_increment += 1, rep) do |cmf|
+          field.each do |attribute|
+            if cmf.attributes.keys.include? attribute[0]
+              cmf.assign_attributes(attribute[0] => attribute[1])
             end
           end
         end
       end
     end
-    c.success_criteria = congress_member_details["contact_form"]["success"]
-
-    # Git updates shouldn't fail if we can't match a senate/house code from CWC, just let them proceed without it. Very useful for custom forms.
-    if term = get_legislator_info(c.bioguide_id)["terms"].try(:last)
-      if term["type"] == "sen"
-        c.chamber = "senate"
-        c.senate_class = term["class"]
-        c.house_district = nil
-      else
-        c.chamber = "house"
-        c.house_district = term["district"]
-        c.senate_class = nil
-      end
-      c.state = term["state"]
-      c.contact_url ||= term["contact_form"]
-      c.contact_url ||= term["url"]
-    end
-    c.name = congress_member_details.dig("name", "last")
-    c.updated_at = Time.now
-    c.save
   end
+  rep.success_criteria = congress_member_details["contact_form"]["success"]
+
+  # Git updates shouldn't fail if we can't match a senate/house code from CWC, just let them proceed without it.
+  # Very useful for custom forms.
+  if term = get_legislator_info(rep.bioguide_id)["terms"].try(:last)
+    if term["type"] == "sen"
+      rep.chamber = "senate"
+      rep.senate_class = term["class"]
+      rep.house_district = nil
+    else
+      rep.chamber = "house"
+      rep.house_district = term["district"]
+      rep.senate_class = nil
+    end
+    rep.state = term["state"]
+    rep.contact_url ||= term["contact_form"]
+    rep.contact_url ||= term["url"]
+  end
+  rep.name = congress_member_details.dig("name", "last")
+  rep.updated_at = Time.now
+  rep.save
 end
 
 def create_action_add_to_member action, step, member

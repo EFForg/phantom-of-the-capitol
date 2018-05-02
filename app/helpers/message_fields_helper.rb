@@ -7,7 +7,7 @@ module MessageFieldsHelper
     fields["$PHONE"] ||= "000-000-0000"
     fields["$ADDRESS_ZIP5"] ||= "00000"
     fields["$ADDRESS_COUNTY"] ||= "Unknown"
-    fields["$ADDRESS_STATE_POSTAL_ABBREV"] ||= CongressMember.bioguide(bio_id).try(:state)
+    fields["$ADDRESS_STATE_POSTAL_ABBREV"] ||= CongressMember.find_by(bioguide_id: bio_id).try(:state)
 
     fields["$MESSAGE"] = fields["$MESSAGE"].gsub(/\d+\s*%/){ |m| "#{m[0..-2]} percent" }
     fields["$MESSAGE"] = fields["$MESSAGE"].gsub('\w*&\w*', ' and ')

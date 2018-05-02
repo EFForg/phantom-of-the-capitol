@@ -23,7 +23,7 @@ CongressForms::App.controller do
     bio_ids = params["bio_ids"]
     response = {}
     bio_ids.each do |bio_id|
-      c = CongressMember.bioguide(bio_id)
+      c = CongressMember.find_by(bioguide_id: bio_id)
       next if c.nil?
 
       if cwc_office_supported?(c.cwc_office_code)
@@ -43,7 +43,7 @@ CongressForms::App.controller do
     return {status: "error", message: "You must provide a bio_id."}.to_json unless params.include? "bio_id"
 
     bio_id = params["bio_id"]
-    c = CongressMember.bioguide(bio_id)
+    c = CongressMember.find_by(bioguide_id: bio_id)
     return {status: "error", message: "Congress member with provided bio id not found"}.to_json if c.nil?
 
     missing_parameters = []
@@ -106,7 +106,7 @@ CongressForms::App.controller do
     return {status: "error", message: "You must provide a bio_id to request the recent fill image."}.to_json unless params.include? "bio_id"
 
     bio_id = params["bio_id"]
-    c = CongressMember.bioguide(bio_id)
+    c = CongressMember.find_by(bioguide_id: bio_id)
     redirect to(CongressMember::RECENT_FILL_IMAGE_BASE + 'YAML-not%20found-red' + CongressMember::RECENT_FILL_IMAGE_EXT) if c.nil?
 
     fill_status = c.recent_fill_status
@@ -132,7 +132,7 @@ CongressForms::App.controller do
       halt 403, {}, "Access Denied"
     end
 
-    if params["bio_id"] && (cm = CongressMember.bioguide(params["bio_id"]))
+    if params["bio_id"] && (cm = CongressMember.find_by(bioguide_id: params["bio_id"]))
       if cwc_office_supported?(cm.cwc_office_code)
         status, headers, body = call env.merge("PATH_INFO" => "/cwc/#{cm.cwc_office_code}/messages")
         halt status, headers, body

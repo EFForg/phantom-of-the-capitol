@@ -64,7 +64,7 @@ CongressForms::App.controller do
     if bio_id.blank?
       @statuses = FillStatus
     else
-      @statuses = CongressMember.bioguide(bio_id).fill_statuses
+      @statuses = CongressMember.find_by(bioguide_id: bio_id).fill_statuses
     end
 
     @statuses = @statuses.where('created_at >= ?', date_start) unless date_start.nil?
@@ -87,7 +87,7 @@ CongressForms::App.controller do
     if bio_id.blank?
       @statuses = FillStatus
     else
-      @statuses = CongressMember.bioguide(bio_id).fill_statuses
+      @statuses = CongressMember.find_by(bioguide_id: bio_id).fill_statuses
     end
 
     @statuses = @statuses.where('created_at >= ?', @date)
