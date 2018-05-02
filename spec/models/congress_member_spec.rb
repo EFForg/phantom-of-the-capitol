@@ -83,7 +83,7 @@ describe CongressMember do
       expect(FillStatus.count).to eq(0)
     end
   end
-  
+
   describe "that already exists with actions and an incorrect success criteria" do
     before do
       @congress_member = create :congress_member_with_actions, success_criteria: YAML.dump({"headers"=>{"status"=>200}, "body"=>{"contains"=>"Won't get me!"}})
@@ -139,7 +139,6 @@ describe CongressMember do
       @congress_member = create :congress_member_with_actions_and_captcha, :bioguide_id => "B010101"
     end
 
-
     it "should successfully fill form for a congress member via CongressMember.fill_out_form" do
       expect(
         @congress_member.fill_out_form(MOCK_VALUES) do |c|
@@ -155,7 +154,7 @@ describe CongressMember do
       c.success_criteria = "something"
       c.save
     end
-    
+
     expect(CongressMember.find_by_bioguide_id("D010101")).not_to be_nil
   end
 
@@ -165,11 +164,9 @@ describe CongressMember do
       c.success_criteria = "something"
       c.save
     end
-    
+
     expect(CongressMember.find_by_bioguide_id("D010101")).not_to be_nil
   end
-
-
 
   describe "#fill_out_form_with_capybara (poltergeist)" do
     let(:session){ Capybara::Session.new(:poltergeist) }
@@ -193,7 +190,6 @@ describe CongressMember do
         congress_member.fill_out_form_with_capybara(fields, session)
       end
     end
-
 
     context "has action: fill_in" do
       let(:action) { CongressMemberAction.new(action: "fill_in", selector: ".abc .xyz") }
@@ -221,7 +217,6 @@ describe CongressMember do
         end
       end
     end
-
 
     context "has action: select" do
       let(:action) { CongressMemberAction.new(action: "select", selector: ".abc .xyz") }
@@ -348,7 +343,6 @@ describe CongressMember do
         end
       end
     end
-
 
     context "has action: javascript" do
       let(:action) { CongressMemberAction.new(action: "javascript", value: "someJavaScript();") }

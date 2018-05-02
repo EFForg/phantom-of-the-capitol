@@ -1,4 +1,3 @@
-
 require "cwc"
 
 CongressForms::App.controller do
