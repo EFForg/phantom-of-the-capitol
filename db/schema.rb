@@ -10,16 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 18) do
-
-  create_table "application_settings", force: :cascade do |t|
-    t.string   "key",        limit: 255
-    t.text     "value",      limit: 65535
-    t.datetime "created_at",               null: false
-    t.datetime "updated_at",               null: false
-  end
-
-  add_index "application_settings", ["key"], name: "index_application_settings_on_key", unique: true, using: :btree
+ActiveRecord::Schema.define(version: 20) do
 
   create_table "campaign_tags", force: :cascade do |t|
     t.string "name", limit: 255
