@@ -14,5 +14,5 @@ before_script:
   - cp config/database.rb.example config/database.rb
   - sed -i "s@^  :username.*@  :username => 'root',@" config/database.rb
   - cp config/phantom-dc_config.rb.example config/phantom-dc_config.rb
-  - "PADRINO_ENV=test bundle exec rake ar:create ar:schema:load"
+  - "RACK_ENV=test bundle exec rake ar:create ar:schema:load"
 script: bundle exec rspec spec
