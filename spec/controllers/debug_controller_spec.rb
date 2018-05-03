@@ -1,17 +1,19 @@
 require 'spec_helper'
 
 describe "Debug controller" do
+  def last_response_json
+    JSON.load(last_response.body)
+  end
+
   describe "route /recent-statuses-detailed" do
     it "should not be accessable without a correct debug_key" do
       get '/recent-statuses-detailed/TEST', { debug_key: DEBUG_KEY + "cruft" }
       expect(last_response.status).to eq(401)
-      last_response_json = JSON.load(last_response.body)
       expect(last_response_json["status"]).to eq("error")
     end
 
     it "should return an error response when a bioguide is not found" do
       get '/recent-statuses-detailed/Z010101', { debug_key: DEBUG_KEY }
-      last_response_json = JSON.load(last_response.body)
       expect(last_response_json["status"]).to eq("error")
     end
 
@@ -24,14 +26,12 @@ describe "Debug controller" do
 
       it "should return recent statuses in order of time, descending" do
         get '/recent-statuses-detailed/' + @c.bioguide_id, { debug_key: DEBUG_KEY }
-        last_response_json = JSON.load(last_response.body)
         expect(last_response_json.first["status"]).to eq("failure")
         expect(last_response_json.second["status"]).to eq("success")
       end
 
       it "should give detailed recent statuses" do
         get '/recent-statuses-detailed/' + @c.bioguide_id, { debug_key: DEBUG_KEY }
-        last_response_json = JSON.load(last_response.body)
         expect(last_response_json.first["dj_id"]).to eq(@failure_fill_status.delayed_job.id)
         expect(last_response_json.first["screenshot"]).to eq(YAML.load(@failure_fill_status.extra)[:screenshot])
       end
@@ -42,13 +42,11 @@ describe "Debug controller" do
     it "should not be accessable without a correct debug_key" do
       get '/list-actions/TEST', { debug_key: DEBUG_KEY + "cruft" }
       expect(last_response.status).to eq(401)
-      last_response_json = JSON.load(last_response.body)
       expect(last_response_json["status"]).to eq("error")
     end
 
     it "should return an error response when a bioguide is not found" do
       get '/list-actions/Z010101', { debug_key: DEBUG_KEY }
-      last_response_json = JSON.load(last_response.body)
       expect(last_response_json["status"]).to eq("error")
     end
 
@@ -64,7 +62,6 @@ describe "Debug controller" do
 
       it "should list the correct number of actions" do
         get '/list-actions/' + @c.bioguide_id, { debug_key: DEBUG_KEY }
-        last_response_json = JSON.load(last_response.body)
         expect(last_response_json["actions"].count).to eq(@c.actions.count)
       end
     end
@@ -74,7 +71,6 @@ describe "Debug controller" do
     it "should not be accessable without a correct debug_key" do
       get '/list-congress-members', { debug_key: DEBUG_KEY + "cruft" }
       expect(last_response.status).to eq(401)
-      last_response_json = JSON.load(last_response.body)
       expect(JSON.load(last_response.body)["status"]).to eq("error")
     end
 
@@ -91,13 +87,11 @@ describe "Debug controller" do
 
       it "should list the correct number of congress members" do
         get '/list-congress-members', { debug_key: DEBUG_KEY }
-        last_response_json = JSON.load(last_response.body)
         expect(last_response_json.count).to eq(2)
       end
 
       it "should list congress members alphabetically by bioguide" do
         get '/list-congress-members', { debug_key: DEBUG_KEY }
-        last_response_json = JSON.load(last_response.body)
         expect(last_response_json.first["bioguide_id"]).to eq("A010101")
         expect(last_response_json.second["bioguide_id"]).to eq("B010101")
       end
@@ -111,7 +105,6 @@ describe "Debug controller" do
 
         it "should give the number of delayed jobs per congress member" do
           get '/list-congress-members', { debug_key: DEBUG_KEY }
-          last_response_json = JSON.load(last_response.body)
           expect(last_response_json.second["jobs"]).to eq(5)
         end
       end
@@ -122,7 +115,6 @@ describe "Debug controller" do
     it "should not be accessable without a correct debug_key" do
       get '/successful-fills-by-date/TEST', { debug_key: DEBUG_KEY + "cruft" }
       expect(last_response.status).to eq(401)
-      last_response_json = JSON.load(last_response.body)
       expect(last_response_json["status"]).to eq("error")
     end
 
@@ -144,7 +136,6 @@ describe "Debug controller" do
 
       it "should accurately select the number of successes for a given member" do
         get '/successful-fills-by-date/A010101', { debug_key: DEBUG_KEY, date_start: "2015-01-01", date_end: "2015-01-03" }
-        last_response_json = JSON.load(last_response.body)
 
         expect(last_response_json.values.count).to eq(2)
         expect(last_response_json[Time.zone.parse('2015-01-01').to_s]).to eq(2)
@@ -153,7 +144,6 @@ describe "Debug controller" do
 
       it "should accurately select the number of successes for every member" do
         get '/successful-fills-by-date/', { debug_key: DEBUG_KEY, date_start: "2015-01-01", date_end: "2015-01-03" }
-        last_response_json = JSON.load(last_response.body)
 
         expect(last_response_json.values.count).to eq(2)
         expect(last_response_json[Time.zone.parse('2015-01-01').to_s]).to eq(2)
@@ -162,7 +152,6 @@ describe "Debug controller" do
 
       it "should accurately select the number of successes for every member" do
         get '/successful-fills-by-date/', { debug_key: DEBUG_KEY, date_start: "2015-01-01", date_end: "2015-01-03", campaign_tag: "test2" }
-        last_response_json = JSON.load(last_response.body)
 
         expect(last_response_json.values.count).to eq(1)
         expect(last_response_json[Time.zone.parse('2015-01-02').to_s]).to eq(1)
@@ -174,7 +163,6 @@ describe "Debug controller" do
     it "should not be accessable without a correct debug_key" do
       get '/successful-fills-by-hour/TEST', { debug_key: DEBUG_KEY + "cruft" }
       expect(last_response.status).to eq(401)
-      last_response_json = JSON.load(last_response.body)
       expect(last_response_json["status"]).to eq("error")
     end
 
@@ -196,7 +184,6 @@ describe "Debug controller" do
 
       it "should accurately select the number of successes for a given member" do
         get '/successful-fills-by-hour/A010101', { debug_key: DEBUG_KEY, date: "2015-01-01", time_zone: Time.zone.name}
-        last_response_json = JSON.load(last_response.body)
 
         expect(last_response_json.values.count).to eq(3)
         expect(last_response_json[Time.zone.parse('2015-01-01 00:00:00').to_s]).to eq(2)
@@ -205,7 +192,6 @@ describe "Debug controller" do
 
       it "should accurately select the number of successes for every member" do
         get '/successful-fills-by-hour/', { debug_key: DEBUG_KEY, date: "2015-01-01", time_zone: Time.zone.name}
-        last_response_json = JSON.load(last_response.body)
 
         expect(last_response_json.values.count).to eq(3)
         expect(last_response_json[Time.zone.parse('2015-01-01 00:00:00').to_s]).to eq(2)
@@ -214,7 +200,6 @@ describe "Debug controller" do
 
       it "should accurately select the number of successes for every member" do
         get '/successful-fills-by-hour/', { debug_key: DEBUG_KEY, date: "2015-01-01", time_zone: Time.zone.name, campaign_tag: "test2" }
-        last_response_json = JSON.load(last_response.body)
 
         expect(last_response_json.values.count).to eq(1)
         expect(last_response_json[Time.zone.parse('2015-01-01 01:00:00').to_s]).to eq(1)
@@ -226,7 +211,6 @@ describe "Debug controller" do
     it "should not be accessable without a correct debug_key" do
       get '/successful-fills-by-member/', { debug_key: DEBUG_KEY + "cruft" }
       expect(last_response.status).to eq(401)
-      last_response_json = JSON.load(last_response.body)
       expect(last_response_json["status"]).to eq("error")
     end
 
@@ -244,7 +228,6 @@ describe "Debug controller" do
 
       it "should accurately select the number of sucesses by member" do
         get '/successful-fills-by-member/', { debug_key: DEBUG_KEY }
-        last_response_json = JSON.load(last_response.body)
 
         expect(last_response_json.values.count).to eq(2)
         expect(last_response_json['A010101']).to eq(4)
@@ -253,7 +236,6 @@ describe "Debug controller" do
 
       it "should accurately select the number of sucesses by member" do
         get '/successful-fills-by-member/', { debug_key: DEBUG_KEY, campaign_tag: "test2" }
-        last_response_json = JSON.load(last_response.body)
 
         expect(last_response_json.values.count).to eq(1)
         expect(last_response_json['A010101']).to eq(1)
@@ -266,24 +248,19 @@ describe "Debug controller" do
     it "should not be accessable without a correct debug_key" do
       get '/job-details/TEST', { debug_key: DEBUG_KEY + "cruft" }
       expect(last_response.status).to eq(401)
-      last_response_json = JSON.load(last_response.body)
       expect(last_response_json["status"]).to eq("error")
     end
 
     it "should return an error response when a job id is not found" do
       get '/job-details/77', { debug_key: DEBUG_KEY }
-      last_response_json = JSON.load(last_response.body)
       expect(last_response_json["status"]).to eq("error")
     end
 
     describe "for multiple members with fill statuses" do
-      before do
-        @status = create :fill_status_failure_with_delayed_job
-      end
+      let(:status) { create :fill_status_failure_with_delayed_job }
 
       it "should provide the mock values" do
-        get '/job-details/' + @status.delayed_job.id.to_s, { debug_key: DEBUG_KEY }
-        last_response_json = JSON.load(last_response.body)
+        get "/job-details/#{status.delayed_job.id}", { debug_key: DEBUG_KEY }
 
         MOCK_VALUES.keys.each do |k|
           expect(last_response_json['arguments'][0][k]).to eq(MOCK_VALUES[k])
@@ -291,12 +268,10 @@ describe "Debug controller" do
       end
 
       it "should provide the bioguide id" do
-        get '/job-details/' + @status.delayed_job.id.to_s, { debug_key: DEBUG_KEY }
-        last_response_json = JSON.load(last_response.body)
+        get "/job-details/#{status.delayed_job.id}", { debug_key: DEBUG_KEY }
 
-          expect(last_response_json['bioguide']).to eq(@status.congress_member.bioguide_id)
+        expect(last_response_json['bioguide']).to eq(status.congress_member.bioguide_id)
       end
-
     end
   end
 
@@ -304,13 +279,11 @@ describe "Debug controller" do
     it "should not be accessable without a correct debug_key" do
       get '/list-jobs/TEST', { debug_key: DEBUG_KEY + "cruft" }
       expect(last_response.status).to eq(401)
-      last_response_json = JSON.load(last_response.body)
       expect(last_response_json["status"]).to eq("error")
     end
 
     it "should return an error response when a bioguide is not found" do
       get '/list-jobs/Z010101', { debug_key: DEBUG_KEY }
-      last_response_json = JSON.load(last_response.body)
       expect(last_response_json["status"]).to eq("error")
     end
 
@@ -329,7 +302,6 @@ describe "Debug controller" do
 
       it "should provide a list of job ids" do
         get '/list-jobs/' + @c.bioguide_id, { debug_key: DEBUG_KEY }
-        last_response_json = JSON.load(last_response.body)
 
         expect(last_response_json.count).to eq(5)
       end
@@ -340,28 +312,22 @@ describe "Debug controller" do
     it "should not be accessable without a correct debug_key" do
       get '/job-details/TEST', { debug_key: DEBUG_KEY + "cruft" }
       expect(last_response.status).to eq(401)
-      last_response_json = JSON.load(last_response.body)
       expect(last_response_json["status"]).to eq("error")
     end
 
     it "should return an error response when a job id is not found" do
       get '/job-details/77', { debug_key: DEBUG_KEY }
-      last_response_json = JSON.load(last_response.body)
       expect(last_response_json["status"]).to eq("error")
     end
 
     describe "with a job" do
-      before do
-        @fill_status = create :fill_status_failure_with_delayed_job
-      end
+      let!(:fill_status) { create :fill_status_failure_with_delayed_job }
 
       it "should accurately provide job details" do
-        job_id = @fill_status.delayed_job.id
-        get '/job-details/' + job_id.to_s, { debug_key: DEBUG_KEY }
-        last_response_json = JSON.load(last_response.body)
+        get "/job-details/#{fill_status.delayed_job.id}", { debug_key: DEBUG_KEY }
 
         expect(last_response_json['arguments'][0]).to eq(MOCK_VALUES)
-        expect(last_response_json['bioguide']).to eq(@fill_status.congress_member.bioguide_id)
+        expect(last_response_json['bioguide']).to eq(fill_status.congress_member.bioguide_id)
       end
     end
   end
@@ -370,32 +336,27 @@ describe "Debug controller" do
     it "should not be accessable without a correct debug_key" do
       put '/job-details/TEST', { debug_key: DEBUG_KEY + "cruft" }
       expect(last_response.status).to eq(401)
-      last_response_json = JSON.load(last_response.body)
       expect(last_response_json["status"]).to eq("error")
     end
 
     it "should return an error response when a job id is not found" do
       put '/job-details/77', { debug_key: DEBUG_KEY }
-      last_response_json = JSON.load(last_response.body)
       expect(last_response_json["status"]).to eq("error")
     end
 
     describe "with a job" do
-      before do
-        @fill_status = create :fill_status_failure_with_delayed_job
-      end
+      let!(:fill_status) { create :fill_status_failure_with_delayed_job }
+      let(:job_id) { fill_status.delayed_job.id }
 
       it "should successfully modify a job" do
-        job_id = @fill_status.delayed_job.id
         arguments = [{
           "$NAME_FIRST" => "Testing",
           "$NAME_LAST" => "McTesterson"
         }]
-        put_json '/job-details/' + job_id.to_s, {
+        put_json "/job-details/#{job_id}", {
           debug_key: DEBUG_KEY,
           arguments: arguments
         }.to_json
-        last_response_json = JSON.load(last_response.body)
         expect(last_response_json["status"]).to eq("success")
 
         job = Delayed::Job.find(job_id)
@@ -409,26 +370,21 @@ describe "Debug controller" do
     it "should not be accessable without a correct debug_key" do
       delete '/job-details/TEST', { debug_key: DEBUG_KEY + "cruft" }
       expect(last_response.status).to eq(401)
-      last_response_json = JSON.load(last_response.body)
       expect(last_response_json["status"]).to eq("error")
     end
 
     it "should return an error response when a job id is not found" do
       delete '/job-details/77', { debug_key: DEBUG_KEY }
-      last_response_json = JSON.load(last_response.body)
       expect(last_response_json["status"]).to eq("error")
     end
 
     describe "with a job" do
-      before do
-        @fill_status = create :fill_status_failure_with_delayed_job
-      end
+      let!(:fill_status) { create :fill_status_failure_with_delayed_job }
+      let(:job_id) { fill_status.delayed_job.id }
 
       it "should successfully delete a job" do
-        job_id = @fill_status.delayed_job.id
-        delete '/job-details/' + job_id.to_s, { debug_key: DEBUG_KEY }
+        delete "/job-details/#{job_id}", { debug_key: DEBUG_KEY }
 
-        last_response_json = JSON.load(last_response.body)
         expect(last_response_json["status"]).to eq("success")
         expect{ Delayed::Job.find(job_id) }.to raise_error ActiveRecord::RecordNotFound
       end
@@ -446,41 +402,37 @@ describe "Debug controller" do
     it "should not be accessable without a correct debug_key" do
       get '/perform-job/TEST', { debug_key: DEBUG_KEY + "cruft" }
       expect(last_response.status).to eq(401)
-      last_response_json = JSON.load(last_response.body)
       expect(last_response_json["status"]).to eq("error")
     end
 
     it "should return an error response when a job id is not found" do
       get '/perform-job/77', { debug_key: DEBUG_KEY }
-      last_response_json = JSON.load(last_response.body)
       expect(last_response_json["status"]).to eq("error")
     end
 
     describe "with a non-captcha job" do
-      before do
-        @fill_status = create :fill_status_failure_with_delayed_job, congress_member: create(:congress_member_with_actions)
+      let!(:fill_status) do
+        create :fill_status_failure_with_delayed_job,
+        congress_member: create(:congress_member_with_actions)
       end
 
       it "should perform the job successfully" do
-        job_id = @fill_status.delayed_job.id
-        get '/perform-job/' + job_id.to_s, { debug_key: DEBUG_KEY }
+        get "/perform-job/#{fill_status.delayed_job.id}", { debug_key: DEBUG_KEY }
         expect(last_response.status).to eq(200)
-        last_response_json = JSON.load(last_response.body)
         expect(last_response_json["status"]).to eq("success")
         expect(FillStatus.success.count).to eq(1)
       end
     end
 
     describe "with a captcha job" do
-      before do
-        @fill_status = create :fill_status_failure_with_delayed_job, congress_member: create(:congress_member_with_actions_and_captcha)
+      let!(:fill_status) do
+        create :fill_status_failure_with_delayed_job,
+          congress_member: create(:congress_member_with_actions_and_captcha)
       end
 
       it "should provide information that a captcha is needed and a uid" do
-        job_id = @fill_status.delayed_job.id
-        get '/perform-job/' + job_id.to_s, { debug_key: DEBUG_KEY }
+        get "/perform-job/#{fill_status.delayed_job.id}", { debug_key: DEBUG_KEY }
         expect(last_response.status).to eq(200)
-        last_response_json = JSON.load(last_response.body)
         expect(last_response_json["status"]).to eq("captcha_needed")
         expect(last_response_json["uid"].blank?).to be_falsy
       end
@@ -491,28 +443,24 @@ describe "Debug controller" do
     it "should not be accessable without a correct debug_key" do
       post '/perform-job-captcha/TEST', { debug_key: DEBUG_KEY + "cruft" }
       expect(last_response.status).to eq(401)
-      last_response_json = JSON.load(last_response.body)
       expect(last_response_json["status"]).to eq("error")
     end
 
     it "should return an error response when a job id is not found" do
       post '/perform-job-captcha/77', { debug_key: DEBUG_KEY }
-      last_response_json = JSON.load(last_response.body)
       expect(last_response_json["status"]).to eq("error")
     end
 
     describe "with a captcha job" do
-      before do
-        @fill_status = create :fill_status_failure_with_delayed_job, congress_member: create(:congress_member_with_actions_and_captcha)
+      let!(:fill_status) do
+        create :fill_status_failure_with_delayed_job,
+          congress_member: create(:congress_member_with_actions_and_captcha)
       end
 
       it "should perform the job successfully" do
-        job_id = @fill_status.delayed_job.id
-        get '/perform-job/' + job_id.to_s, { debug_key: DEBUG_KEY }
-        last_response_json = JSON.load(last_response.body)
-        post '/perform-job-captcha/' + last_response_json["uid"], { debug_key: DEBUG_KEY, answer: "placeholder" }
+        get "/perform-job/#{fill_status.delayed_job.id}", { debug_key: DEBUG_KEY }
+        post "/perform-job-captcha/#{last_response_json["uid"]}", { debug_key: DEBUG_KEY, answer: "placeholder" }
         expect(last_response.status).to eq(200)
-        last_response_json = JSON.load(last_response.body)
         expect(last_response_json["status"]).to eq("success")
       end
     end
