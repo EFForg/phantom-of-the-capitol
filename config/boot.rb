@@ -20,9 +20,6 @@ if File.exists?(file = "#{Padrino.root}/config/constants.rb")
   require file
 end
 
-HEADLESS = Headless.new
-HEADLESS.start
-
 require 'capybara/poltergeist'
 Capybara.run_server = false
 Capybara.default_max_wait_time = 5
