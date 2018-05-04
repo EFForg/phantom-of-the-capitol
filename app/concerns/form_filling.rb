@@ -57,7 +57,21 @@ module FormFilling
       actions.each do |a|
         form_fill_log(f, %(#{a.action}(#{a.selector.inspect+", " if a.selector.present?}#{a.value.inspect})))
 
-        a.execute(session, self, f, &block)
+        solution = "$CAPTCHA_SOLUTION"
+        if a.value == solution
+          location = CAPTCHA_LOCATIONS.fetch(bioguide_id, nil)
+          location ||= session.driver.evaluate_script(
+            'document.querySelector("' + a.captcha_selector.gsub('"', '\"') + '").getBoundingClientRect();'
+          )
+          url = self.class.save_captcha_and_store_poltergeist(
+            session, location["left"], location["top"], location["width"], location["height"]
+          )
+
+          yield(url, session, self) unless f[solution]
+          session.find(a.selector).set(f[solution])
+        else
+          a.execute(session, f, &block)
+        end
       end
 
       success = check_success session.text

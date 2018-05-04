@@ -184,10 +184,12 @@ describe CongressMember do
     end
 
     context "has action: select" do
+      # TODO: this is pretty brittle.  Move it into a feature spec and stop stubbing.
       let(:action) { CongressMemberAction.new(action: "select", selector: ".abc .xyz") }
-      before { congress_member.actions << action }
 
       before do
+        congress_member.actions << action
+
         expect(session).to receive(:within) do |selector, &block|
           expect(selector).to eq(action.selector)
           block.call
@@ -195,28 +197,30 @@ describe CongressMember do
       end
 
       context "action value is not a placeholder" do
+        # TODO: this case should include multiple options with the given value
         before { action.update(value: "aFormOptionValue") }
+
         it "should lookup the <option> node with the given value and select it" do
           html_node = double
-          expect(session).to receive(:find).with(%(option[value="#{action.value}"])){ html_node }
+          expect(session).to receive(:first).with(%(option[value="#{action.value}"])){ html_node }
           expect(html_node).to receive(:select_option)
           congress_member.fill_out_form_with_capybara(fields, session)
         end
 
-        pending "multiple options with the given value exist"
         pending "no option with the given value exists" # should then search as if value is regex
       end
 
       context "action value is a placeholder" do
+        # TODO: this case should include multiple options with the given value
         before { action.update(value: "$TOPIC") }
+
         it "should lookup the <option> node with the user provided value and select it" do
           html_node = double
-          expect(session).to receive(:find).with(%(option[value="#{fields[action.value]}"])){ html_node }
+          expect(session).to receive(:first).with(%(option[value="#{fields[action.value]}"])){ html_node }
           expect(html_node).to receive(:select_option)
           congress_member.fill_out_form_with_capybara(fields, session)
         end
 
-        pending "multiple options with the given user provided value exist"
         pending "no option with the given user provided value exists" # should then search as if value is regex
       end
 

@@ -13,12 +13,6 @@ describe CongressMemberAction do
     end.to raise_error(ActiveRecord::RecordInvalid)
   end
 
-  it "should only have the required fields when calling as_required_json" do
-    ca = create :congress_member_action, action: "fill_in", name: "first-name", value: "first-name"
-    expect(ca.as_json["id"]).not_to be_nil
-    expect(ca.as_required_json["id"]).to be_nil
-  end
-
   it "should deserialize the `options` field successfully using YAML" do
     ca = create :congress_member_action, action: "select", name: "topic", options: {'agriculture' => "AG", 'economy' => "EC"}
     expect { YAML.load(ca.options) }.not_to raise_error
