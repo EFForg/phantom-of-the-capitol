@@ -1,5 +1,6 @@
 module FormFilling
   extend ActiveSupport::Concern
+  CAPTCHA_SOLUTION = "$CAPTCHA_SOLUTION"
 
   included do
     attr_accessor :persist_session
@@ -9,36 +10,18 @@ module FormFilling
   def fill_out_form f={}, ct = nil, session: nil, action: nil, &block
     preprocess_message_fields(bioguide_id, f)
 
-    status_fields = {
-      congress_member: self,
-      status: "success",
-      extra: {}
-    }
+    status_fields = { congress_member: self, status: "success", extra: {} }
     status_fields[:campaign_tag] = ct unless ct.nil?
+    response_hash = fill_out_form_with_capybara(
+      f, session, starting_action: action, &block
+    )
 
-    success_hash = fill_out_form_with_capybara f, session, starting_action: action, &block
-
-    unless success_hash[:success]
-      status_fields[:status] = success_hash[:exception] ? "error" : "failure"
-      status_fields[:extra][:screenshot] = success_hash[:screenshot]
-
-      if success_hash[:exception]
-        message = YAML.load(success_hash[:exception].message)
-
-        if message.is_a?(Hash) and message.include?(:screenshot)
-          status_fields[:extra][:screenshot] = message[:screenshot]
-        end
-      end
-    end
+    handle_failure(response_hash, status_fields)
 
     fill_status = FillStatus.create(status_fields)
     fill_status.save if RECORD_FILL_STATUSES
 
     fill_status
-  end
-
-  def fill_out_form!(f={}, ct=nil, &block)
-    fill_out_form(f, ct, &block)[0] or raise FillError.new
   end
 
   def fill_out_form_with_capybara f, session=nil, starting_action: nil, &block
@@ -55,20 +38,11 @@ module FormFilling
       end
 
       actions.each do |a|
-        form_fill_log(f, %(#{a.action}(#{a.selector.inspect+", " if a.selector.present?}#{a.value.inspect})))
+        log_action(a, f)
 
-        solution = "$CAPTCHA_SOLUTION"
-        if a.value == solution
-          location = CAPTCHA_LOCATIONS.fetch(bioguide_id, nil)
-          location ||= session.driver.evaluate_script(
-            'document.querySelector("' + a.captcha_selector.gsub('"', '\"') + '").getBoundingClientRect();'
-          )
-          url = self.class.save_captcha_and_store_poltergeist(
-            session, location["left"], location["top"], location["width"], location["height"]
-          )
-
-          yield(url, session, self) unless f[solution]
-          session.find(a.selector).set(f[solution])
+        if a.value == CAPTCHA_SOLUTION
+          yield(url_for(session, a), session, self) unless f[CAPTCHA_SOLUTION]
+          session.find(a.selector).set(f[CAPTCHA_SOLUTION])
         else
           a.execute(session, f, &block)
         end
@@ -92,31 +66,6 @@ module FormFilling
     end
   end
 
-  def check_success body_text
-    criteria = YAML.load(success_criteria)
-    criteria.each do |i, v|
-      case i
-      when "headers"
-        v.each do |hi, hv|
-          case hi
-          when "status"
-            # TODO: check status code
-          end
-        end
-      when "body"
-        v.each do |bi, bv|
-          case bi
-          when "contains"
-            unless body_text.include? bv
-              return false
-            end
-          end
-        end
-      end
-    end
-    true
-  end
-
   def as_required_json o={}
     as_json({
       :only => [],
@@ -126,12 +75,49 @@ module FormFilling
 
   private
 
+  def url_for(session, action)
+    location =  CAPTCHA_LOCATIONS.fetch(bioguide_id, nil)
+    location ||= session.driver.evaluate_script(
+      'document.querySelector("' + action.captcha_selector.gsub('"', '\"') + '").getBoundingClientRect();'
+    )
+    self.class.save_captcha_and_store_poltergeist(
+      session, location["left"], location["top"], location["width"], location["height"]
+    )
+  end
+
+  def log_action(a, f)
+    a_info = [a.selector.try(:inspect), a.value.inspect].compact.join(', ')
+    form_fill_log(f, "#{a.action}(#{a_info})")
+  end
+
+  def check_success body_text
+    criteria = YAML.load(success_criteria)
+    # TODO: check headers
+    body = criteria.fetch("body", nil)
+    body && body_text.include?(body["contains"])
+  end
+
   def form_fill_log(fields, message)
     log_message = "#{bioguide_id} fill (#{[bioguide_id, fields].hash.to_s(16)}): #{message}"
     Padrino.logger.info(log_message)
 
     Raven.extra_context(fill_log: "") unless Raven.context.extra.key?(:fill_log)
     Raven.context.extra[:fill_log] << message << "\n"
+  end
+
+  def handle_failure(response_hash, status_fields)
+    return if response_hash[:success]
+
+    if response_hash[:exception]
+      status_fields[:status] ="error"
+
+      message = response_hash[:exception].message
+      status_fields[:extra][:screenshot] = message[:screenshot] if message.is_a?(Hash)
+    else
+      status_fields[:status] = "failure"
+    end
+
+    status_fields[:extra][:screenshot] ||= response_hash[:screenshot]
   end
 
   public
