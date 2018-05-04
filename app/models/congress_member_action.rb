@@ -3,13 +3,14 @@ class CongressMemberAction < ActiveRecord::Base
 
   REQUIRED_JSON = { :only => [ :value, :maxlength ], :methods => [:options_hash] }
   DEFAULT_FIND_WAIT_TIME = 5
+  ACTIONS = %w(visit fill_in select click_on find check uncheck choose wait javascript recaptcha)
 
   validates_presence_of :action
 
   belongs_to :congress_member
 
   serialize :options, LegacySerializer
-  enumerize :action, in: %w(visit fill_in select click_on find check uncheck choose wait javascript recaptcha)
+  enumerize :action, in: ACTIONS
 
   def execute(session, f)
     self.send(action, session, f)
