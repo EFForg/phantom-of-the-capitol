@@ -6,7 +6,7 @@ class CongressMember < ActiveRecord::Base
 
   validates_presence_of :bioguide_id
 
-  has_many :actions, :class_name => 'CongressMemberAction', dependent: :destroy
+  has_many :actions, class_name: 'CongressMemberAction', dependent: :destroy
   has_many :required_actions, -> (object) { where "required = true AND SUBSTRING(value, 1, 1) = '$'" },
     class_name: 'CongressMemberAction'
   has_many :fill_statuses, class_name: 'FillStatus', dependent: :destroy
@@ -19,7 +19,7 @@ class CongressMember < ActiveRecord::Base
   RECENT_FILL_IMAGE_EXT = '.svg'
 
   def has_captcha?
-    !actions.find_by_value("$CAPTCHA_SOLUTION").nil?
+    actions.solved_captcha.exists?
   end
 
   def recent_fill_status

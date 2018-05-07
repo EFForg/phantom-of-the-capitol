@@ -11,6 +11,7 @@ class CongressMemberAction < ActiveRecord::Base
 
   serialize :options, LegacySerializer
   enumerize :action, in: ACTIONS
+  scope :solved_captchas, -> { where(value: "$CAPTCHA_SOLUTION") }
 
   def execute(session, f)
     self.send(action, session, f)
