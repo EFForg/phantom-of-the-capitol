@@ -31,6 +31,17 @@ class CongressMember < ActiveRecord::Base
     }
   end
 
+  def as_required_json o={}
+    as_json({
+      only: [],
+      include: {
+        required_actions: {
+          only: [ :value, :maxlength ], methods: [:options_hash]
+        }
+      }
+    }.merge o)
+  end
+
   class << self
     def to_hash cm_array
       cm_hash = {}

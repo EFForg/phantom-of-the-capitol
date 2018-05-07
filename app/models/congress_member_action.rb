@@ -1,7 +1,6 @@
 class CongressMemberAction < ActiveRecord::Base
   extend Enumerize
 
-  REQUIRED_JSON = { :only => [ :value, :maxlength ], :methods => [:options_hash] }
   DEFAULT_FIND_WAIT_TIME = 5
   ACTIONS = %w(visit fill_in select click_on find check uncheck choose wait javascript recaptcha)
 
