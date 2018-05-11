@@ -71,7 +71,8 @@ CongressForms::App.controller do
     if result[:status] == "error"
       Raven.capture_message("Form error: #{bio_id}", tags: { "form_error" => true })
 
-      job = c.delay(queue: "error_or_failure").fill_out_form(fields, params["campaign_tag"])
+      job = FormFiller.new(c, fields, params["campaign_tag"])
+        .delay(queue: "error_or_failure").fill_out_form
 
       if RECORD_FILL_STATUSES
         fill_status = FillStatus.find(result[:fill_status_id])

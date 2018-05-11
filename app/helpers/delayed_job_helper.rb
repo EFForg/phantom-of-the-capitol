@@ -9,11 +9,20 @@ class DelayedJobHelper
 
       object_mapping = root_hash["object"]
       object_hash = hash_from_mapping(object_mapping)
-      attributes_mapping = object_hash.include?("raw_attributes") ? object_hash["raw_attributes"] : object_hash["attributes"]
+      congress_member_hash = hash_from_mapping(object_hash["rep"])
+
+      attributes_mapping = if congress_member_hash.include?("raw_attributes")
+        congress_member_hash["raw_attributes"]
+      else
+        congress_member_hash["attributes"]
+      end
+
       id_scalar = hash_from_mapping(attributes_mapping)["id"]
       id = id_scalar.value
 
-      args = root_hash["args"].to_ruby
+      args = [
+        object_hash["fields"].to_ruby, object_hash["campaign_tag"].to_ruby
+      ].flatten
 
       [id, args]
     end

@@ -14,7 +14,8 @@ FactoryGirl.define do
 
       factory :fill_status_failure_with_delayed_job do
         after(:create) do |fs|
-          fs.congress_member.delay(queue: "error_or_failure").fill_out_form MOCK_VALUES
+          FormFiller.new(fs.congress_member, MOCK_VALUES)
+            .delay(queue: "error_or_failure").fill_out_form
           job = Delayed::Job.last
           job.attempts = 1
           job.run_at = Time.now

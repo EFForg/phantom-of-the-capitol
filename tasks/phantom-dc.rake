@@ -139,7 +139,7 @@ namespace :'phantom-dc' do
         end
       end
       begin
-        c.fill_out_form fields_hash, "rake" do |c|
+        FormFiller.new(c, fields_hash, "rake").fill_out_form do |c|
           puts "Please type in the value for the captcha at " + c + "\n"
           STDIN.gets.strip
         end

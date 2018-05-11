@@ -1,8 +1,9 @@
 class CongressMember < ActiveRecord::Base
-  require_dependency "app/helpers/message_fields_helper"
-  include MessageFieldsHelper
-  include FormFilling
   include CwcMessaging
+
+  REQUIRED_JSON = { only: [ :value, :maxlength ], methods: [:options_hash] }
+  RECENT_FILL_IMAGE_BASE = 'https://img.shields.io/badge/'
+  RECENT_FILL_IMAGE_EXT = '.svg'
 
   validates_presence_of :bioguide_id
 
@@ -15,8 +16,8 @@ class CongressMember < ActiveRecord::Base
 
   serialize :success_criteria, LegacySerializer
 
-  RECENT_FILL_IMAGE_BASE = 'https://img.shields.io/badge/'
-  RECENT_FILL_IMAGE_EXT = '.svg'
+  attr_accessor :persist_session #TODO move this elsewhere?
+  alias_method :persist_session?, :persist_session
 
   def has_captcha?
     actions.solved_captcha.exists?

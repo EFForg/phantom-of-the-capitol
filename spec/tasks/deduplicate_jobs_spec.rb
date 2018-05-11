@@ -2,7 +2,8 @@ require "spec_helper"
 
 describe DeduplicateJobs do
   def make_job(cm, fields={}, campaign_tag="rspec")
-    cm.delay(queue: "error_or_failure").fill_out_form(MOCK_VALUES.merge(fields), campaign_tag)
+    FormFiller.new(cm, MOCK_VALUES.merge(fields), campaign_tag)
+      .delay(queue: "error_or_failure").fill_out_form
   end
 
   let(:jobs){ Delayed::Job.where(queue: "error_or_failure") }

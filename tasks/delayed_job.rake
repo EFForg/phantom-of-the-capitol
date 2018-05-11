@@ -125,7 +125,7 @@ namespace :'phantom-dc' do
         job.handler = YAML.dump(handler)
         job.save
         begin
-          handler.object.fill_out_form handler.args[0], handler.args[1] do |img|
+          FormFiller.new(handler.object, handler.args[0], handler.args[1]).fill_out_form do |img|
             puts img
             STDIN.gets.strip
           end

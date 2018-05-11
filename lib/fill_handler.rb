@@ -1,20 +1,22 @@
 class FillHandler
   attr_reader :fields, :campaign_tag, :session, :saved_action
 
-  def initialize c, fields, campaign_tag = "", debug = false
-    @c = c
+  def initialize rep, fields, campaign_tag = "", debug = false
+    @rep = rep
     @debug = debug
     @fields = fields
     @campaign_tag = campaign_tag
   end
 
   def fill(session=nil, action=nil)
-    if DELAY_ALL_NONCAPTCHA_FILLS and not @c.has_captcha? and not @debug
-      @c.delay(queue: "default").fill_out_form fields, campaign_tag
+    if DELAY_ALL_NONCAPTCHA_FILLS and not @rep.has_captcha? and not @debug
+      FormFiller.delay(queue: "default").fill(@rep, fields, campaign_tag)
       return check_result(true)
     end
 
-    fill_status = @c.fill_out_form(fields, campaign_tag, session: session, action: action) do |url, session, action|
+    fill_status = FormFiller.new(
+      @rep, fields, campaign_tag, session: session
+    ).fill_out_form(action) do |url, session, action|
       save_session(session, action)
       return check_result(url)
     end
@@ -36,7 +38,7 @@ class FillHandler
   def save_session(session, action)
     @session = session
     @saved_action = action
-    @c.persist_session = true
+    @rep.persist_session = true
   end
 
   def check_result result, fill_status_id = nil
@@ -50,4 +52,3 @@ class FillHandler
     end
   end
 end
-

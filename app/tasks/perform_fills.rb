@@ -68,7 +68,7 @@ class PerformFills
         false
       end
     elsif RACK_ENV != "development"
-      status = cm.fill_out_form(fields, cm_args[1], &block).success?
+      status = FormFiller.new(cm, fields, cm_args[1]).fill_out_form(&block).success?
 
       unless status
         Raven.capture_message("Form error: #{cm.bioguide_id}",
@@ -79,9 +79,14 @@ class PerformFills
       status
     end
   rescue => e
-    Raven.capture_exception(e, tags: { "rake" => true },
-                            extra: { delayed_job_id: job.id })
-    return false
+    if RACK_ENV == "production"
+
+      Raven.capture_exception(e, tags: { "rake" => true },
+                              extra: { delayed_job_id: job.id })
+      return false
+    else
+      raise e
+    end
   end
 
   def cm_hash
