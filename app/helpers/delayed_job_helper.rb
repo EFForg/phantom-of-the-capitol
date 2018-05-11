@@ -4,27 +4,18 @@ class DelayedJobHelper
       parser = Psych::Parser.new Psych::TreeBuilder.new
       parser.parse(handler)
 
-      root_mapping = parser.handler.root.children[0].children[0]
-      root_hash = hash_from_mapping(root_mapping)
-
-      object_mapping = root_hash["object"]
-      object_hash = hash_from_mapping(object_mapping)
+      root_hash = hash_from_mapping(parser.handler.root.children[0].children[0])
+      object_hash = hash_from_mapping(root_hash["object"])
       congress_member_hash = hash_from_mapping(object_hash["rep"])
 
-      attributes_mapping = if congress_member_hash.include?("raw_attributes")
-        congress_member_hash["raw_attributes"]
-      else
+      attributes_mapping = congress_member_hash["raw_attributes"] ||
         congress_member_hash["attributes"]
-      end
-
-      id_scalar = hash_from_mapping(attributes_mapping)["id"]
-      id = id_scalar.value
 
       args = [
         object_hash["fields"].to_ruby, object_hash["campaign_tag"].to_ruby
       ].flatten
 
-      [id, args]
+      [hash_from_mapping(attributes_mapping)["id"].value, args]
     end
 
     def tabulate_jobs_by_member cm_hash
