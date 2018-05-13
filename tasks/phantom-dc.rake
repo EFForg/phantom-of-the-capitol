@@ -16,19 +16,20 @@ namespace :'phantom-dc' do
   desc "Update CWC office codes. Run once after switching to CWC delivery."
   task :update_cwc_codes do |t, args|
     CongressMember.all.each do |cm|
-      if term = get_legislator_info(cm.bioguide_id)["terms"].try(:last)
-        if term["type"] == "sen"
-          cm.chamber = "senate"
-          cm.senate_class = term["class"]
-          cm.house_district = nil
-        else
-          cm.chamber = "house"
-          cm.house_district = term["district"]
-          cm.senate_class = nil
-        end
-        cm.state = term["state"]
-        cm.save
+      next unless (term = get_legislator_info(cm.bioguide_id)["terms"].try(:last))
+
+      if term["type"] == "sen"
+        cm.chamber = "senate"
+        cm.senate_class = term["class"]
+        cm.house_district = nil
+      else
+        cm.chamber = "house"
+        cm.house_district = term["district"]
+        cm.senate_class = nil
       end
+
+      cm.state = term["state"]
+      cm.save
     end
   end
 
