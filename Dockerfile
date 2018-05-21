@@ -39,6 +39,7 @@ ADD ./cwc/ ./cwc
 RUN bundle install
 
 ADD app ./app
+ADD lib ./lib
 ADD config ./config
 ADD db ./db
 ADD public ./public
