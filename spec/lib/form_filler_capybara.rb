@@ -12,7 +12,7 @@ describe FormFiller::Capybara do
   end
 
   describe "with saved session and action" do
-    let(:session){ Capybara::Session.new(:poltergeist) }
+    let(:session){ Capybara::Session.new(:headless_chrome) }
     let(:congress_member){ create :congress_member }
     let(:fields) { MOCK_VALUES }
 

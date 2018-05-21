@@ -20,20 +20,29 @@ if File.exists?(file = "#{Padrino.root}/config/constants.rb")
   require file
 end
 
-require 'capybara/poltergeist'
+require 'capybara'
+require 'selenium/webdriver'
 Capybara.run_server = false
 Capybara.default_max_wait_time = 5
 
-Capybara.register_driver :poltergeist do |app|
-  options = {
-    js_errors: false,
-    phantomjs_options: ['--ssl-protocol=TLSv1'],
-    url_blacklist: ENV.fetch('URL_BLACKLIST'){ '' }.split(',')
-  }
-
-  Capybara::Poltergeist::Driver.new(app, options)
+# Switch to this driver if you want to watch Capybara in action.
+# Can help with debugging.
+Capybara.register_driver :chrome do |app|
+  Capybara::Selenium::Driver.new(app, browser: :chrome)
 end
 
+# TODO: figure out how to re-implement the url_blacklist
+Capybara.register_driver :headless_chrome do |app|
+  capabilities = Selenium::WebDriver::Remote::Capabilities.chrome(
+    chromeOptions: { args: %w(headless no-sandbox disable-gpu window-size=1200,1400) }
+  )
+
+  Capybara::Selenium::Driver.new app,
+    browser: :chrome,
+    desired_capabilities: capabilities
+end
+
+Capybara.javascript_driver = :headless_chrome
 
 SmartyStreets.configure do |c|
   c.auth_id = SMARTY_STREETS_ID

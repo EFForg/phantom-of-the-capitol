@@ -7,7 +7,7 @@ A RESTful API for retrieving the required fields for and filling out the contact
 Phantom DC has three major functions:
 
 * Looking up form fields provided by all members of congress
-* Using [PhantomJS](http://phantomjs.org/) to proxy fill-in a congress member's form such that they need not navigate directly to the congress member's web page
+* Using [Chrome Headless](https://chromium.googlesource.com/chromium/src/+/lkgr/headless/README.md) to proxy fill-in a congress member's form such that they need not navigate directly to the congress member's web page
 * It can return any captcha images and forward the user submitted solution to the `.gov` website
 
 This project relies on:
@@ -115,10 +115,13 @@ $  cd /vagrant;
 
 #### Requirements
 
-On a Debian based system (we're testing against **Ubuntu**) download and install the latest [phantomjs](http://phantomjs.org/) and then run the below `apt-get` command.
+On a Debian based system (we're testing against **Ubuntu**) download and install the latest [Chrome](https://www.google.com/chrome/) and then run the below `apt-get` command.
 
 ```bash
-$  apt-get install imagemagick libmysql++-dev libpq-dev git libqt4-dev xvfb
+$  wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+$  sudo sh -c 'echo "deb http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list'
+$  sudo apt-get update
+$  apt-get install google-chrome-stable imagemagick libmysql++-dev libpq-dev git libqt4-dev xvfb
 ```
 
 [Install ruby with rvm](http://rvm.io), then

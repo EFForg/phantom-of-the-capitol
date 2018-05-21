@@ -6,6 +6,9 @@ RUN apt-get update && \
   apt-get install -y --no-install-recommends \
     build-essential \
     curl \
+    apt-transport-https \
+    ca-certificates \
+    gnupg \
     default-libmysqlclient-dev \
     libpq-dev \
     git \
@@ -14,19 +17,14 @@ RUN apt-get update && \
     lsof \
     imagemagick \
     cron && \
+  curl -sSL https://dl.google.com/linux/linux_signing_key.pub | apt-key add - && \
+  echo "deb [arch=amd64] https://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list && \
+  apt-get update && \
+  apt-get install -y google-chrome-stable --no-install-recommends && \
   apt-get clean && \
   rm -rf /var/lib/apt/lists/* \
     /tmp/* \
     /var/tmp/*
-
-# Create a symlink to what will be the phantomjs exec path
-RUN ln -s /phantomjs-2.1.1-linux-x86_64/bin/phantomjs /bin/phantomjs
-
-# Set up phantomjs, making sure to check the known good sha256sum
-RUN curl -sLo phantomjs.tar.bz2 https://bitbucket.org/ariya/phantomjs/downloads/phantomjs-2.1.1-linux-x86_64.tar.bz2 && \
-  bash -l -c '[ "`sha256sum phantomjs.tar.bz2 | cut -f1 -d" "`" = "86dd9a4bf4aee45f1a84c9f61cf1947c1d6dce9b9e8d2a907105da7852460d2f" ]' && \
-  tar -jxvf phantomjs.tar.bz2 > /dev/null && \
-  rm phantomjs.tar.bz2
 
 # Datasources should be a persistent volume
 VOLUME /datasources

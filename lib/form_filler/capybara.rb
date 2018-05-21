@@ -12,9 +12,10 @@ class FormFiller::Capybara
   end
 
   def fill_out(starting_action = nil, &block)
-    @session ||= Capybara::Session.new(:poltergeist)
-    @session.driver.options[:js_errors] = false
-    @session.driver.options[:phantomjs_options] = ['--ssl-protocol=TLSv1']
+    @session ||= Capybara::Session.new(:headless_chrome)
+    # TODO: do we need to turn off js_errors & TLS versions > 1?
+    #@session.driver.options[:js_errors] = false
+    #@session.driver.options[:phantomjs_options] = ['--tls1']
     form_fill_log("begin")
 
     begin
@@ -40,14 +41,14 @@ class FormFiller::Capybara
       form_fill_log("done: #{success ? 'passing' : 'failing'} success criteria")
 
       success_hash = {success: success}
-      success_hash[:screenshot] = save_screenshot_and_store_poltergeist if !success
+      success_hash[:screenshot] = save_screenshot if !success
       success_hash
     rescue Exception => e
       form_fill_log("done: unsuccessful fill (#{e.class})")
       Raven.extra_context(backtrace: e.backtrace)
 
       message = {success: false, message: e.message, exception: e}
-      message[:screenshot] = save_screenshot_and_store_poltergeist
+      message[:screenshot] = save_screenshot
       raise e
     ensure
       @session.driver.quit unless rep.persist_session?
@@ -61,7 +62,7 @@ class FormFiller::Capybara
     location ||= @session.driver.evaluate_script(
       'document.querySelector("' + action.captcha_selector.gsub('"', '\"') + '").getBoundingClientRect();'
     )
-    save_captcha_and_store_poltergeist(
+    save_captcha(
       location["left"], location["top"], location["width"], location["height"]
     )
   end
