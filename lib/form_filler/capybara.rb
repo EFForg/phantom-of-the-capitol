@@ -1,9 +1,11 @@
 class FormFiller::Capybara
-  include FormFiller::AssetsHelper
+  include FormFillHelper
 
   CAPTCHA_SOLUTION = "$CAPTCHA_SOLUTION"
 
   delegate :bioguide_id, to: :rep
+  attr_accessor :rep
+  attr_accessor :fields
 
   def initialize(rep, fields, session: nil)
     @fields = fields
@@ -18,19 +20,19 @@ class FormFiller::Capybara
     form_fill_log("begin")
 
     begin
-      actions = @rep.actions.order(:step)
+      actions = rep.actions.order(:step)
 
       if starting_action
         actions = actions.drop_while{ |a| a.id != starting_action.id }
       end
 
       actions.each do |a|
-        action = FormFiller::CapybaraAction.new(a, @session, @fields)
+        action = FormFiller::CapybaraAction.new(a, @session, fields)
         log_action(action)
 
         if action.value == CAPTCHA_SOLUTION
-          yield(url_for(action), @session, @rep) unless @fields[CAPTCHA_SOLUTION]
-          @session.find(action.selector).set(@fields[CAPTCHA_SOLUTION])
+          yield(url_for(action), @session, rep) unless fields[CAPTCHA_SOLUTION]
+          @session.find(action.selector).set(fields[CAPTCHA_SOLUTION])
         else
           action.execute(&block)
         end
@@ -50,22 +52,14 @@ class FormFiller::Capybara
       message[:screenshot] = save_screenshot_and_store_poltergeist
       raise e
     ensure
-      @session.driver.quit unless @rep.persist_session?
+      @session.driver.quit unless rep.persist_session?
     end
-  end
-
-  def rep
-    @rep
-  end
-
-  def fields
-    @fields
   end
 
   private
 
   def url_for(action)
-    location =  CAPTCHA_LOCATIONS.fetch(@rep.bioguide_id, nil)
+    location =  CAPTCHA_LOCATIONS.fetch(rep.bioguide_id, nil)
     location ||= @session.driver.evaluate_script(
       'document.querySelector("' + action.captcha_selector.gsub('"', '\"') + '").getBoundingClientRect();'
     )
@@ -80,14 +74,14 @@ class FormFiller::Capybara
   end
 
   def check_success body_text
-    criteria = YAML.load(@rep.success_criteria)
+    criteria = YAML.load(rep.success_criteria)
     # TODO: check headers
     body = criteria.fetch("body", nil)
     body && body_text.include?(body["contains"])
   end
 
   def form_fill_log(message)
-    log_message = "#{@rep.bioguide_id} fill (#{[@rep.bioguide_id, @fields].hash.to_s(16)}): #{message}" << " #{message.try(:message)}"
+    log_message = "#{rep.bioguide_id} fill (#{[rep.bioguide_id, fields].hash.to_s(16)}): #{message}" << " #{message.try(:message)}"
     Padrino.logger.info(log_message)
 
     Raven.extra_context(fill_log: "") unless Raven.context.extra.key?(:fill_log)

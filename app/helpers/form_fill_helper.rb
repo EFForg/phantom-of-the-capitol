@@ -1,4 +1,4 @@
-module FormFiller::AssetsHelper
+module FormFillHelper
   def save_screenshot_and_store_poltergeist
     screenshot_location = random_screenshot_location
     @session.save_screenshot(screenshot_location, full: true)
