@@ -1,4 +1,5 @@
 require 'securerandom'
+require 'cwc/fixtures'
 
 CongressForms::App.controller do
   helpers CwcHelper
@@ -26,7 +27,7 @@ CongressForms::App.controller do
       next if c.nil?
 
       if cwc_office_supported?(c.cwc_office_code)
-        response[bio_id] = c.as_cwc_required_json
+        response[bio_id] = Cwc::RequiredJson
       else
         response[bio_id] = c.as_required_json(only: [:defunct, :contact_url])
       end
