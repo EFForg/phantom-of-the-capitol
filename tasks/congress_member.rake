@@ -1,15 +1,35 @@
 require File.expand_path("../../config/boot.rb", __FILE__)
 require File.expand_path("../../app/helpers/states.rb", __FILE__)
 
-namespace :'phantom-dc' do
+namespace :'congress_member' do
   desc "Git pull and reload changed CongressMember records into db"
   task :update_git do |t, args|
-
-    DataSource.all.each do |ds|
-      g = Git.open ds.path
+    DataSource.all.each do |data_source|
+      g = Git.open data_source.path
       g.pull
 
-      update_db_with_git_object g, ds
+      current_commit = data_source.latest_commit
+      new_commit = g.log.first.sha
+
+      if current_commit == new_commit
+        puts data_source.name + ": Already at latest commit. Aborting!"
+      else
+        if current_commit.nil?
+          files_changed = Dir[data_source.path + '/' + data_source.yaml_subpath + '/*.yaml'].map { |d| d.sub(data_source.path, "") }
+          puts data_source.name + "No previous commit found, reloading all congress members into db"
+        else
+          files_changed = g.diff(current_commit, new_commit).path(data_source.yaml_subpath).map { |d| d.path }
+          puts files_changed.count.to_s + " congress members form files have changed between commits " + current_commit.to_s + " and " + new_commit
+        end
+
+        files_changed.each do |file_changed|
+          f = data_source.path + '/' + file_changed
+          update_db_member_by_file f, data_source.prefix
+        end
+
+        data_source.latest_commit = new_commit
+        data_source.save
+      end
     end
   end
 
@@ -83,72 +103,12 @@ namespace :'phantom-dc' do
     end
   end
 
-  desc "Run through filling out of all congress members"
+  desc "Run through filling out of all congress members, or a subset specified by regex."
   task :fill_out_all, :regex do |t, args|
-    response = Typhoeus.get("https://raw.githubusercontent.com/EFForg/congress-zip-plus-four/master/legislators.json")
-    congress_defaults = JSON.parse(response.body.gsub(/^define\(|\)$/, ''))
+    filler = BulkFiller.new(args)
+    filler.fill
 
-    response = Typhoeus.get("https://raw.githubusercontent.com/unitedstates/contact-congress/master/support/variables.yaml")
-    defaults = YAML.load(response.body)
-
-    possible_validation = {
-      "$ADDRESS_STREET" => "example_address",
-      "$ADDRESS_CITY" => "example_city",
-      "$ADDRESS_STATE_POSTAL_ABBREV" => "example_state",
-      "$ADDRESS_STATE_FULL" => "example_state"
-    }
-
-    captchad = []
-    noncaptchad = []
-    notfound = []
-
-    cm = args[:regex].blank? ? CongressMember.all : CongressMember.where("bioguide_id REGEXP '" + args[:regex].gsub("'","") + "'")
-    cm.each do |c|
-      if congress_defaults.include? c.bioguide_id
-        if !c.has_captcha?
-          noncaptchad.push(c)
-        else
-          captchad.push(c)
-        end
-      else
-        notfound.push(c.bioguide_id)
-      end
-    end
-
-    (captchad + noncaptchad).each do |c|
-      fields_hash = {}
-
-      fields_hash["$ADDRESS_ZIP4"] = congress_defaults[c.bioguide_id]["zip4"] || defaults["$ADDRESS_ZIP4"]["example"]
-      fields_hash["$ADDRESS_ZIP5"] = congress_defaults[c.bioguide_id]["zip5"] || defaults["$ADDRESS_ZIP5"]["example"]
-
-      c.required_actions.each do |ra|
-        if ra.value == "$ADDRESS_ZIP4" or ra.value == "$ADDRESS_ZIP5"
-        elsif possible_validation.keys.include? ra.value
-          if ra.value == "$ADDRESS_STATE_FULL"
-            fields_hash[ra.value] = STATES[congress_defaults[c.bioguide_id][possible_validation[ra.value]]] || defaults[ra.value]["example"]
-          else
-            fields_hash[ra.value] = congress_defaults[c.bioguide_id][possible_validation[ra.value]] || defaults[ra.value]["example"]
-          end
-        elsif defaults.keys.include? ra.value
-          if ra.options.nil?
-            fields_hash[ra.value] = defaults[ra.value]["example"]
-          else
-            options = YAML.load(ra.options)
-            values = options.is_a?(Hash) ? options.values : options
-            fields_hash[ra.value] = values[Random.rand(values.length)]
-          end
-        end
-      end
-      begin
-        FormFiller.new(c, fields_hash, "rake").fill_out_form do |c|
-          puts "Please type in the value for the captcha at " + c + "\n"
-          STDIN.gets.strip
-        end
-      rescue
-      end
-    end
-
-    puts "No congressional defaults found for the following members: " + notfound.inspect
+    puts "No congressional defaults found for the following members: #{filler.not_found}"
   end
 
   desc "Enable defunct status of congressmember"
@@ -166,54 +126,20 @@ namespace :'phantom-dc' do
   end
 end
 
-def update_db_with_git_object g, data_source
-  current_commit = data_source.latest_commit
-
-  new_commit = g.log.first.sha
-
-  if current_commit == new_commit
-    puts data_source.name + ": Already at latest commit. Aborting!"
-  else
-    if current_commit.nil?
-      files_changed = Dir[data_source.path + '/' + data_source.yaml_subpath + '/*.yaml'].map { |d| d.sub(data_source.path, "") }
-      puts data_source.name + "No previous commit found, reloading all congress members into db"
-    else
-      files_changed = g.diff(current_commit, new_commit).path(data_source.yaml_subpath).map { |d| d.path }
-      puts files_changed.count.to_s + " congress members form files have changed between commits " + current_commit.to_s + " and " + new_commit
-    end
-
-    files_changed.each do |file_changed|
-      f = data_source.path + '/' + file_changed
-      update_db_member_by_file f, data_source.prefix
-    end
-
-    data_source.latest_commit = new_commit
-    data_source.save
-  end
-end
-
 def update_db_member_by_file f, prefix
-  create_congress_member_exception_wrapper(f) do
-    begin
-      congress_member_details = YAML.load_file(f)
-      bioguide = congress_member_details["bioguide"]
-      congress_member_details.merge!(get_legislator_info(bioguide))
-      CongressMember.find_or_create_by(bioguide_id: prefix + bioguide).actions.delete_all
-      create_congress_member_from_hash congress_member_details, prefix
-    rescue Errno::ENOENT
-      puts "File " + f + " is missing, skipping..."
-    rescue NoMethodError
-      puts "File " + f + " does not have a bioguide defined, skipping..."
-    end
-  end
-end
-
-def create_congress_member_exception_wrapper file_path
   begin
-    yield
+    congress_member_details = YAML.load_file(f)
+    bioguide = congress_member_details["bioguide"]
+    congress_member_details.merge!(get_legislator_info(bioguide))
+    CongressMember.find_or_create_by(bioguide_id: prefix + bioguide).actions.delete_all
+    create_congress_member_from_hash congress_member_details, prefix
+  rescue Errno::ENOENT
+    puts "File " + f + " is missing, skipping..."
+  rescue NoMethodError
+    puts "File " + f + " does not have a bioguide defined, skipping..."
   rescue Psych::SyntaxError => exception
     puts ""
-    puts "File "+file_path+" could not be parsed"
+    puts "File "+f+" could not be parsed"
     puts "  Problem: "+exception.problem
     puts "  Line:    "+exception.line.to_s
     puts "  Column:  "+exception.column.to_s
