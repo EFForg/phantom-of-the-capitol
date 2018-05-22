@@ -22,4 +22,19 @@ describe CongressMember do
       expect { YAML.load(rep.success_criteria) }.not_to raise_error
     end
   end
+
+  describe "has_captcha?" do
+    let(:rep) { create(:congress_member, bioguide_id: "B010101") }
+    subject { rep.has_captcha? }
+
+    it { is_expected.to be_falsey }
+
+    context "with a solved captcha" do
+      before do
+        create(:congress_member_action, congress_member: rep, value: CAPTCHA_SOLUTION)
+      end
+
+      it { is_expected.to be_truthy }
+    end
+  end
 end

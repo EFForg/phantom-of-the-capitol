@@ -20,7 +20,7 @@ class CongressMember < ActiveRecord::Base
   alias_method :persist_session?, :persist_session
 
   def has_captcha?
-    actions.solved_captcha.exists?
+    actions.solved_captchas.exists?
   end
 
   def recent_fill_status
