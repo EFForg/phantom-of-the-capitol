@@ -1,8 +1,6 @@
 class FormFiller::Capybara
   include FormFillHelper
 
-  CAPTCHA_SOLUTION = "$CAPTCHA_SOLUTION"
-
   delegate :bioguide_id, to: :rep
   attr_accessor :rep
   attr_accessor :fields

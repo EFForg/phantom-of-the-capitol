@@ -29,7 +29,7 @@ class FillHandler
   end
 
   def fill_captcha answer
-    fields.merge!("$CAPTCHA_SOLUTION" => answer)
+    fields.merge!(CAPTCHA_SOLUTION => answer)
     fill(session, saved_action)
   end
 

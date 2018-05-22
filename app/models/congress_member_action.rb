@@ -9,5 +9,5 @@ class CongressMemberAction < ActiveRecord::Base
 
   serialize :options, LegacySerializer
   enumerize :action, in: ACTIONS
-  scope :solved_captchas, -> { where(value: "$CAPTCHA_SOLUTION") }
+  scope :solved_captchas, -> { where(value: CAPTCHA_SOLUTION) }
 end

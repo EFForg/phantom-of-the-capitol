@@ -97,7 +97,7 @@ class PerformFills
     @captcha_hash ||=
       begin
         hash = {}
-        CongressMemberAction.where(value: "$CAPTCHA_SOLUTION").each do |cma|
+        CongressMemberAction.where(value: CAPTCHA_SOLUTION).each do |cma|
           hash[cma.congress_member_id] = true
         end
         hash

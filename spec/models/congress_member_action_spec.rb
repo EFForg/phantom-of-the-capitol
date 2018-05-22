@@ -20,7 +20,7 @@ describe CongressMemberAction do
 
   describe "#solved_captcha" do
     let!(:captcha_action) do
-      create(:congress_member_action, value: "$CAPTCHA_SOLUTION")
+      create(:congress_member_action, value: CAPTCHA_SOLUTION)
     end
     let!(:random_action) do
       create(:congress_member_action, value: "$ADDRESS")
