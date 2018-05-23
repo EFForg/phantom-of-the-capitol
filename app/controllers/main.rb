@@ -18,9 +18,9 @@ CongressForms::App.controller do
 
   post :'retrieve-form-elements' do
     content_type :json
-    return {status: "error", message: "You must provide bio_ids to retrieve form elements."}.to_json unless params.include? "bio_ids" and params["bio_ids"].is_a? Array
-
+    return error_response("You must provide bio_ids to retrieve form elements.") unless params.include? "bio_ids" and params["bio_ids"].is_a? Array
     bio_ids = params["bio_ids"]
+
     response = {}
     bio_ids.each do |bio_id|
       c = CongressMember.find_by(bioguide_id: bio_id)
@@ -36,15 +36,14 @@ CongressForms::App.controller do
     response.to_json
   end
 
-  fh = FillHash.new
   post :'fill-out-form' do
     content_type :json
 
-    return {status: "error", message: "You must provide a bio_id."}.to_json unless params.include? "bio_id"
+    return error_response("You must provide a bio_id.") unless params.include? "bio_id"
 
     bio_id = params["bio_id"]
     c = CongressMember.find_by(bioguide_id: bio_id)
-    return {status: "error", message: "Congress member with provided bio id not found"}.to_json if c.nil?
+    return error_response("Congress member with provided bio id not found") if c.nil?
 
     missing_parameters = []
     fields = params["fields"] || {}
@@ -54,10 +53,8 @@ CongressForms::App.controller do
       end
     end
 
-    if missing_parameters.any?
-      message = "Error: missing fields (#{missing_parameters.join(', ')})."
-      return { status: "error", message: message }.to_json
-    end
+    message = "Error: missing fields (#{missing_parameters.join(', ')})."
+    return error_response(message) unless has_params(missing_parameters)
 
     if params["test"] == "1"
       return { status: "success", test: true }.to_json
@@ -66,7 +63,7 @@ CongressForms::App.controller do
     handler = FillHandler.new(c, fields, params["campaign_tag"])
     result = handler.fill
     result[:uid] = SecureRandom.hex
-    fh[result[:uid]] = handler if result[:status] == "captcha_needed"
+    captcha_record[result[:uid]] = handler if result[:status] == "captcha_needed"
 
     if result[:status] == "error"
       Raven.capture_message("Form error: #{bio_id}", tags: { "form_error" => true })
@@ -87,10 +84,10 @@ CongressForms::App.controller do
     content_type :json
     requires_uid_and_answer params, "fill out captcha"
 
-    return {status: "error", message: "The unique id provided was not found."}.to_json unless fh.include? @uid
+    return error_response("The unique id provided was not found.") unless captcha_record.include? @uid
 
-    result = fh[@uid].fill_captcha @answer
-    fh.delete(@uid) if result[:status] != "captcha_needed"
+    result = captcha_record[@uid].fill_captcha @answer
+    captcha_record.delete(@uid) if result[:status] != "captcha_needed"
     result.to_json
   end
 
@@ -104,7 +101,7 @@ CongressForms::App.controller do
   get :'recent-fill-image/:bio_id' do
     content_type :json
     response.headers['Cache-Control'] = "no-cache"
-    return {status: "error", message: "You must provide a bio_id to request the recent fill image."}.to_json unless params.include? "bio_id"
+    return error_response("You must provide a bio_id to request the recent fill image.") unless params.include? "bio_id"
 
     bio_id = params["bio_id"]
     c = CongressMember.find_by(bioguide_id: bio_id)
@@ -139,5 +136,9 @@ CongressForms::App.controller do
         halt status, headers, body
       end
     end
+  end
+
+  define_method :captcha_record do
+    @captcha_record ||= CaptchaCache.current
   end
 end

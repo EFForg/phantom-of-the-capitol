@@ -21,8 +21,7 @@ describe PerformFills do
     it "should call #run_job for each job's congress member, and destroy the job afterwards if successful" do
       task = PerformFills.new([job])
       expect(task).to receive(:run_job).with(job){ true }
-
-      expect(DelayedJobHelper).to receive(:destroy_job_and_dependents).with(job)
+      expect(job).to receive(:destroy)
 
       task.execute
     end
@@ -30,8 +29,6 @@ describe PerformFills do
     it "should call #run_job for each job's congress member, and preserve the job afterwards if it failed" do
       task = PerformFills.new([job])
       expect(task).to receive(:run_job).with(job){ false }
-
-      expect(DelayedJobHelper).not_to receive(:destroy_job_and_dependents)
 
       task.execute
     end
@@ -45,7 +42,6 @@ describe PerformFills do
 
       expect(task).to receive(:run_job).with(captcha_job).ordered
       expect(task).to receive(:run_job).with(noncaptcha_job).ordered
-      allow(DelayedJobHelper).to receive(:destroy_job_and_dependents)
 
       task.execute
     end

@@ -1,13 +1,13 @@
 require 'securerandom'
+include DelayedJobHelper
 
-debug_fh = FillHash.new
 CongressForms::App.controller do
 
   before do
     content_type :json
 
     response.headers['X-Backend-Hostname'] = Socket.gethostname
-    halt 401, {status: "error", message: "You must provide a valid debug key to access this endpoint."}.to_json unless params.include? "debug_key" and params["debug_key"] == DEBUG_KEY
+    halt 401, error_response("You must provide a valid debug key to access this endpoint.") unless params.include? "debug_key" and params["debug_key"] == DEBUG_KEY
   end
 
   before :'successful-fills-by-hour', :'successful-fills-by-date', :'successful-fills-by-member/' do
@@ -53,7 +53,7 @@ CongressForms::App.controller do
 
   get :'list-congress-members' do
     reps_ordered = CongressMember.order(:bioguide_id)
-    jobs_by_rep = DelayedJobHelper::tabulate_jobs_by_member(
+    jobs_by_rep = tabulate_jobs_by_member(
       CongressMember.to_hash(reps_ordered)
     )
 
@@ -133,7 +133,7 @@ CongressForms::App.controller do
 
   get :'job-details/:job_id' do
     requires_job_id params, "retrieve job details"
-    id, args = DelayedJobHelper::congress_member_id_and_args_from_handler @job.handler
+    id, args = congress_member_id_and_args_from_handler @job.handler
     bioguide = CongressMember.find(id).bioguide_id
     { arguments: args, bioguide: bioguide }.to_json
   end
@@ -141,7 +141,7 @@ CongressForms::App.controller do
   put :'job-details/:job_id' do
     error_string = "modify job details"
     requires_job_id params, error_string
-    requires_arguments params, error_string
+    return error_response("You must provide arguments to #{error_string}.") unless has_params("arguments")
 
     handler = YAML.load(@job.handler)
     handler.args = params['arguments']
@@ -155,7 +155,7 @@ CongressForms::App.controller do
   delete :'job-details/:job_id' do
     requires_job_id params, "retrieve job details"
 
-    DelayedJobHelper::destroy_job_and_dependents @job
+    destroy_job_and_dependents @job
 
     { status: "success" }.to_json
   end
@@ -167,7 +167,7 @@ CongressForms::App.controller do
   post :'batch-job-save/:bio_id' do
     error_string = "batch save jobs"
     requires_bio_id params, error_string
-    return {status: "error", message: "You must provide a delayed job id to " + error_string + "."}.to_json unless params.include? "if_arguments" and params.include? "then_arguments"
+    return error_response("You must provide a delayed job id to #{error_string}.") unless has_params(["if_arguments", "then_arguments"])
 
     if_arguments = JSON.parse(params["if_arguments"])
     then_arguments = JSON.parse(params["then_arguments"])
@@ -175,7 +175,7 @@ CongressForms::App.controller do
     @c.fill_statuses.joins(:delayed_job).order(created_at: :desc).each do |f|
       job = f.delayed_job
       match = true
-      cm_id, job_args = DelayedJobHelper::congress_member_id_and_args_from_handler(job.handler)
+      cm_id, job_args = congress_member_id_and_args_from_handler(job.handler)
       if_arguments.each.with_index do |arg, arg_i|
         if arg.is_a? Hash
           arg.each do |field_i, field|
@@ -215,25 +215,25 @@ CongressForms::App.controller do
   get :'perform-job/:job_id' do
     requires_job_id params, "peform job"
 
-    id, args = DelayedJobHelper::congress_member_id_and_args_from_handler @job.handler
+    id, args = congress_member_id_and_args_from_handler @job.handler
     cm = CongressMember.find(id)
     fill_handler = FillHandler.new(cm, args[0], args[1], true)
 
-    DelayedJobHelper::destroy_job_and_dependents @job
+    destroy_job_and_dependents @job
 
     result = fill_handler.fill
     result[:uid] = SecureRandom.hex
-    debug_fh[result[:uid]] = fill_handler if result[:status] == "captcha_needed"
+    debug_captcha_record[result[:uid]] = fill_handler if result[:status] == "captcha_needed"
     result.to_json
   end
 
   post :'perform-job-captcha/:uid' do
     requires_uid_and_answer params, "fill out captcha"
 
-    return {status: "error", message: "The unique id provided was not found."}.to_json unless debug_fh.include? @uid
+    return error_response("The unique id provided was not found.") unless debug_captcha_record.include? @uid
 
-    result = debug_fh[@uid].fill_captcha @answer
-    debug_fh.delete(@uid) if result[:status] != "captcha_needed"
+    result = debug_captcha_record[@uid].fill_captcha @answer
+    debug_captcha_record.delete(@uid) if result[:status] != "captcha_needed"
     result.to_json
   end
 
@@ -275,4 +275,7 @@ CongressForms::App.controller do
     end
   end
 
+  define_method :debug_captcha_record do
+    @debug_captcha_record ||= CaptchaCache.current
+  end
 end

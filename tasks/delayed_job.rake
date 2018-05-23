@@ -26,7 +26,7 @@ namespace :'phantom-dc' do
       cm_hash = CongressMember::to_hash CongressMember.all
 
       jobs.each do |job|
-        cm_id, = DelayedJobHelper::congress_member_id_and_args_from_handler(job.handler)
+        cm_id, = congress_member_id_and_args_from_handler(job.handler)
         cm = CongressMember::retrieve_cached(cm_hash, cm_id)
 
         if regex.nil? or regex.match(cm.bioguide_id)
@@ -56,10 +56,10 @@ namespace :'phantom-dc' do
       jobs = retrieve_jobs args
 
       jobs.each do |job|
-        cm_id, = DelayedJobHelper::congress_member_id_and_args_from_handler(job.handler)
+        cm_id, = congress_member_id_and_args_from_handler(job.handler)
         if not args[:job_id].nil? or cm_id.to_i == cm.id
           puts red("Destroying job #" + job.id.to_s)
-          DelayedJobHelper::destroy_job_and_dependents job
+          destroy_job_and_dependents job
         end
       end
     end
@@ -67,7 +67,7 @@ namespace :'phantom-dc' do
     desc "calculate # of jobs per member on the Delayed::Job error_or_failure queue"
     task :jobs_per_member do |t, args|
       cm_hash = CongressMember::to_hash CongressMember.all
-      people = DelayedJobHelper::tabulate_jobs_by_member cm_hash
+      people = tabulate_jobs_by_member cm_hash
 
       captchad_hash = {}
       total_captchad_jobs = 0
@@ -100,7 +100,7 @@ namespace :'phantom-dc' do
 
       non_zip4_jobs = []
       jobs.each do |job|
-        cm_id, cm_args = DelayedJobHelper::congress_member_id_and_args_from_handler(job.handler)
+        cm_id, cm_args = congress_member_id_and_args_from_handler(job.handler)
         cm = CongressMember::retrieve_cached(cm_hash, cm_id)
         if regex.nil? or regex.match(cm.bioguide_id)
           if cm_args[0]['$ADDRESS_ZIP4'].nil?
@@ -131,7 +131,7 @@ namespace :'phantom-dc' do
           end
         rescue
         end
-        DelayedJobHelper::destroy_job_and_dependents job
+        destroy_job_and_dependents job
       end
     end
 
@@ -140,7 +140,7 @@ namespace :'phantom-dc' do
       jobs = Delayed::Job.where(queue: "error_or_failure")
       jobs.each do |job|
         handler = YAML.load job.handler
-        DelayedJobHelper::destroy_job_and_dependents(job) if handler.args[1] == "rake"
+        destroy_job_and_dependents(job) if handler.args[1] == "rake"
       end
     end
 
@@ -154,7 +154,7 @@ namespace :'phantom-dc' do
 
       duplicate_jobs = []
       jobs.each do |job|
-        cm_id, cm_args = DelayedJobHelper::congress_member_id_and_args_from_handler(job.handler)
+        cm_id, cm_args = congress_member_id_and_args_from_handler(job.handler)
         cm = CongressMember::retrieve_cached(cm_hash, cm_id)
         if regex.nil? or regex.match(cm.bioguide_id)
           field = cm_args[0][args[:field]]

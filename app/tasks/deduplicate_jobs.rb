@@ -1,3 +1,4 @@
+include DelayedJobHelper
 
 class DeduplicateJobs
   attr_reader :jobs
@@ -13,6 +14,6 @@ class DeduplicateJobs
       [job.object.bioguide_id, job.object.fields]
     end
 
-    DelayedJobHelper.destroy_jobs_and_dependents(sorted_jobs - unique_jobs)
+    destroy_jobs_and_dependents(sorted_jobs - unique_jobs)
   end
 end
