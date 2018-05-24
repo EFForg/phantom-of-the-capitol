@@ -41,8 +41,7 @@ gem 'enumerize'
 gem 'mini_magick'
 gem 'delayed_job_active_record'
 gem 'nokogiri', '>= 1.8.2'
-gem 'capybara'
-gem 'poltergeist'
+gem 'capybara-selenium'
 gem 'git'
 gem 'thin'
 gem 'carrierwave'
@@ -57,7 +56,7 @@ gem 'dotenv'
 gem 'rack-cors'
 gem 'rest-client'
 gem 'rack-protection', '~> 1.5.5'
-
+gem 'chromedriver-helper'
 
 # Or Padrino Edge
 # gem 'padrino', :github => 'padrino/padrino-framework'

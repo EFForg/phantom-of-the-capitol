@@ -1,5 +1,5 @@
 module FormFillHelper
-  def save_screenshot_and_store_poltergeist
+  def save_screenshot
     screenshot_location = random_screenshot_location
     @session.save_screenshot(screenshot_location, full: true)
     url = store_screenshot_from_location screenshot_location
@@ -8,7 +8,7 @@ module FormFillHelper
     url
   end
 
-  def save_captcha_and_store_poltergeist x, y, width, height
+  def save_captcha x, y, width, height
     screenshot_location = random_captcha_location
     @session.save_screenshot(screenshot_location, full: true)
     crop_screenshot_from_coords screenshot_location, x, y, width, height

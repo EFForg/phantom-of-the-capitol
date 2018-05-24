@@ -55,10 +55,12 @@ RACK_ENV=test bundle exec rake ar:create ar:schema:load > /dev/null
 echo "Loading congress members..."
 bundle exec rake phantom-dc:clone_git[/home/vagrant] > /dev/null
 
-echo "Setting up PhantomJS..."
+echo "Setting up Chrome..."
 cd /home/vagrant
-curl -Lo phantomjs.tar.bz2 https://bitbucket.org/ariya/phantomjs/downloads/phantomjs-1.9.8-linux-x86_64.tar.bz2
-tar -jxvf phantomjs.tar.bz2 > /dev/null
+wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+sudo sh -c 'echo "deb http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list'
+sudo apt-get update
+sudo apt-get install google-chrome-stable
 EOF
 
 ln -s /home/vagrant/phantomjs-1.9.8-linux-x86_64/bin/phantomjs /usr/bin/phantomjs

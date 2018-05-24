@@ -60,27 +60,30 @@ class FormFiller::CapybaraAction
   end
 
   def uncheck
+    scroll_to(selector)
     @session.find(selector).set(false)
   end
 
   def check
+    scroll_to(selector)
     @session.find(selector).set(true)
   end
 
   def click_on
+    scroll_to(selector)
     @session.find(selector).click
   end
 
   def choose
-    if options.nil?
-      @session.find(selector).set(true)
-    else
-      @session.find(element_name(@fields[value], selector)).set(true)
-    end
+    element = options.nil? ? selector : element_name(@fields[value], selector)
+    scroll_to(element)
+    @session.find(element).set(true)
   end
 
   def find
     wait_val = DEFAULT_FIND_WAIT_TIME
+    scroll_to(selector)
+
     if options
       options_hash = YAML.load options
       wait_val = options_hash['wait'] || wait_val
@@ -112,6 +115,12 @@ class FormFiller::CapybaraAction
   end
 
   def element_name(value, selector = 'option')
-    selector + '[value="' + value.gsub('"', '\"') + '"]'
+    %(#{selector}[value='#{value.gsub('"', '\"')}'])
+  end
+
+  def scroll_to(element)
+    return unless @session.find(element, visible: false)
+
+    @session.execute_script(%($("#{element}")[0].scrollIntoView(true)))
   end
 end

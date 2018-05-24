@@ -2,6 +2,7 @@ language: ruby
 rvm:
   - 2.4
 addons:
+  chrome: stable
   apt:
     packages:
       - libqtwebkit-dev
