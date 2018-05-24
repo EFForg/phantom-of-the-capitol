@@ -5,7 +5,11 @@ describe PerformFills do
   let(:overrides){ { "$NAME_LAST" => "abc" } }
   let(:campaign_tag){ "rspec" }
   let(:congress_member){ create :congress_member_with_actions_and_captcha }
-  let(:job){ congress_member.delay(queue: "error_or_failure").fill_out_form fields, campaign_tag }
+  let(:job) do
+    FormFiller.new(congress_member, fields, campaign_tag)
+      .delay(queue: "error_or_failure")
+      .fill_out_form
+  end
 
   describe ".execute" do
     before do
@@ -17,8 +21,7 @@ describe PerformFills do
     it "should call #run_job for each job's congress member, and destroy the job afterwards if successful" do
       task = PerformFills.new([job])
       expect(task).to receive(:run_job).with(job){ true }
-
-      expect(DelayedJobHelper).to receive(:destroy_job_and_dependents).with(job)
+      expect(job).to receive(:destroy)
 
       task.execute
     end
@@ -26,8 +29,6 @@ describe PerformFills do
     it "should call #run_job for each job's congress member, and preserve the job afterwards if it failed" do
       task = PerformFills.new([job])
       expect(task).to receive(:run_job).with(job){ false }
-
-      expect(DelayedJobHelper).not_to receive(:destroy_job_and_dependents)
 
       task.execute
     end
@@ -41,7 +42,6 @@ describe PerformFills do
 
       expect(task).to receive(:run_job).with(captcha_job).ordered
       expect(task).to receive(:run_job).with(noncaptcha_job).ordered
-      allow(DelayedJobHelper).to receive(:destroy_job_and_dependents)
 
       task.execute
     end
@@ -62,15 +62,25 @@ describe PerformFills do
   end
 
   describe "#run_job" do
+    let(:filler) { double(:form_filler, fill_out_form: Proc.new { |&block| } ) }
+
     before do
       allow(CongressMember).to receive(:retrieve_cached).with(anything, anything){ congress_member }
       allow_any_instance_of(PerformFills).to receive(:cwc_office_supported?){ false }
     end
 
-    it "should call #fill_out_form on the congress member, passing args and respecting overrides" do
-      expect(congress_member).to receive(:fill_out_form).with(fields.merge(overrides), campaign_tag).
-                                  and_return(FillStatus.new(status: "success"))
+    it "should fill_out_form, passing args and respecting overrides" do
+      # create the job
+      allow(FormFiller).to receive(:new).at_least(:once).and_call_original
 
+      # start watching FormFiller
+      expect(FormFiller).to receive(:new).at_least(:once)
+        .with(congress_member, fields.merge(overrides), campaign_tag)
+        .and_return(filler)
+      expect(filler).to receive(:fill_out_form)
+        .and_return(FillStatus.new(status: "success"))
+
+      # check that the job receives the overrides from PerformFills
       task = PerformFills.new([job], overrides: overrides)
       task.run_job(job)
     end
@@ -80,17 +90,19 @@ describe PerformFills do
 
       expect(task).to receive(:preprocess_job){ false }
       expect_any_instance_of(CongressMember).not_to receive(:message_via_cwc)
-      expect_any_instance_of(CongressMember).not_to receive(:fill_out_form)
+      expect_any_instance_of(FormFiller).not_to receive(:fill_out_form)
 
       task.run_job(job)
     end
 
     context "congress member is supported by Cwc" do
       it "should call #message_via_cwc instead" do
-        expect(congress_member).to receive(:message_via_cwc).with(fields.merge(overrides), campaign_tag: campaign_tag)
+        expect(congress_member).to receive(:message_via_cwc)
+          .with(fields.merge(overrides), campaign_tag: campaign_tag)
 
         task = PerformFills.new([job], overrides: overrides)
-        expect(task).to receive(:cwc_office_supported?).with(congress_member.cwc_office_code){ true }
+        expect(task).to receive(:cwc_office_supported?)
+          .with(congress_member.cwc_office_code){ true }
 
         task.run_job(job)
       end
@@ -98,12 +110,16 @@ describe PerformFills do
 
     context "block is given" do
       it "should pass block through to CongressMember#fill_out_form" do
-        block = Proc.new{}
+        block_is = double(:block, success?: true)
+        block = -> {
+          block_is.run
+          FillStatus.new(status: "success")
+        }
 
-        expect(congress_member).to receive(:fill_out_form).with(fields.merge(overrides), campaign_tag, &block).
-                                    and_return(FillStatus.new(status: "success"))
+        expect_any_instance_of(FormFiller).to receive(:fill_out_form).and_yield
 
         task = PerformFills.new([job], overrides: overrides)
+        expect(block_is).to receive(:run)
         task.run_job(job, &block)
       end
     end
@@ -115,7 +131,9 @@ describe PerformFills do
       noncaptcha_cm = create :congress_member_with_actions
 
       jobs = [captcha_cm, noncaptcha_cm].map do |cm|
-        cm.delay(queue: "error_or_failure").fill_out_form fields, campaign_tag
+        FormFiller.new(cm, fields, campaign_tag)
+          .delay(queue: "error_or_failure")
+          .fill_out_form
       end
 
       captcha_jobs = [jobs[0]]

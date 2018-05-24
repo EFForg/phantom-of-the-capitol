@@ -1,4 +1,5 @@
 require "pp"
+include DelayedJobHelper
 
 class PerformFills
   include CwcHelper
@@ -27,7 +28,7 @@ class PerformFills
       end
 
       if success
-        DelayedJobHelper::destroy_job_and_dependents job
+        destroy_job_and_dependents job
       else
         Delayed::Job.increment_counter(:attempts, job)
         yield(job.reload) if block_given?
@@ -36,7 +37,7 @@ class PerformFills
   end
 
   def run_job(job, &block)
-    cm_id, cm_args = DelayedJobHelper::congress_member_id_and_args_from_handler(job.handler)
+    cm_id, cm_args = congress_member_id_and_args_from_handler(job.handler)
     cm = CongressMember::retrieve_cached(cm_hash, cm_id)
 
     fields, campaign_tag = cm_args[0].merge(overrides), cm_args[1]
@@ -68,7 +69,7 @@ class PerformFills
         false
       end
     elsif RACK_ENV != "development"
-      status = cm.fill_out_form(fields, cm_args[1], &block).success?
+      status = FormFiller.new(cm, fields, cm_args[1]).fill_out_form(&block).success?
 
       unless status
         Raven.capture_message("Form error: #{cm.bioguide_id}",
@@ -79,9 +80,14 @@ class PerformFills
       status
     end
   rescue => e
-    Raven.capture_exception(e, tags: { "rake" => true },
-                            extra: { delayed_job_id: job.id })
-    return false
+    if RACK_ENV == "production"
+
+      Raven.capture_exception(e, tags: { "rake" => true },
+                              extra: { delayed_job_id: job.id })
+      return false
+    else
+      raise e
+    end
   end
 
   def cm_hash
@@ -92,7 +98,7 @@ class PerformFills
     @captcha_hash ||=
       begin
         hash = {}
-        CongressMemberAction.where(value: "$CAPTCHA_SOLUTION").each do |cma|
+        CongressMemberAction.where(value: CAPTCHA_SOLUTION).each do |cma|
           hash[cma.congress_member_id] = true
         end
         hash
@@ -116,7 +122,7 @@ class PerformFills
     captcha_jobs, noncaptcha_jobs = [], []
 
     jobs.each do |job|
-      cm_id, _ = DelayedJobHelper::congress_member_id_and_args_from_handler(job.handler)
+      cm_id, _ = congress_member_id_and_args_from_handler(job.handler)
       cm = CongressMember::retrieve_cached(cm_hash, cm_id)
 
       next unless regex.nil? or regex.match(cm.bioguide_id)

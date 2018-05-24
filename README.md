@@ -270,7 +270,8 @@ If you prefer to dive deep, you can fire up the padrino console with `padrino c`
 > job = Delayed::Job.where(queue: "error_or_failure").first # get the first job
  => #<Delayed::Backend::ActiveRecord::Job id: 318, priority: 0, attempts: 1, handler: "--- !ruby/object:Delayed::PerformableMethod\nobject:...", last_error: "Unable to find css \"p\" with text /Thank you!/\n[\"/ho...", run_at: "2014-07-03 12:14:10", locked_at: nil, failed_at: nil, locked_by: nil, queue: "error_or_failure", created_at: "2014-07-03 12:14:10", updated_at: "2014-08-26 18:50:27">
 > handler = YAML.load job.handler # get the "handler" which contains the object to be acted upon and the arguments
- => #<Delayed::PerformableMethod:0x0000000544ae30 @object=#<CongressMember id: 60, bioguide_id: "F000457", success_criteria: "---\nheaders:\n  status: 200\nbody:\n  contains: Your m...", created_at: "2014-04-30 19:08:05", updated_at: "2014-07-03 18:54:34">, @method_name=:fill_out_form, @args=[{"$NAME_FIRST"=>"John", "$NAME_LAST"=>"Doe", "$ADDRESS_STREET"=>"123 Fake Street", "$ADDRESS_CITY"=>"Hennepin", "$ADDRESS_ZIP5"=>"55369", "$EMAIL"=>"johndoe@example.com", "subscribe"=>"1", "$SUBJECT"=>"Example subject", "$MESSAGE"=>"Example Message", "$NAME_PREFIX"=>"Mr.", "$ADDRESS_STATE_POSTAL_ABBREV"=>"MN", "$TOPIC"=>"Example Topic", "$PHONE"=>"555-555-5555", "$ADDRESS_ZIP4"=>"1234"}, nil]>
+ => #<Delayed::PerformableMethod:0x0000000544ae30 @object=
+#<FormFiller:0x007fd1abb23728 @campaign_tag=nil, @fields={}, @rep= #<CongressMember:0x007fd1ac1e0020 id: 1, bioguide_id: "A000374", success_criteria: "---\n" + "headers:\n" + "  status: 200\n" + "body:\n" + "  contains: your message has been sent\n", created_at: 2018-05-04 19:38:48 UTC, updated_at: 2018-05-04 19:41:35 UTC, defunct: false, contact_url: "https://abraham.house.gov", name: "Abraham", state: "LA", chamber: "house", house_district: 5, senate_class: nil>, @session=nil>, @method_name=:fill_out_form, @args=[{"$NAME_FIRST"=>"John", "$NAME_LAST"=>"Doe", "$ADDRESS_STREET"=>"123 Fake Street", "$ADDRESS_CITY"=>"Hennepin", "$ADDRESS_ZIP5"=>"55369", "$EMAIL"=>"johndoe@example.com", "subscribe"=>"1", "$SUBJECT"=>"Example subject", "$MESSAGE"=>"Example Message", "$NAME_PREFIX"=>"Mr.", "$ADDRESS_STATE_POSTAL_ABBREV"=>"MN", "$TOPIC"=>"Example Topic", "$PHONE"=>"555-555-5555", "$ADDRESS_ZIP4"=>"1234"}, nil]>
 handler.args[0]['$PHONE'] = '123-456-7890' # set the phone number
 ```
 
@@ -278,7 +279,7 @@ Then, when you're ready to retry the fill:
 
 ```rb
 handler.perform # try filling out the form
-handler.object.fill_out_form(handler.args[0]) do |c|
+handler.object.fill_out_form do |c|
   puts c
   STDIN.gets.strip
 end # fills out a form with a captcha

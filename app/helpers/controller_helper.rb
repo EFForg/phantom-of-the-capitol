@@ -4,38 +4,44 @@ CongressForms::App.helpers do
   # else lookup congress member, exposed as @c
   # will respond with error if CongressMember not found
   def requires_bio_id params, retrieval_string
-    return {status: "error", message: "You must provide a bio_id to retrieve the " + retrieval_string + "."}.to_json unless params.include? "bio_id"
+    return error_response("You must provide a bio_id to retrieve the #{retrieval_string}.") unless has_params("bio_id")
 
-    bio_id = params["bio_id"]
-
-    @c = CongressMember.bioguide(bio_id)
-    halt 200, {status: "error", message: "Congress member with provided bio id not found"}.to_json if @c.nil?
+    @c = CongressMember.find_by(bioguide_id: params["bio_id"])
+    halt 200, error_response("Congress member with provided bio id not found") if @c.nil?
   end
 
   def requires_job_id params, error_string
-    return {status: "error", message: "You must provide a delayed job id to " + error_string + "."}.to_json unless params.include? "job_id"
-
+    return error_response("You must provide a delayed job id to #{error_string}.") unless has_params("job_id")
     job_id = params["job_id"]
 
     begin
       @job = Delayed::Job.find job_id
     rescue ActiveRecord::RecordNotFound
-      halt 200, {status: "error", message: "Job with provided id not found."}.to_json if @job.nil?
+      halt 200, error_response("Job with provided id not found.") if @job.nil?
     end
   end
 
   def requires_date params, error_string
-    return {status: "error", message: "You must provide a date to " + error_string + "."}.to_json unless params.include? "date"
+    return error_response("You must provide a date to #{error_string}.") unless has_params("date")
     @date = Time.zone.parse(params["date"])
   end
 
-  def requires_arguments params, error_string
-    return {status: "error", message: "You must provide arguments to " + error_string + "."}.to_json unless params.include? "arguments"
-  end
-
   def requires_uid_and_answer params, error_string
-    halt 200, {status: "error", message: "You must provide a uid and answer to " + error_string + "."}.to_json unless params.include? "uid" and params.include? "answer"
+    msg = "You must provide a uid and answer to #{error_string}."
+    halt 200, error_response(msg) unless has_params(["uid", "answer"])
+
     @uid = params["uid"]
     @answer = params["answer"]
+  end
+
+  private
+
+  def error_response(message)
+    { status: "error", message: message }.to_json
+  end
+
+  def has_params(required_params)
+    required_params = [required_params].flatten # handle one param or a list
+    required_params.all? {|p| params.include?(p) }
   end
 end
