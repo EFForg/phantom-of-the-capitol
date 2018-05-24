@@ -13,9 +13,6 @@ class FormFiller::Capybara
 
   def fill_out(starting_action = nil, &block)
     @session ||= Capybara::Session.new(:headless_chrome)
-    # TODO: do we need to turn off js_errors & TLS versions > 1?
-    #@session.driver.options[:js_errors] = false
-    #@session.driver.options[:phantomjs_options] = ['--tls1']
     form_fill_log("begin")
 
     begin
