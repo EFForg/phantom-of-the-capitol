@@ -245,7 +245,7 @@ describe "Debug controller" do
   end
 
   describe "route /job-details" do
-    it "should not be accessable without a correct debug_key" do
+    it "should not be accessible without a correct debug_key" do
       get '/job-details/TEST', { debug_key: DEBUG_KEY + "cruft" }
       expect(last_response.status).to eq(401)
       expect(last_response_json["status"]).to eq("error")

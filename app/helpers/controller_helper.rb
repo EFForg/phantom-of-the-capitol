@@ -5,9 +5,8 @@ CongressForms::App.helpers do
   # will respond with error if CongressMember not found
   def requires_bio_id params, retrieval_string
     return error_response("You must provide a bio_id to retrieve the #{retrieval_string}.") unless has_params("bio_id")
-    bio_id = params["bio_id"]
 
-    @c = CongressMember.find_by(bioguide_id: bio_id)
+    @c = CongressMember.find_by(bioguide_id: params["bio_id"])
     halt 200, error_response("Congress member with provided bio id not found") if @c.nil?
   end
 

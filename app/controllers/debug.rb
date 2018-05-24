@@ -22,28 +22,26 @@ CongressForms::App.controller do
   get :'recent-statuses-detailed/:bio_id' do
     requires_bio_id params, "most recent status"
 
-    if params.include? "all_statuses"
-      statuses = @c.fill_statuses.order(:updated_at).reverse
+    statuses = if params.include? "all_statuses"
+      @c.fill_statuses.order(:updated_at).reverse
     else
-      statuses = @c.recent_fill_statuses.order(:updated_at).reverse
+      @c.recent_fill_statuses.order(:updated_at).reverse
     end
 
-    statuses_arr = []
-    statuses.each do |s|
+    statuses.map do |s|
+      status_hash = {id: s.id, status: s.status, run_at: s.updated_at}
+
       if s.status == 'error' or s.status == 'failure'
         begin
           extra = YAML.load(s.extra)
           status_hash = {id: s.id, status: s.status, run_at: s.updated_at, dj_id: s.delayed_job.id}
           status_hash[:screenshot] = extra[:screenshot] if extra.include? :screenshot
         rescue
-          status_hash = {id: s.id, status: s.status, run_at: s.updated_at}
         end
-      elsif s.status == 'success'
-        status_hash = {id: s.id, status: s.status, run_at: s.updated_at}
       end
-      statuses_arr.push(status_hash)
-    end
-    statuses_arr.to_json
+
+      status_hash
+    end.to_json
   end
 
   get :'list-actions/:bio_id' do
@@ -66,50 +64,22 @@ CongressForms::App.controller do
   end
 
   get :'successful-fills-by-date', map: %r{/successful-fills-by-date/([\w]*)} do
-    bio_id = params[:captures].first
-
-    date_start = params.include?("date_start") ? Time.zone.parse(params["date_start"]) : nil
-    date_end = params.include?("date_end") ? Time.zone.parse(params["date_end"]) : nil
-
-    if bio_id.blank?
-      @statuses = FillStatus
-    else
-      @statuses = CongressMember.find_by(bioguide_id: bio_id).fill_statuses
-    end
-
-    @statuses = @statuses.where('created_at >= ?', date_start) unless date_start.nil?
-    @statuses = @statuses.where('created_at < ?', date_end) unless date_end.nil?
-
+    get_recent_statuses(
+      params[:captures].first,
+      Time.zone.parse(params.fetch("date_start", "01/01/1967")),
+      Time.zone.parse(params.fetch("date_end", Time.now.to_s))
+    )
     filter_by_campaign_tag
 
-    options = {}
-    options[:time_zone] = params["time_zone"] if params.include?("time_zone")
-    options[:format] = '%Y-%m-%d 00:00:00 UTC' if params.include?("give_as_utc") and params["give_as_utc"] == "true"
-
-    @statuses.success.group_by_day(:created_at, options).count.to_json
+    @statuses.success.group_by_day(:created_at, fill_options).count.to_json
   end
 
   get :'successful-fills-by-hour', map: %r{/successful-fills-by-hour/([\w]*)} do
-    bio_id = params[:captures].first
-
     requires_date params, "retrieve successful fills by hour"
-
-    if bio_id.blank?
-      @statuses = FillStatus
-    else
-      @statuses = CongressMember.find_by(bioguide_id: bio_id).fill_statuses
-    end
-
-    @statuses = @statuses.where('created_at >= ?', @date)
-    @statuses = @statuses.where('created_at < ?', @date + 1.day)
-
+    get_recent_statuses(params[:captures].first, @date, @date + 1.day)
     filter_by_campaign_tag
 
-    options = {}
-    options[:time_zone] = params["time_zone"] if params.include?("time_zone")
-    options[:format] = '%Y-%m-%d %H:%M:00 UTC' if params.include?("give_as_utc") and params["give_as_utc"] == "true"
-
-    @statuses.success.group_by_hour(:created_at, options).count.to_json
+    @statuses.success.group_by_hour(:created_at, fill_options).count.to_json
   end
 
   get :'successful-fills-by-member/' do
@@ -119,12 +89,9 @@ CongressForms::App.controller do
     member_id_mapping = {}
     member_hash = {}
     @statuses.success.each do |s|
-      unless member_id_mapping.include? s.congress_member_id
-        member_id_mapping[s.congress_member_id] = s.congress_member.bioguide_id
-      end
-      bioguide = member_id_mapping[s.congress_member_id]
+      bioguide = (member_id_mapping[s.congress_member_id] ||= s.congress_member.bioguide_id)
 
-      member_hash[bioguide] = 0 unless member_hash.include? bioguide
+      member_hash[bioguide] ||= 0
       member_hash[bioguide] += 1
     end
 
@@ -213,7 +180,7 @@ CongressForms::App.controller do
   end
 
   get :'perform-job/:job_id' do
-    requires_job_id params, "peform job"
+    requires_job_id params, "perform job"
 
     id, args = congress_member_id_and_args_from_handler @job.handler
     cm = CongressMember.find(id)
@@ -240,11 +207,9 @@ CongressForms::App.controller do
   get :'list-jobs/:bio_id' do
     requires_bio_id params, "list of jobs"
 
-    jobs = []
-    @c.fill_statuses.joins(:delayed_job).order(created_at: :desc).each do |f|
-      jobs << (f.delayed_job.as_json only: [:id, :created_at, :updated_at, :last_error])
-    end
-    jobs.to_json
+    @c.fill_statuses.joins(:delayed_job).order(created_at: :desc).map do |f|
+      f.delayed_job.as_json only: [:id, :created_at, :updated_at, :last_error]
+    end.to_json
   end
 
   private
@@ -268,14 +233,33 @@ CongressForms::App.controller do
   end
 
   define_method :filter_by_campaign_tag do
-    if @ct_id.nil?
-      @statuses = @statuses.where('campaign_tag_id != ? OR campaign_tag_id IS NULL', @rake_ct_id.to_s)
+    @statuses = if @ct_id.nil?
+      @statuses.where('campaign_tag_id != ? OR campaign_tag_id IS NULL', @rake_ct_id.to_s)
     else
-      @statuses = @statuses.where(campaign_tag_id: @ct_id)
+      @statuses.where(campaign_tag_id: @ct_id)
     end
   end
 
   define_method :debug_captcha_record do
     @debug_captcha_record ||= CaptchaCache.current
+  end
+
+  define_method :get_recent_statuses do |bio_id, date_start, date_end|
+    @statuses = if bio_id.blank?
+      FillStatus.where(
+        'created_at >= ? and created_at < ?', date_start, date_end
+      )
+    else
+      CongressMember.find_by(bioguide_id: bio_id).fill_statuses.where(
+        'created_at >= ? and created_at < ?', date_start, date_end
+      )
+    end
+  end
+
+  define_method :fill_options do
+    options = {}
+    options[:time_zone] = params["time_zone"] if params.include?("time_zone")
+    options[:format] = '%Y-%m-%d %H:%M:00 UTC' if params.include?("give_as_utc") and params["give_as_utc"] == "true"
+    options
   end
 end

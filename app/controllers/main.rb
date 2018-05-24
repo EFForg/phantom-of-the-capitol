@@ -4,16 +4,26 @@ require 'cwc/fixtures'
 CongressForms::App.controller do
   helpers CwcHelper
 
-  get :index do
-    render :index
-  end
-
   before do
     Raven.tags_context web: true
+    response.headers['X-Backend-Hostname'] = Socket.gethostname
   end
 
-  before do
-    response.headers['X-Backend-Hostname'] = Socket.gethostname
+  before :'fill-out-form' do
+    if respond_to?(:preprocess_message) && preprocess_message(request, params["bio_id"], params["fields"]) == false
+      halt 403, {}, "Access Denied"
+    end
+
+    if params["bio_id"] && (cm = CongressMember.find_by(bioguide_id: params["bio_id"]))
+      if cwc_office_supported?(cm.cwc_office_code)
+        status, headers, body = call env.merge("PATH_INFO" => "/cwc/#{cm.cwc_office_code}/messages")
+        halt status, headers, body
+      end
+    end
+  end
+
+  get :index do
+    render :index
   end
 
   post :'retrieve-form-elements' do
@@ -103,42 +113,25 @@ CongressForms::App.controller do
     response.headers['Cache-Control'] = "no-cache"
     return error_response("You must provide a bio_id to request the recent fill image.") unless params.include? "bio_id"
 
-    bio_id = params["bio_id"]
-    c = CongressMember.find_by(bioguide_id: bio_id)
-    redirect to(CongressMember::RECENT_FILL_IMAGE_BASE + 'YAML-not%20found-red' + CongressMember::RECENT_FILL_IMAGE_EXT) if c.nil?
+    c = CongressMember.find_by(bioguide_id: params["bio_id"])
+    redirect to(recent_fill_url('YAML-not%20found-red')) if c.nil?
 
     fill_status = c.recent_fill_status
-
-    if [fill_status[:successes], fill_status[:errors], fill_status[:failures]].max == 0
-      redirect to(CongressMember::RECENT_FILL_IMAGE_BASE + 'not-tried-lightgray' + CongressMember::RECENT_FILL_IMAGE_EXT), 302
+    url = if [fill_status[:successes], fill_status[:errors], fill_status[:failures]].max == 0
+      recent_fill_url('not-tried-lightgray')
     else
       success_rate = fill_status[:successes].to_f / (fill_status[:successes] + fill_status[:errors] + fill_status[:failures])
-
-      darkness = 0.8
-
-      red = (1 - ([success_rate - 0.5, 0].max * 2)) * 255 * darkness
-      green = [success_rate * 2, 1].min * 255 * darkness
-      blue = 0
-
-      color_hex = sprintf("%02X%02X%02X", red, green, blue)
-      redirect to(CongressMember::RECENT_FILL_IMAGE_BASE + 'success-' + (success_rate * 100).to_i.to_s + '%25-' + color_hex + CongressMember::RECENT_FILL_IMAGE_EXT), 302
-    end
-  end
-
-  before :'fill-out-form' do
-    if respond_to?(:preprocess_message) && preprocess_message(request, params["bio_id"], params["fields"]) == false
-      halt 403, {}, "Access Denied"
+      recent_fill_url("success-#{(success_rate * 100).to_i}%25-#{success_color(success_rate)}")
     end
 
-    if params["bio_id"] && (cm = CongressMember.find_by(bioguide_id: params["bio_id"]))
-      if cwc_office_supported?(cm.cwc_office_code)
-        status, headers, body = call env.merge("PATH_INFO" => "/cwc/#{cm.cwc_office_code}/messages")
-        halt status, headers, body
-      end
-    end
+    redirect to(url), 302
   end
 
   define_method :captcha_record do
     @captcha_record ||= CaptchaCache.current
+  end
+
+  define_method :recent_fill_url do |options|
+    CongressMember::RECENT_FILL_IMAGE_BASE + options + CongressMember::RECENT_FILL_IMAGE_EXT
   end
 end
