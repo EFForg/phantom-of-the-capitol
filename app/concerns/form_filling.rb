@@ -72,6 +72,10 @@ module FormFilling
 
       message = {success: false, message: e.message, exception: e}
       message[:screenshot] = self.class::save_screenshot_and_store_poltergeist(session)
+      Padrino.logger.info("HTTP Status: #{session.status_code}")
+      Raven.extra_context(http_status: session.status_code)
+      Padrino.logger.info(session.html)
+      Raven.extra_context(html: session.html)
       message
     ensure
       session.driver.quit unless persist_session?
