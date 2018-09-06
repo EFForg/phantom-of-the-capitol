@@ -53,7 +53,7 @@ GEM
       activesupport (>= 3.0.0)
     faraday (0.11.0)
       multipart-post (>= 1.2, < 3)
-    ffi (1.9.18)
+    ffi (1.9.25)
     fission (0.5.0)
       CFPropertyList (~> 2.2)
     fog (1.37.0)
