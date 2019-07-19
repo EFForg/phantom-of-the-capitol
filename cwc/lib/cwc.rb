@@ -1,2 +1,0 @@
-
-require "cwc/client"

@@ -1,9 +1,0 @@
----
-:orm: activerecord
-:test: none
-:mock: none
-:script: none
-:renderer: slim
-:stylesheet: none
-:namespace: CongressForms
-:migration_format: number
