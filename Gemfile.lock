@@ -245,7 +245,7 @@ GEM
       rack
     rack-test (0.8.2)
       rack (>= 1.0, < 3)
-    rake (10.4.2)
+    rake (12.3.3)
     rbvmomi (1.8.2)
       builder
       nokogiri (>= 1.4.1)
