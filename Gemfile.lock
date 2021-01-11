@@ -250,7 +250,7 @@ GEM
       builder
       nokogiri (>= 1.4.1)
       trollop
-    redcarpet (3.3.4)
+    redcarpet (3.5.1)
     rest-client (2.0.2)
       http-cookie (>= 1.0.2, < 2.0)
       mime-types (>= 1.16, < 4.0)
