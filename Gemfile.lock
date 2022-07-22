@@ -295,7 +295,7 @@ GEM
     trollop (2.1.2)
     typhoeus (1.0.1)
       ethon (>= 0.8.0)
-    tzinfo (1.2.3)
+    tzinfo (1.2.10)
       thread_safe (~> 0.1)
     unf (0.1.4)
       unf_ext
