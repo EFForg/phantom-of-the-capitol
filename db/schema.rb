@@ -1,3 +1,4 @@
+# encoding: UTF-8
 # This file is auto-generated from the current state of the database. Instead
 # of editing this file, please use the migrations feature of Active Record to
 # incrementally modify your database, and then regenerate this schema definition.
@@ -10,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20) do
+ActiveRecord::Schema.define(version: 21) do
 
   create_table "campaign_tags", force: :cascade do |t|
     t.string "name", limit: 255
@@ -22,7 +23,7 @@ ActiveRecord::Schema.define(version: 20) do
     t.string  "action",              limit: 255
     t.string  "name",                limit: 255
     t.string  "selector",            limit: 255
-    t.string  "value",               limit: 511
+    t.text    "value",               limit: 65535
     t.boolean "required",                          default: false
     t.integer "maxlength",           limit: 4
     t.string  "captcha_selector",    limit: 255
