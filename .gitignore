@@ -9,7 +9,6 @@ db/*.db
 config/database.rb
 .*.sw*
 *.swp
-config/phantom-dc_config.rb
 .bundle
 .vagrant
 docker-compose.yml
