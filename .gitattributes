@@ -1,1 +1,3 @@
+.env filter=git-crypt diff=git-crypt
 config/phantom-dc_config.rb filter=git-crypt diff=git-crypt
+config/database.rb filter=git-crypt diff=git-crypt

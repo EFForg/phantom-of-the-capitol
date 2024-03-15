@@ -6,11 +6,10 @@ vendor/gems/*
 !vendor/gems/cache/
 .sass-cache/*
 db/*.db
-config/database.rb
 .*.sw*
 *.swp
 .bundle
 .vagrant
 docker-compose.yml
 private/*
-.env
+
